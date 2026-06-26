@@ -14,8 +14,19 @@ export default function LeaderboardPage() {
   const [rows, setRows]       = useState([])
   const [loading, setLoading] = useState(true)
   const [round, setRound]     = useState(CURRENT_ROUND)
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  useEffect(() => { loadData() }, [view, round])
+  useEffect(() => { loadData() }, [view, round, refreshKey])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('lb-live')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'predictions' }, () => {
+        setRefreshKey(k => k + 1)
+      })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [])
 
   async function loadData() {
     setLoading(true)
