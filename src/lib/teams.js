@@ -1,28 +1,32 @@
 export const TEAMS = {
-  'Real Madrid':     { short: 'MAD', color: '#C9A84C', bg: '#fff8e8', initial: 'ר' },
-  'Barcelona':       { short: 'BAR', color: '#004D9E', bg: '#e8f0ff', initial: 'ב' },
-  'Atletico Madrid': { short: 'ATL', color: '#CE1021', bg: '#ffe8ea', initial: 'א' },
-  'Sevilla':         { short: 'SEV', color: '#D4002A', bg: '#ffe8ea', initial: 'ס' },
-  'Real Betis':      { short: 'BET', color: '#00883A', bg: '#e8f8ee', initial: 'ב' },
-  'Valencia':        { short: 'VAL', color: '#EF7D00', bg: '#fff3e0', initial: 'ו' },
-  'Villarreal':      { short: 'VIL', color: '#FFDA00', bg: '#fffbe0', initial: 'ו' },
-  'Real Sociedad':   { short: 'SOC', color: '#005AA7', bg: '#e8f0ff', initial: 'ס' },
-  'Osasuna':         { short: 'OSA', color: '#C11B17', bg: '#ffe8ea', initial: 'א' },
-  'Athletic Club':   { short: 'ATH', color: '#EE3124', bg: '#ffe8ea', initial: 'א' },
-  'Rayo Vallecano':  { short: 'RAY', color: '#D4002A', bg: '#ffe8ea', initial: 'ר' },
-  'Celta Vigo':      { short: 'CEL', color: '#6CACE4', bg: '#e8f4ff', initial: 'ס' },
-  'Getafe':          { short: 'GET', color: '#004B93', bg: '#e8f0ff', initial: 'ג' },
-  'Mallorca':        { short: 'MAL', color: '#D4002A', bg: '#ffe8ea', initial: 'מ' },
-  'Las Palmas':      { short: 'LPA', color: '#FFDA00', bg: '#fffbe0', initial: 'ל' },
-  'Girona':          { short: 'GIR', color: '#D4002A', bg: '#ffe8ea', initial: 'ג' },
-  'Espanyol':        { short: 'ESP', color: '#0055A5', bg: '#e8f0ff', initial: 'א' },
-  'Alaves':          { short: 'ALA', color: '#005BAC', bg: '#e8f0ff', initial: 'א' },
-  'Leganes':         { short: 'LEG', color: '#003087', bg: '#e8f0ff', initial: 'ל' },
-  'Valladolid':      { short: 'VLL', color: '#6A0DAD', bg: '#f0e8ff', initial: 'ו' },
+  'Real Madrid':     { short: 'MAD', color: '#C9A84C', bg: '#1a1200', initial: 'ר', logoId: 541 },
+  'Barcelona':       { short: 'BAR', color: '#004D9E', bg: '#001a33', initial: 'ב', logoId: 529 },
+  'Atletico Madrid': { short: 'ATL', color: '#CE1021', bg: '#1a0002', initial: 'א', logoId: 530 },
+  'Sevilla':         { short: 'SEV', color: '#D4002A', bg: '#1a0002', initial: 'ס', logoId: 536 },
+  'Real Betis':      { short: 'BET', color: '#00883A', bg: '#001a0d', initial: 'ב', logoId: 543 },
+  'Valencia':        { short: 'VAL', color: '#EF7D00', bg: '#1a0e00', initial: 'ו', logoId: 532 },
+  'Villarreal':      { short: 'VIL', color: '#FFDA00', bg: '#1a1400', initial: 'ו', logoId: 533 },
+  'Real Sociedad':   { short: 'SOC', color: '#005AA7', bg: '#001233', initial: 'ס', logoId: 548 },
+  'Osasuna':         { short: 'OSA', color: '#C11B17', bg: '#1a0002', initial: 'א', logoId: 727 },
+  'Athletic Club':   { short: 'ATH', color: '#EE3124', bg: '#1a0002', initial: 'א', logoId: 531 },
+  'Rayo Vallecano':  { short: 'RAY', color: '#D4002A', bg: '#1a0002', initial: 'ר', logoId: 728 },
+  'Celta Vigo':      { short: 'CEL', color: '#6CACE4', bg: '#001a2e', initial: 'ס', logoId: 538 },
+  'Getafe':          { short: 'GET', color: '#6CA0DC', bg: '#001233', initial: 'ג', logoId: 546 },
+  'Mallorca':        { short: 'MAL', color: '#D4002A', bg: '#1a0002', initial: 'מ', logoId: 798 },
+  'Las Palmas':      { short: 'LPA', color: '#FFDA00', bg: '#1a1400', initial: 'ל', logoId: 840 },
+  'Girona':          { short: 'GIR', color: '#D4002A', bg: '#1a0002', initial: 'ג', logoId: 547 },
+  'Espanyol':        { short: 'ESP', color: '#4488CC', bg: '#001233', initial: 'א', logoId: 534 },
+  'Alaves':          { short: 'ALA', color: '#5599CC', bg: '#001233', initial: 'א', logoId: 542 },
+  'Leganes':         { short: 'LEG', color: '#4477BB', bg: '#001233', initial: 'ל', logoId: 723 },
+  'Valladolid':      { short: 'VLL', color: '#9B6FD4', bg: '#0e0033', initial: 'ו', logoId: 720 },
 }
 
 export function getTeamInfo(name) {
-  return TEAMS[name] || { short: name.slice(0, 3).toUpperCase(), color: '#888', bg: '#f0f0f0', initial: name[0] }
+  return TEAMS[name] || { short: name.slice(0, 3).toUpperCase(), color: '#888', bg: '#1a1a1a', initial: name[0], logoId: null }
+}
+
+export function getTeamLogoUrl(logoId) {
+  return logoId ? `https://media.api-sports.io/football/teams/${logoId}.png` : null
 }
 
 export function calcPoints(homeGuess, awayGuess, homeReal, awayReal) {
@@ -46,5 +50,5 @@ export function formatKickoff(kickoff) {
     ' · ' + d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
 }
 
-export const CURRENT_ROUND = 36
+export const CURRENT_ROUND = 1
 export const TOTAL_ROUNDS = 38

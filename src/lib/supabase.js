@@ -96,6 +96,20 @@ export async function getProfile(userId) {
   return data
 }
 
+export async function updateProfile(userId, updates) {
+  const { error } = await supabase.from('profiles').update(updates).eq('id', userId)
+  if (error) throw error
+}
+
+export async function uploadAvatar(file, userId) {
+  const ext = file.name.split('.').pop()
+  const path = `${userId}/avatar.${ext}`
+  const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+  if (error) throw error
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+  return data.publicUrl
+}
+
 export async function getMyStats(userId) {
   const { data, error } = await supabase
     .from('predictions')

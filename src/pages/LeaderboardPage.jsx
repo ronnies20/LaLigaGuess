@@ -67,9 +67,9 @@ export default function LeaderboardPage() {
 
         {view === 'round' && (
           <div className="round-nav" style={{ marginBottom:'12px' }}>
-            <button className="round-nav-btn" onClick={() => setRound(r => r-1)} disabled={round<=1}>›</button>
+            <button className="round-nav-btn" onClick={() => setRound(r => r-1)} disabled={round<=1}>‹</button>
             <div className="round-label">מחזור {round}</div>
-            <button className="round-nav-btn" onClick={() => setRound(r => r+1)} disabled={round>=38}>‹</button>
+            <button className="round-nav-btn" onClick={() => setRound(r => r+1)} disabled={round>=38}>›</button>
           </div>
         )}
 

@@ -31,10 +31,10 @@ export default function AuthPage() {
   }
 
   if (done) return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'100dvh', padding:'32px', textAlign:'center', gap:'12px' }}>
-      <div style={{ fontSize:'48px' }}>✉️</div>
-      <h2 style={{ fontSize:'18px', fontWeight:'600' }}>בדוק את האימייל שלך!</h2>
-      <p style={{ color:'#666', fontSize:'14px', lineHeight:'1.6' }}>
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'100dvh', padding:'32px', textAlign:'center', gap:'12px', background:'#07091A' }}>
+      <div style={{ fontSize:'48px', filter:'drop-shadow(0 0 16px rgba(255,215,0,0.5))' }}>✉️</div>
+      <h2 style={{ fontSize:'18px', fontWeight:'700', color:'#FFD700' }}>בדוק את האימייל שלך!</h2>
+      <p style={{ color:'#6B6B90', fontSize:'14px', lineHeight:'1.6' }}>
         שלחנו קישור אימות לכתובת <strong>{email}</strong>.<br/>
         לחץ על הקישור ואז חזור לכאן להתחבר.
       </p>
@@ -46,10 +46,11 @@ export default function AuthPage() {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', minHeight:'100dvh' }}>
-      <div style={{ background:'#D4002A', padding:'32px 24px 24px', color:'#fff', textAlign:'center' }}>
-        <div style={{ fontSize:'36px', marginBottom:'8px' }}>⚽</div>
-        <h1 style={{ fontSize:'22px', fontWeight:'700' }}>LaLiga Predictions</h1>
-        <p style={{ fontSize:'13px', opacity:'0.8', marginTop:'4px' }}>ליגת ניחושים פרטית · עונת 2025/26</p>
+      <div style={{ background:'linear-gradient(135deg, #0D0F24 0%, #1A1040 100%)', padding:'40px 24px 28px', textAlign:'center', borderBottom:'1px solid rgba(255,215,0,0.2)' }}>
+        <img src="https://media.api-sports.io/football/teams/529.png" alt="Barça"
+          style={{ width:56, height:56, objectFit:'contain', marginBottom:10, filter:'drop-shadow(0 0 16px rgba(253,185,39,0.6))' }} />
+        <h1 style={{ fontSize:'20px', fontWeight:'800', color:'#FDB927', letterSpacing:'0.3px', lineHeight:1.3 }}>תחרות הניחושים של הלה ליגה</h1>
+        <p style={{ fontSize:'13px', color:'#A07FCC', marginTop:'7px', fontWeight:700, letterSpacing:0.5 }}>Barca Mania x FRIEREN · עונת 26/27</p>
       </div>
 
       <div style={{ padding:'24px 20px', flex:'1' }}>
@@ -61,8 +62,8 @@ export default function AuthPage() {
         <form onSubmit={handleSubmit}>
           {mode === 'register' && (
             <div className="form-group">
-              <label className="form-label">שם תצוגה (יוצג בטבלה)</label>
-              <input className="form-input" type="text" placeholder="למשל: יוסי כהן" value={name}
+              <label className="form-label">ניק טלגרם (יוצג בטבלה)</label>
+              <input className="form-input" type="text" placeholder="למשל: FRIEREN" value={name}
                 onChange={e => setName(e.target.value)} required maxLength={30} />
             </div>
           )}
