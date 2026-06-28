@@ -12,9 +12,9 @@ create table if not exists profiles (
 
 -- יצירה אוטומטית של פרופיל בעת הרשמה
 create or replace function handle_new_user()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into profiles (id, display_name)
+  insert into public.profiles (id, display_name)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1))
@@ -32,6 +32,7 @@ create trigger on_auth_user_created
 -- 2. MATCHES (משחקים)
 create table if not exists matches (
   id          uuid primary key default gen_random_uuid(),
+  external_id bigint unique,
   round       int not null,
   home_team   text not null,
   away_team   text not null,
@@ -40,6 +41,7 @@ create table if not exists matches (
   away_score  int,
   created_at  timestamptz default now()
 );
+alter table matches add column if not exists external_id bigint unique;
 
 -- פונקציה לבדיקה אם משחק נעול (שעה לפני קיקאוף)
 create or replace function is_match_locked(kickoff timestamptz)

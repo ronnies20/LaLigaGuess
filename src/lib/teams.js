@@ -50,5 +50,5 @@ export function formatKickoff(kickoff) {
     ' · ' + d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
 }
 
-export const CURRENT_ROUND = 1
+export const CURRENT_ROUND = 21
 export const TOTAL_ROUNDS = 38

@@ -138,14 +138,25 @@ body {
   margin-bottom: 10px;
 }
 
+/* ---- Teams header (בית / חוץ once above all cards) ---- */
+.teams-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 16px 4px;
+  font-size: 13px; font-weight: 800; letter-spacing: 1px;
+  color: rgba(253,185,39,0.75); text-transform: uppercase;
+}
+.teams-header-slot { width: 70px; text-align: center; }
+.teams-header-center { flex: 1; }
+
 /* ---- Match card ---- */
 .match-header {
   background: rgba(253,185,39,0.04);
-  padding: 6px 12px;
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 11px; color: var(--muted);
+  padding: 8px 12px;
+  display: flex; justify-content: center; align-items: center;
+  position: relative;
   border-bottom: 1px solid var(--border);
 }
+.match-date { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); }
 .match-body {
   padding: 14px 12px;
   display: flex; align-items: center; gap: 8px;
@@ -162,7 +173,7 @@ body {
 }
 .team-name { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.2; }
 
-.score-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.score-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; direction: ltr; }
 .score-input {
   width: 46px; height: 46px;
   border: 1.5px solid rgba(253,185,39,0.22);
@@ -196,9 +207,9 @@ body {
 
 /* ---- Points badges ---- */
 .pts-badge {
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 38px; height: 38px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800; flex-shrink: 0;
+  font-size: 15px; font-weight: 800; flex-shrink: 0;
 }
 .pts-exact {
   background: linear-gradient(135deg, #00C853, #00E676, #69F0AE);
@@ -216,6 +227,42 @@ body {
   border: 1px solid rgba(255,23,68,0.3);
 }
 .pts-none { background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px; }
+
+/* ---- Completed match: 3-section result area ---- */
+.result-area {
+  display: flex; align-items: stretch; direction: ltr; flex-shrink: 0;
+}
+.result-col {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 5px; padding: 2px 10px;
+}
+.result-col-label {
+  font-size: 9px; font-weight: 700; color: var(--muted);
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.result-sep {
+  width: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; flex-shrink: 0;
+}
+.guess-chip {
+  font-size: 20px; font-weight: 800;
+  padding: 6px 10px; border-radius: 10px;
+  border: 1.5px solid; min-width: 60px;
+  text-align: center; direction: ltr;
+}
+.guess-exact { color: #00E676; border-color: rgba(0,230,118,0.45); background: rgba(0,230,118,0.09); }
+.guess-dir   { color: #FDB927; border-color: rgba(253,185,39,0.45); background: rgba(253,185,39,0.08); }
+.guess-miss  { color: #FF1744; border-color: rgba(255,23,68,0.3);   background: rgba(255,23,68,0.07); }
+.guess-none  { color: var(--muted); border-color: var(--border);    background: transparent; }
+.final-score-chip {
+  font-size: 20px; font-weight: 800; color: var(--gold);
+  background: rgba(253,185,39,0.07); border: 1px solid rgba(253,185,39,0.22);
+  border-radius: 10px; padding: 6px 10px; direction: ltr; min-width: 60px;
+  text-align: center;
+}
+
+/* ---- Save button emoji on left ---- */
+.save-btn { direction: ltr; gap: 10px; }
+.save-emoji { font-size: 22px; line-height: 1; }
 
 /* ---- Buttons ---- */
 .btn {

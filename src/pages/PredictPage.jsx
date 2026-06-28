@@ -101,7 +101,7 @@ export default function PredictPage() {
     setSaving(true)
     let count = 0
     for (const m of matches) {
-      if (isMatchLocked(m.kickoff)) continue
+      if (isMatchLocked(m.kickoff) || m.home_score !== null) continue
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') continue
       try {
@@ -123,16 +123,16 @@ export default function PredictPage() {
     setTimeout(() => setSaveMsg(''), 3500)
   }
 
-  const openMatches = matches.filter(m => !isMatchLocked(m.kickoff))
+  const openMatches = matches.filter(m => !isMatchLocked(m.kickoff) && m.home_score === null)
 
   return (
     <div className="page">
       <div className="content">
         <div className="round-nav">
-          {/* RTL: first button appears on RIGHT → increase round (go to next) */}
-          <button className="round-nav-btn" onClick={() => setRound(r => r - 1)} disabled={round <= 1}>‹</button>
+          {/* circular: from round 1 go back to last round, and vice versa */}
+          <button className="round-nav-btn" onClick={() => setRound(r => r <= 1 ? TOTAL_ROUNDS : r - 1)}>‹</button>
           <div className="round-label">מחזור {round}</div>
-          <button className="round-nav-btn" onClick={() => setRound(r => r + 1)} disabled={round >= TOTAL_ROUNDS}>›</button>
+          <button className="round-nav-btn" onClick={() => setRound(r => r >= TOTAL_ROUNDS ? 1 : r + 1)}>›</button>
         </div>
 
         {loading ? (
@@ -140,61 +140,86 @@ export default function PredictPage() {
         ) : matches.length === 0 ? (
           <div className="empty">אין משחקים במחזור זה</div>
         ) : (
-          matches.map(m => {
-            const locked = isMatchLocked(m.kickoff)
-            const g = guesses[m.id] || { h: '', a: '' }
-            const pts = calcPoints(
-              g.h !== '' ? parseInt(g.h) : null,
-              g.a !== '' ? parseInt(g.a) : null,
-              m.home_score, m.away_score
-            )
-            const hasReal = m.home_score !== null
+          <>
+            {/* One-time בית/חוץ header — home on right, away on left in RTL */}
+            <div className="teams-header">
+              <span className="teams-header-slot">בית</span>
+              <span className="teams-header-center" />
+              <span className="teams-header-slot">חוץ</span>
+            </div>
 
-            return (
-              <div className="card" key={m.id}>
-                <div className="match-header">
-                  <span>{formatKickoff(m.kickoff)}</span>
-                  <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
-                    {locked && <span className="badge badge-lock">🔒 נעול</span>}
-                    {hasReal && (
-                      <span style={{ fontWeight:'700', fontSize:'14px', color:'#FDB927' }}>
-                        {m.home_score}:{m.away_score}
-                      </span>
-                    )}
+            {matches.map(m => {
+              const locked          = isMatchLocked(m.kickoff)
+              const hasReal         = m.home_score !== null
+              const effectiveLocked = locked || hasReal
+              const g               = guesses[m.id] || { h: '', a: '' }
+              const hasGuess        = g.h !== '' && g.a !== ''
+              const pts             = hasReal && hasGuess
+                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score)
+                : null
+              const guessClass = pts === 3 ? 'guess-exact' : pts === 1 ? 'guess-dir' : pts === 0 ? 'guess-miss' : 'guess-none'
+
+              return (
+                <div className="card" key={m.id}>
+                  <div className="match-header">
+                    <span className="match-date">{formatKickoff(m.kickoff)}</span>
+                    {locked && !hasReal && <span className="badge badge-lock" style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}>🔒 נעול</span>}
                   </div>
-                </div>
-                <div className="match-body">
-                  <TeamDisplay name={m.home_team} />
-                  <div className="score-wrap">
-                    <input
-                      className={`score-input${flash[m.id] ? ' saved' : ''}`}
-                      type="number" min="0" max="20" inputMode="numeric"
-                      value={g.h} disabled={locked}
-                      onChange={e => handleInput(m.id, 'h', e.target.value)}
-                    />
-                    <span className="score-sep">:</span>
-                    <input
-                      className={`score-input${flash[m.id] ? ' saved' : ''}`}
-                      type="number" min="0" max="20" inputMode="numeric"
-                      value={g.a} disabled={locked}
-                      onChange={e => handleInput(m.id, 'a', e.target.value)}
-                    />
-                    <div style={{ marginRight:'6px' }}>
-                      <PtsBadge pts={hasReal ? pts : null} />
+                  <div className="match-body">
+                    <TeamDisplay name={m.home_team} />
+                    <div className="score-wrap">
+                      {hasReal ? (
+                        <div className="result-area">
+                          <div className="result-col">
+                            <span className="result-col-label">ניחוש</span>
+                            <div className={`guess-chip ${guessClass}`}>{hasGuess ? `${g.h}:${g.a}` : '—'}</div>
+                          </div>
+                          <div className="result-sep" />
+                          <div className="result-col">
+                            <span className="result-col-label">סופי</span>
+                            <div className="final-score-chip">{m.home_score}:{m.away_score}</div>
+                          </div>
+                          <div className="result-sep" />
+                          <div className="result-col">
+                            <span className="result-col-label">נק׳</span>
+                            <PtsBadge pts={pts} />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <input
+                            className={`score-input${flash[m.id] ? ' saved' : ''}`}
+                            type="number" min="0" max="20" inputMode="numeric"
+                            value={g.h} disabled={effectiveLocked}
+                            onChange={e => handleInput(m.id, 'h', e.target.value)}
+                          />
+                          <span className="score-sep">:</span>
+                          <input
+                            className={`score-input${flash[m.id] ? ' saved' : ''}`}
+                            type="number" min="0" max="20" inputMode="numeric"
+                            value={g.a} disabled={effectiveLocked}
+                            onChange={e => handleInput(m.id, 'a', e.target.value)}
+                          />
+                          <div style={{ marginRight:'6px' }}>
+                            <PtsBadge pts={null} />
+                          </div>
+                        </>
+                      )}
                     </div>
+                    <TeamDisplay name={m.away_team} />
                   </div>
-                  <TeamDisplay name={m.away_team} />
                 </div>
-              </div>
-            )
-          })
+              )
+            })}
+          </>
         )}
       </div>
 
       {openMatches.length > 0 && (
         <div className="save-bar">
-          <button ref={saveBtnRef} className="btn btn-primary btn-full" onClick={saveAll} disabled={saving}>
-            {saving ? '🎲 שומר...' : '🎰 שמור ניחושים'}
+          <button ref={saveBtnRef} className="btn btn-primary btn-full save-btn" onClick={saveAll} disabled={saving}>
+            <span className="save-emoji">{saving ? '🎲' : '🎰'}</span>
+            <span>{saving ? 'שומר...' : 'שמור ניחושים'}</span>
           </button>
           <div className="save-msg">{saveMsg}</div>
         </div>
