@@ -595,7 +595,7 @@ export default function PredictPage() {
                     const freq = {}
                     others.forEach(o => { const k = `${o.h}:${o.a}`; freq[k] = (freq[k] || 0) + 1 })
                     const total = others.length
-                    const top5 = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,5)
+                    const top5 = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,3)
                     const maxCount = top5[0][1]
                     return (
                       <>
