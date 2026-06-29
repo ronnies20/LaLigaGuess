@@ -106,7 +106,7 @@ export default function LeaderboardPage() {
                       : initial(r.display_name)
                     }
                   </div>
-                  <div className="lb-name">{r.display_name}</div>
+                  <div className="lb-name">{r.display_name}{r.display_name === 'CAT' && ' 🤖'}</div>
                   {streak >= 3 && <div className="lb-streak-badge">🔥 {streak}</div>}
                 </div>
                 <div className="lb-num">{ex(r) ?? 0}</div>
