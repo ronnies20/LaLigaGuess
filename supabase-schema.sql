@@ -164,7 +164,37 @@ create policy "predictions_update" on predictions for update
     not (select is_match_locked(kickoff) from matches where id = match_id)
   );
 
--- 8. STORAGE — bucket לאווטרים
+-- 8. VIEW: רצף נוכחי של ניחושים מדויקים רצופים (לפי כיפוף זמן)
+-- סופר כמה ניחושים מדויקים אחרונים יש לכל שחקן ברצף, ללא הפסקה
+create or replace view current_streak_view as
+with ordered as (
+  select
+    p.user_id,
+    m.kickoff,
+    case when p.points = 3 then 1 else 0 end as is_exact,
+    row_number() over (partition by p.user_id order by m.kickoff desc) as rn
+  from predictions p
+  join matches m on m.id = p.match_id
+  where p.points is not null
+),
+first_miss as (
+  select user_id, min(rn) as miss_rn
+  from ordered
+  where is_exact = 0
+  group by user_id
+)
+select
+  o.user_id,
+  count(*)::int as current_streak
+from ordered o
+left join first_miss fm on fm.user_id = o.user_id
+where o.is_exact = 1
+  and (fm.miss_rn is null or o.rn < fm.miss_rn)
+group by o.user_id;
+
+grant select on current_streak_view to anon, authenticated;
+
+-- 9. STORAGE — bucket לאווטרים
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do nothing;

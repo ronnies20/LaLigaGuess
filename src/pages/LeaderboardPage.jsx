@@ -8,27 +8,6 @@ const BGS    = ['#e8f0ff','#e8f8ee','#ffe8ea','#EEEDFE','#fff8e8','#fff3e0','#e8
 
 function initial(name) { return name ? name[0].toUpperCase() : '?' }
 
-function computeStreaks(roundData) {
-  // Group by user, sorted desc by round
-  const byUser = {}
-  roundData.forEach(r => {
-    if (!byUser[r.user_id]) byUser[r.user_id] = []
-    byUser[r.user_id].push(r)
-  })
-  const streakMap = {}
-  Object.entries(byUser).forEach(([uid, rounds]) => {
-    // rounds already sorted desc — count consecutive rounds with round_exact > 0
-    let streak = 0
-    let expected = rounds[0].round
-    for (const r of rounds) {
-      if (r.round !== expected) break   // gap in rounds
-      if (r.round_exact > 0) { streak++; expected-- }
-      else break
-    }
-    streakMap[uid] = streak
-  })
-  return streakMap
-}
 
 export default function LeaderboardPage() {
   const { user } = useAuth()
@@ -56,12 +35,14 @@ export default function LeaderboardPage() {
     setStreaks({})
     try {
       if (view === 'season') {
-        const [{ data }, { data: roundData }] = await Promise.all([
+        const [{ data }, { data: streakData }] = await Promise.all([
           supabase.from('leaderboard_view').select('*').order('total_points', { ascending: false }).limit(100),
-          supabase.from('round_leaderboard_view').select('user_id, round, round_exact').order('round', { ascending: false }),
+          supabase.from('current_streak_view').select('user_id, current_streak'),
         ])
         setRows(data || [])
-        if (roundData) setStreaks(computeStreaks(roundData))
+        const sm = {}
+        streakData?.forEach(r => { sm[r.user_id] = r.current_streak })
+        setStreaks(sm)
       } else {
         const { data } = await supabase
           .from('round_leaderboard_view')
