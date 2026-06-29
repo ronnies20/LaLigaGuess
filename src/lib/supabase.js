@@ -110,6 +110,17 @@ export async function uploadAvatar(file, userId) {
   return data.publicUrl
 }
 
+// Returns the earliest round that still has unplayed matches (open for prediction)
+export async function getCurrentRound() {
+  const { data } = await supabase
+    .from('matches')
+    .select('round')
+    .is('home_score', null)
+    .order('round', { ascending: true })
+    .limit(1)
+  return data?.[0]?.round ?? 1
+}
+
 export async function getMyStats(userId) {
   const { data, error } = await supabase
     .from('predictions')

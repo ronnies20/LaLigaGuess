@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase, upsertPrediction } from '../lib/supabase'
+import { supabase, upsertPrediction, getCurrentRound } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
-import { getTeamInfo, getTeamLogoUrl, calcPoints, isMatchLocked, formatKickoff, CURRENT_ROUND, TOTAL_ROUNDS } from '../lib/teams'
+import { getTeamInfo, getTeamLogoUrl, calcPoints, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated } from '../lib/effects'
 
 function PtsBadge({ pts }) {
@@ -39,7 +39,7 @@ function TeamDisplay({ name }) {
 
 export default function PredictPage() {
   const { user } = useAuth()
-  const [round, setRound]     = useState(CURRENT_ROUND)
+  const [round, setRound]     = useState(null)
   const [matches, setMatches] = useState([])
   const [guesses, setGuesses] = useState({})
   const [saved, setSaved]     = useState({})
@@ -49,7 +49,12 @@ export default function PredictPage() {
   const [saveMsg, setSaveMsg] = useState('')
   const saveBtnRef            = useRef(null)
 
+  useEffect(() => {
+    getCurrentRound().then(r => setRound(r)).catch(() => setRound(1))
+  }, [])
+
   const loadRound = useCallback(async () => {
+    if (round === null) return
     setLoading(true)
     try {
       const { data: matchData } = await supabase
@@ -141,11 +146,11 @@ export default function PredictPage() {
           <div className="empty">אין משחקים במחזור זה</div>
         ) : (
           <>
-            {/* One-time בית/חוץ header — home on right, away on left in RTL */}
+            {/* Home on left, Away on right — matches API Football convention */}
             <div className="teams-header">
-              <span className="teams-header-slot">בית</span>
+              <span className="teams-header-slot">Away</span>
               <span className="teams-header-center" />
-              <span className="teams-header-slot">חוץ</span>
+              <span className="teams-header-slot">Home</span>
             </div>
 
             {matches.map(m => {
@@ -166,7 +171,7 @@ export default function PredictPage() {
                     {locked && !hasReal && <span className="badge badge-lock" style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}>🔒 נעול</span>}
                   </div>
                   <div className="match-body">
-                    <TeamDisplay name={m.home_team} />
+                    <TeamDisplay name={m.away_team} />
                     <div className="score-wrap">
                       {hasReal ? (
                         <div className="result-area">
@@ -206,7 +211,7 @@ export default function PredictPage() {
                         </>
                       )}
                     </div>
-                    <TeamDisplay name={m.away_team} />
+                    <TeamDisplay name={m.home_team} />
                   </div>
                 </div>
               )

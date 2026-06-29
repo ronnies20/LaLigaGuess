@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentRound } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
-import { CURRENT_ROUND } from '../lib/teams'
 
 const COLORS = ['#004D9E','#00883A','#CE1021','#534AB7','#C9A84C','#EF7D00','#005AA7','#D4002A','#6A0DAD','#0F6E56']
 const BGS    = ['#e8f0ff','#e8f8ee','#ffe8ea','#EEEDFE','#fff8e8','#fff3e0','#e8f0ff','#ffe8ea','#f0e8ff','#e1f5ee']
@@ -15,10 +14,14 @@ export default function LeaderboardPage() {
   const [rows, setRows]       = useState([])
   const [streaks, setStreaks] = useState({})
   const [loading, setLoading] = useState(true)
-  const [round, setRound]     = useState(CURRENT_ROUND)
+  const [round, setRound]     = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  useEffect(() => { loadData() }, [view, round, refreshKey])
+  useEffect(() => {
+    getCurrentRound().then(r => setRound(r)).catch(() => setRound(1))
+  }, [])
+
+  useEffect(() => { if (round !== null) loadData() }, [view, round, refreshKey])
 
   useEffect(() => {
     const channel = supabase
