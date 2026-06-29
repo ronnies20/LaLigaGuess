@@ -7,8 +7,10 @@
 create table if not exists profiles (
   id            uuid primary key references auth.users(id) on delete cascade,
   display_name  text not null,
+  avatar_url    text,
   created_at    timestamptz default now()
 );
+alter table profiles add column if not exists avatar_url text;
 
 -- יצירה אוטומטית של פרופיל בעת הרשמה
 create or replace function handle_new_user()
