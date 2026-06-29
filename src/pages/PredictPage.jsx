@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
-import { getTeamInfo, getTeamLogoUrl, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
+import { getTeamInfo, getTeamLogoUrl, isMatchLocked, isMatchLive, isMatchFinished, getStatusLabel, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
 function generateShareCanvas({ matches, guesses, round, userStreak, displayName }) {
@@ -155,6 +155,8 @@ export default function PredictPage() {
   const [currentRound, setCurrentRound] = useState(null)
   const [jokerMatchId, setJokerMatchId] = useState(null)
   const [userStreak, setUserStreak]     = useState(0)
+  const [othersGuesses, setOthersGuesses] = useState({})
+  const [expandedMatch, setExpandedMatch] = useState(null)
   const [shareMsg, setShareMsg]         = useState('')
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareImageUrl, setShareImageUrl]   = useState('')
@@ -186,17 +188,40 @@ export default function PredictPage() {
         .from('predictions').select('*')
         .eq('user_id', user.id)
         .in('match_id', (matchData || []).map(m => m.id))
+      const allMatchIds = (matchData || []).map(m => m.id)
       setMatches(matchData || [])
+
       const g = {}, s = {}
       let joker = null
       ;(predData || []).forEach(p => {
-        g[p.match_id] = { h: String(p.home_guess ?? ''), a: String(p.away_guess ?? ''), joker: !!p.is_joker, pts: p.points }
+        g[p.match_id] = {
+          h: String(p.home_guess ?? ''), a: String(p.away_guess ?? ''),
+          joker: !!p.is_joker, pts: p.points,
+          penMin: String(p.penalty_min ?? ''), penMax: String(p.penalty_max ?? ''),
+          penBonus: p.penalty_bonus ?? 0,
+        }
         s[p.match_id] = true
         if (p.is_joker) joker = p.match_id
       })
       setGuesses(g)
       setSaved(s)
       setJokerMatchId(joker)
+
+      // Others' predictions — only for locked matches
+      const lockedIds = (matchData || []).filter(m => isMatchLocked(m.kickoff)).map(m => m.id)
+      if (lockedIds.length) {
+        const { data: othersData } = await supabase
+          .from('predictions')
+          .select('match_id, user_id, home_guess, away_guess, points, is_joker, profiles(display_name, avatar_url)')
+          .in('match_id', lockedIds)
+          .neq('user_id', user.id)
+        const og = {}
+        ;(othersData || []).forEach(p => {
+          if (!og[p.match_id]) og[p.match_id] = []
+          og[p.match_id].push({ userId: p.user_id, name: p.profiles?.display_name, avatar: p.profiles?.avatar_url, h: p.home_guess, a: p.away_guess, pts: p.points, joker: !!p.is_joker })
+        })
+        setOthersGuesses(og)
+      }
 
       const { data: streakData } = await supabase
         .from('current_streak_view').select('current_streak')
@@ -207,6 +232,26 @@ export default function PredictPage() {
   }, [round, user.id])
 
   useEffect(() => { loadRound() }, [loadRound])
+
+  // Realtime: live match score updates + own points updates
+  useEffect(() => {
+    if (!round) return
+    const channel = supabase.channel(`predict-round-${round}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, payload => {
+        if (payload.new.round !== round) return
+        setMatches(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m))
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'predictions' }, payload => {
+        if (payload.new.user_id !== user.id) return
+        setGuesses(prev => {
+          const ex = prev[payload.new.match_id]
+          if (!ex) return prev
+          return { ...prev, [payload.new.match_id]: { ...ex, pts: payload.new.points, penBonus: payload.new.penalty_bonus ?? 0 } }
+        })
+      })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [round, user.id])
 
   useEffect(() => {
     if (!currentRound) return
@@ -220,6 +265,7 @@ export default function PredictPage() {
     let delay = 0
     matches.forEach(m => {
       if (m.home_score === null || celebratedRef.current.has(m.id)) return
+      if (isMatchLive(m.status)) return  // don't celebrate during live
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') return
       const pts = g.pts ?? null
@@ -282,6 +328,12 @@ export default function PredictPage() {
     setGuesses(g => ({ ...g, [matchId]: { ...g[matchId], [side]: clean } }))
   }
 
+  function handlePenaltyInput(matchId, side, val) {
+    const clean = val.replace(/\D/g, '').slice(0, 2)
+    const clamped = clean && parseInt(clean) > 90 ? '90' : clean
+    setGuesses(g => ({ ...g, [matchId]: { ...g[matchId], [side]: clamped } }))
+  }
+
   async function saveAll() {
     setSaving(true)
     let count = 0
@@ -290,7 +342,9 @@ export default function PredictPage() {
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') continue
       try {
-        await upsertPrediction(user.id, m.id, parseInt(g.h), parseInt(g.a), jokerMatchId === m.id)
+        const penMin = g.penMin ? parseInt(g.penMin) : null
+        const penMax = g.penMax ? parseInt(g.penMax) : null
+        await upsertPrediction(user.id, m.id, parseInt(g.h), parseInt(g.a), jokerMatchId === m.id, penMin, penMax)
         setSaved(s => ({ ...s, [m.id]: true }))
         setFlash(f => ({ ...f, [m.id]: true }))
         setTimeout(() => setFlash(f => ({ ...f, [m.id]: false })), 400)
@@ -408,21 +462,28 @@ export default function PredictPage() {
 
             {matches.map(m => {
               const locked          = isMatchLocked(m.kickoff)
-              const hasReal         = m.home_score !== null
-              const effectiveLocked = locked || hasReal
-              const g               = guesses[m.id] || { h: '', a: '', joker: false }
+              const live            = isMatchLive(m.status)
+              const finished        = isMatchFinished(m.status) || (m.home_score !== null && !live && !m.status)
+              const hasScore        = m.home_score !== null
+              const effectiveLocked = locked || hasScore
+              const g               = guesses[m.id] || { h: '', a: '', joker: false, penMin: '', penMax: '', penBonus: 0 }
               const hasGuess        = g.h !== '' && g.a !== ''
               const isThisJoker     = jokerMatchId === m.id
               const jokerTaken      = jokerMatchId !== null && !isThisJoker
-              const pts        = hasReal && hasGuess ? (g.pts ?? null) : null
+              const pts        = hasScore && hasGuess ? (g.pts ?? null) : null
               const guessClass = (pts >= 3) ? 'guess-exact' : (pts === 1 || pts === 2) ? 'guess-dir' : (pts !== null && pts <= 0) ? 'guess-miss' : 'guess-none'
+              const isRMMatch       = m.home_team === 'Real Madrid' || m.away_team === 'Real Madrid'
+              const others          = othersGuesses[m.id] || []
 
               return (
                 <div className={`card${isThisJoker ? ' joker-card' : ''}${m.is_special ? ' special-card' : ''}`} key={m.id}>
                   {m.is_special && <div className="special-strip">⭐ משחק מיוחד — ניחוש שווה כפל נקודות</div>}
                   <div className="match-header">
-                    <span className="match-date">{formatKickoff(m.kickoff)}</span>
-                    {locked && !hasReal && <span className="badge badge-lock" style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}>🔒 נעול</span>}
+                    <span className="match-date">
+                      {live ? <span className="live-dot">🔴</span> : null}
+                      {getStatusLabel(m.status) || formatKickoff(m.kickoff)}
+                    </span>
+                    {locked && !hasScore && <span className="badge badge-lock" style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}>🔒 נעול</span>}
                     {!effectiveLocked && (
                       <button
                         className={`joker-btn${isThisJoker ? ' joker-active' : ''}${jokerTaken ? ' joker-taken' : ''}`}
@@ -431,13 +492,13 @@ export default function PredictPage() {
                         title="ג׳וקר — מדויק = 6 נקודות, טעות = -1"
                       >🃏</button>
                     )}
-                    {hasReal && g.joker && <span style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)',fontSize:'16px'}}>🃏</span>}
+                    {hasScore && g.joker && <span style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)',fontSize:'16px'}}>🃏</span>}
                   </div>
                   <div className="match-body">
                     <TeamDisplay name={m.away_team} />
                     <div className="score-wrap">
-                      {hasReal ? (
-                        <div className="result-area">
+                      {hasScore ? (
+                        <div className={`result-area${live ? ' result-live' : ''}`}>
                           <div className="result-col">
                             <span className="result-col-label">ניחוש</span>
                             <div style={{ position: 'relative' }}>
@@ -448,13 +509,14 @@ export default function PredictPage() {
                           </div>
                           <div className="result-sep" />
                           <div className="result-col">
-                            <span className="result-col-label">סופי</span>
-                            <div className="final-score-chip">{m.home_score}:{m.away_score}</div>
+                            <span className="result-col-label">{live ? '🔴' : 'סופי'}</span>
+                            <div className={`final-score-chip${live ? ' live-score' : ''}`}>{m.home_score}:{m.away_score}</div>
                           </div>
                           <div className="result-sep" />
                           <div className="result-col">
                             <span className="result-col-label">נק׳</span>
                             <PtsBadge pts={pts} isJoker={!!g.joker} isSpecial={!!m.is_special} />
+                            {(g.penBonus ?? 0) > 0 && <div className="pen-bonus-badge">+{g.penBonus}🎯</div>}
                           </div>
                         </div>
                       ) : (
@@ -480,6 +542,69 @@ export default function PredictPage() {
                     </div>
                     <TeamDisplay name={m.home_team} />
                   </div>
+                  {/* Penalty prediction — Real Madrid matches only */}
+                  {isRMMatch && (
+                    <div className="penalty-section">
+                      {!effectiveLocked ? (
+                        <>
+                          <span className="penalty-label">🎯 ניחוש פנדל לריאל מדריד (אופציונלי)</span>
+                          <div className="penalty-inputs">
+                            <span className="penalty-unit">מדקה</span>
+                            <input type="number" min="1" max="90" inputMode="numeric" placeholder="1"
+                              className="penalty-input" value={g.penMin}
+                              onChange={e => handlePenaltyInput(m.id, 'penMin', e.target.value)} />
+                            <span>–</span>
+                            <input type="number" min="1" max="90" inputMode="numeric" placeholder="90"
+                              className="penalty-input" value={g.penMax}
+                              onChange={e => handlePenaltyInput(m.id, 'penMax', e.target.value)} />
+                          </div>
+                        </>
+                      ) : m.penalty_minute != null ? (
+                        <div className="penalty-result">
+                          <span>פנדל בדקה {m.penalty_minute} — </span>
+                          {g.penMin && g.penMax && m.penalty_minute >= parseInt(g.penMin) && m.penalty_minute <= parseInt(g.penMax)
+                            ? <span className="pen-hit">✅ ניחוש מדויק! +3נק׳</span>
+                            : g.penMin && g.penMax
+                              ? <span className="pen-miss">❌ ניחשת {g.penMin}–{g.penMax}</span>
+                              : <span className="pen-no">לא ניחשת</span>}
+                        </div>
+                      ) : hasScore && finished ? (
+                        <div className="penalty-result pen-no">לא היה פנדל לריאל במשחק זה</div>
+                      ) : (g.penMin && g.penMax) ? (
+                        <div className="penalty-result pen-pending">🎯 ניחשת: {g.penMin}–{g.penMax} דקה</div>
+                      ) : null}
+                    </div>
+                  )}
+
+                  {/* Others' predictions — locked matches */}
+                  {effectiveLocked && (
+                    <button className="others-toggle-btn" onClick={() => setExpandedMatch(p => p === m.id ? null : m.id)}>
+                      👥 {others.length} ניחושים {expandedMatch === m.id ? '▲' : '▼'}
+                    </button>
+                  )}
+                  {expandedMatch === m.id && (
+                    <div className="others-list">
+                      {others.length === 0
+                        ? <div className="others-empty">אין ניחושים נוספים</div>
+                        : others.map(o => {
+                            const oCls = o.pts >= 3 ? 'o-exact' : o.pts >= 1 ? 'o-dir' : o.pts != null ? 'o-miss' : ''
+                            return (
+                              <div key={o.userId} className="others-row">
+                                <div className="others-avatar">
+                                  {o.avatar ? <img src={o.avatar} alt={o.name} /> : (o.name?.[0] || '?')}
+                                </div>
+                                <span className="others-name">{o.name}</span>
+                                {o.joker && <span className="others-joker">🃏</span>}
+                                <span className={`others-guess ${oCls}`}>{o.a}:{o.h}</span>
+                                {o.pts != null && (
+                                  <span className={`others-pts ${oCls}`}>{o.pts >= 0 ? '+' : ''}{o.pts}</span>
+                                )}
+                              </div>
+                            )
+                          })
+                      }
+                    </div>
+                  )}
                 </div>
               )
             })}

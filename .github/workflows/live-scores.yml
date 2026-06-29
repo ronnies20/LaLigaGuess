@@ -1,0 +1,36 @@
+name: Live Scores Update
+
+on:
+  schedule:
+    - cron: '* * * * *'   # every minute; job runs the script twice → ~30s cadence
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-save @supabase/supabase-js
+
+      - name: Update scores (run 1)
+        run: node scripts/update-live-scores.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+
+      - name: Wait 30 seconds
+        run: sleep 30
+
+      - name: Update scores (run 2)
+        run: node scripts/update-live-scores.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}

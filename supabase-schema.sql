@@ -43,7 +43,10 @@ create table if not exists matches (
   away_score  int,
   created_at  timestamptz default now()
 );
-alter table matches add column if not exists external_id bigint unique;
+alter table matches add column if not exists external_id    bigint unique;
+alter table matches add column if not exists status         text default 'NS';
+alter table matches add column if not exists is_special     boolean default false;
+alter table matches add column if not exists penalty_minute int;
 
 -- פונקציה לבדיקה אם משחק נעול (שעה לפני קיקאוף)
 create or replace function is_match_locked(kickoff timestamptz)
@@ -55,14 +58,18 @@ create index if not exists matches_round_idx on matches(round);
 
 -- 3. PREDICTIONS (ניחושים)
 create table if not exists predictions (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid not null references profiles(id) on delete cascade,
-  match_id    uuid not null references matches(id) on delete cascade,
-  home_guess  int not null,
-  away_guess  int not null,
-  points      int,
-  created_at  timestamptz default now(),
-  updated_at  timestamptz default now(),
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references profiles(id) on delete cascade,
+  match_id      uuid not null references matches(id) on delete cascade,
+  home_guess    int not null,
+  away_guess    int not null,
+  points        int,
+  is_joker      boolean default false,
+  penalty_min   int,
+  penalty_max   int,
+  penalty_bonus int default 0,
+  created_at    timestamptz default now(),
+  updated_at    timestamptz default now(),
   unique(user_id, match_id)
 );
 
@@ -161,13 +168,13 @@ create trigger on_match_result
   after update of home_score, away_score on matches
   for each row execute function update_match_points();
 
--- 5. VIEW: טבלת דירוג עונה שלמה
+-- 5. VIEW: טבלת דירוג עונה שלמה (כולל בונוס פנדל)
 create or replace view leaderboard_view as
 select
   p.user_id,
   pr.display_name,
   pr.avatar_url,
-  coalesce(sum(p.points), 0)                                                                     as total_points,
+  coalesce(sum(p.points), 0) + coalesce(sum(p.penalty_bonus), 0)                                 as total_points,
   count(*) filter (where p.home_guess = m.home_score and p.away_guess = m.away_score)            as exact_count,
   count(*) filter (where p.points > 0
                      and not (p.home_guess = m.home_score and p.away_guess = m.away_score))      as direction_count,
@@ -179,16 +186,17 @@ join matches   m  on m.id  = p.match_id
 where p.points is not null
 group by p.user_id, pr.display_name, pr.avatar_url;
 
--- 6. VIEW: טבלת דירוג לפי מחזור
+-- 6. VIEW: טבלת דירוג לפי מחזור (כולל בונוס פנדל)
 create or replace view round_leaderboard_view as
 select
   p.user_id,
   pr.display_name,
   pr.avatar_url,
   m.round,
-  coalesce(sum(p.points), 0)             as round_points,
-  count(*) filter (where p.points = 3)   as round_exact,
-  count(*) filter (where p.points = 1)   as round_direction
+  coalesce(sum(p.points), 0) + coalesce(sum(p.penalty_bonus), 0)                                as round_points,
+  count(*) filter (where p.home_guess = m.home_score and p.away_guess = m.away_score)           as round_exact,
+  count(*) filter (where p.points > 0
+                     and not (p.home_guess = m.home_score and p.away_guess = m.away_score))     as round_direction
 from predictions p
 join profiles pr on pr.id = p.user_id
 join matches m   on m.id  = p.match_id
@@ -303,6 +311,34 @@ create policy "avatars_update" on storage.objects
     bucket_id = 'avatars'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- =====================================================
+-- 13. PENALTY BONUS — כשמוגדר penalty_minute על משחק ריאל מדריד
+-- =====================================================
+alter table predictions add column if not exists penalty_min   int;
+alter table predictions add column if not exists penalty_max   int;
+alter table predictions add column if not exists penalty_bonus int default 0;
+
+create or replace function update_penalty_bonus()
+returns trigger language plpgsql security definer as $$
+begin
+  if new.penalty_minute is not null then
+    update predictions
+    set penalty_bonus = case
+      when penalty_min is not null and penalty_max is not null
+        and new.penalty_minute between penalty_min and penalty_max then 3
+      else 0
+    end
+    where match_id = new.id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_penalty_scored on matches;
+create trigger on_penalty_scored
+  after update of penalty_minute on matches
+  for each row execute function update_penalty_bonus();
 
 -- =====================================================
 -- 10. ROUND MESSAGES (טראש טוק)

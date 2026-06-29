@@ -53,13 +53,13 @@ export async function getPredictions(userId, round) {
   return data
 }
 
-export async function upsertPrediction(userId, matchId, homeGuess, awayGuess, isJoker = false) {
+export async function upsertPrediction(userId, matchId, homeGuess, awayGuess, isJoker = false, penaltyMin = null, penaltyMax = null) {
+  const row = { user_id: userId, match_id: matchId, home_guess: homeGuess, away_guess: awayGuess, is_joker: isJoker }
+  if (penaltyMin !== null) row.penalty_min = penaltyMin
+  if (penaltyMax !== null) row.penalty_max = penaltyMax
   const { data, error } = await supabase
     .from('predictions')
-    .upsert(
-      { user_id: userId, match_id: matchId, home_guess: homeGuess, away_guess: awayGuess, is_joker: isJoker },
-      { onConflict: 'user_id,match_id' }
-    )
+    .upsert(row, { onConflict: 'user_id,match_id' })
     .select()
   if (error) throw error
   return data

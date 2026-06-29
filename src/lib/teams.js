@@ -42,6 +42,17 @@ export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = f
   return isSpecial ? dir * 2 : dir
 }
 
+export const LIVE_STATUSES     = ['1H','HT','2H','ET','BT','P','INT']
+export const FINISHED_STATUSES = ['FT','AET','PEN']
+
+export function isMatchLive(status)     { return LIVE_STATUSES.includes(status) }
+export function isMatchFinished(status) { return FINISHED_STATUSES.includes(status) }
+
+export function getStatusLabel(status) {
+  const map = { '1H':'🔴 מח׳ ראשונה', HT:'🔴 הפסקה', '2H':'🔴 מח׳ שנייה', ET:'🔴 הארכות', P:'🔴 פנדלים' }
+  return map[status] || null
+}
+
 export function isMatchLocked(kickoff) {
   const kickoffDate = new Date(kickoff)
   const lockTime = new Date(kickoffDate.getTime() - 5 * 60 * 1000)

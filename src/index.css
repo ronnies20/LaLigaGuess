@@ -665,3 +665,67 @@ body {
   border: 1px solid rgba(255,255,255,0.12);
   color: rgba(255,255,255,0.7);
 }
+
+/* ---- Live scores ---- */
+.live-dot { animation: blink 1s step-start infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.result-live .result-col-label { color: #ff5252; }
+.live-score { color: #ff5252 !important; border-color: rgba(255,82,82,0.4) !important; }
+
+/* ---- Penalty prediction ---- */
+.penalty-section {
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 10px 12px 8px;
+  font-size: 12px;
+}
+.penalty-label { color: rgba(255,255,255,0.55); display: block; margin-bottom: 6px; }
+.penalty-inputs { display: flex; align-items: center; gap: 6px; direction: ltr; }
+.penalty-input {
+  width: 44px; text-align: center; padding: 5px 4px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 7px; color: #fff; font-size: 13px;
+}
+.penalty-unit { color: rgba(255,255,255,0.45); font-size: 12px; }
+.penalty-result { color: rgba(255,255,255,0.6); }
+.pen-hit  { color: #66bb6a; font-weight: 600; }
+.pen-miss { color: #ef5350; }
+.pen-no   { color: rgba(255,255,255,0.35); }
+.pen-pending { color: #FDB927; }
+.pen-bonus-badge {
+  font-size: 10px; color: #66bb6a; font-weight: 700;
+  margin-top: 2px; text-align: center;
+}
+
+/* ---- Others' predictions ---- */
+.others-toggle-btn {
+  width: 100%; background: none; border: none;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.4); font-size: 12px;
+  padding: 8px 12px; cursor: pointer; text-align: right;
+  transition: color .15s;
+}
+.others-toggle-btn:hover { color: rgba(255,255,255,0.65); }
+.others-list {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 6px 12px 8px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.others-row {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px;
+}
+.others-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 11px; overflow: hidden; flex-shrink: 0;
+}
+.others-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.others-name { flex: 1; color: rgba(255,255,255,0.7); }
+.others-joker { font-size: 11px; }
+.others-guess { font-family: monospace; font-size: 13px; font-weight: 600; }
+.others-pts { font-weight: 700; min-width: 28px; text-align: left; }
+.o-exact { color: #66bb6a; }
+.o-dir   { color: #42a5f5; }
+.o-miss  { color: rgba(255,255,255,0.3); }
+.others-empty { color: rgba(255,255,255,0.3); font-size: 12px; text-align: center; padding: 4px 0; }
