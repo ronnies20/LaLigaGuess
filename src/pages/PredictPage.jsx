@@ -589,6 +589,7 @@ export default function PredictPage() {
                         </button>
                         {expandedMatch === m.id && (
                           <div className="dist-list">
+                            <div className="dist-title">הסתברות ניחושים</div>
                             {top5.map(([score, count]) => {
                               const pct = Math.round((count / total) * 100)
                               const barW = Math.round((count / maxCount) * 100)
