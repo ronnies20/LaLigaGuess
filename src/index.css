@@ -612,3 +612,22 @@ body {
   color: var(--gold);
 }
 .pts-streak { font-size: 11px !important; letter-spacing: -0.5px; }
+
+/* ---- Share Card ---- */
+.share-bar {
+  padding: 0 16px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.share-btn {
+  width: 100%; max-width: 480px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  color: #fff; border-radius: 12px;
+  padding: 12px; font-size: 15px; cursor: pointer;
+  transition: background .15s;
+}
+.share-btn:hover { background: rgba(255,255,255,0.1); }
+.share-msg {
+  font-size: 13px; color: var(--gold); font-weight: 600;
+  animation: fadeIn .2s ease;
+}

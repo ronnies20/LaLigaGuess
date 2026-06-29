@@ -2,6 +2,32 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, getTeamLogoUrl, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
+
+function buildShareText({ matches, guesses, round, userStreak, displayName }) {
+  const lines = [`🎰 LaLiga Guess • מחזור ${round}`, `👤 ${displayName}`, '']
+  let total = 0, count = 0
+  for (const m of matches) {
+    if (m.home_score === null) continue
+    const g = guesses[m.id]
+    if (!g || g.pts == null) continue
+    count++
+    total += g.pts
+    const awayS = getTeamInfo(m.away_team).short
+    const homeS = getTeamInfo(m.home_team).short
+    const pts   = g.pts
+    const icon  = pts >= 5 ? '🔥' : pts >= 3 ? '✅' : pts >= 1 ? '➡️' : pts < 0 ? '🃏' : '❌'
+    const badge = (g.joker ? '🃏' : '') + (m.is_special ? '⭐' : '')
+    const ptsStr = pts >= 0 ? `+${pts}` : String(pts)
+    lines.push(`${icon}${badge} ${awayS} ${g.a}:${g.h} ${homeS}  →  ${m.away_score}:${m.home_score}  ${ptsStr}נק׳`)
+  }
+  if (!count) return null
+  lines.push('')
+  lines.push(`📊 מחזור ${round}: ${total} נקודות`)
+  if (userStreak > 0) lines.push(`🔥 סטרייק: ${userStreak}`)
+  lines.push('')
+  lines.push('LaLiga Guess 🎰')
+  return lines.join('\n')
+}
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
 function PtsBadge({ pts, isJoker, isSpecial }) {
@@ -47,11 +73,12 @@ function TeamDisplay({ name }) {
 }
 
 export default function PredictPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [round, setRound]               = useState(null)
   const [currentRound, setCurrentRound] = useState(null)
   const [jokerMatchId, setJokerMatchId] = useState(null)
   const [userStreak, setUserStreak]     = useState(0)
+  const [shareMsg, setShareMsg]         = useState('')
   const [trashTalk, setTrashTalk]       = useState('')
   const [trashSaved, setTrashSaved]     = useState(false)
   const [matches, setMatches] = useState([])
@@ -199,6 +226,22 @@ export default function PredictPage() {
       setSaveMsg('✓ ניחושים עודכנו')
     }
     setTimeout(() => setSaveMsg(''), 3500)
+  }
+
+  async function shareRound() {
+    const text = buildShareText({
+      matches, guesses, round, userStreak,
+      displayName: profile?.display_name || 'שחקן',
+    })
+    if (!text) return
+    if (navigator.share) {
+      try { await navigator.share({ text }); return } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      setShareMsg('הועתק! 📋')
+      setTimeout(() => setShareMsg(''), 2500)
+    } catch {}
   }
 
   async function saveTrashTalk() {
@@ -364,6 +407,14 @@ export default function PredictPage() {
             <span>{saving ? 'שומר...' : 'שמור ניחושים'}</span>
           </button>
           <div className="save-msg">{saveMsg}</div>
+        </div>
+      )}
+      {matches.some(m => m.home_score !== null && guesses[m.id]?.pts != null) && (
+        <div className="share-bar">
+          <button className="btn share-btn" onClick={shareRound}>
+            📤 שתף מחזור {round}
+          </button>
+          {shareMsg && <div className="share-msg">{shareMsg}</div>}
         </div>
       )}
     </div>
