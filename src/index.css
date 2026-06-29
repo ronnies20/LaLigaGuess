@@ -868,6 +868,6 @@ body {
 }
 
 .dist-subtitle {
-  text-align: center; font-size: 11px;
-  color: rgba(255,255,255,0.25); margin-top: -2px; margin-bottom: 2px;
+  text-align: center; font-size: 13px;
+  color: rgba(255,255,255,0.35); margin-top: 2px; margin-bottom: 4px;
 }
