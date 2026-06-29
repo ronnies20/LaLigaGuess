@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, getCurrentRound } from '../lib/supabase'
+import { supabase, getCurrentRound, getRoundMessages } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
 const COLORS = ['#004D9E','#00883A','#CE1021','#534AB7','#C9A84C','#EF7D00','#005AA7','#D4002A','#6A0DAD','#0F6E56']
@@ -13,12 +13,14 @@ export default function LeaderboardPage() {
   const [view, setView]       = useState('season')
   const [rows, setRows]       = useState([])
   const [streaks, setStreaks] = useState({})
+  const [messages, setMessages] = useState({})
   const [loading, setLoading] = useState(true)
   const [round, setRound]     = useState(null)
+  const [currentRound, setCurrentRound] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    getCurrentRound().then(r => setRound(r)).catch(() => setRound(1))
+    getCurrentRound().then(r => { setRound(r); setCurrentRound(r) }).catch(() => { setRound(1); setCurrentRound(1) })
   }, [])
 
   useEffect(() => { if (round !== null) loadData() }, [view, round, refreshKey])
@@ -38,14 +40,18 @@ export default function LeaderboardPage() {
     setStreaks({})
     try {
       if (view === 'season') {
-        const [{ data }, { data: streakData }] = await Promise.all([
+        const [{ data }, { data: streakData }, msgs] = await Promise.all([
           supabase.from('leaderboard_view').select('*').order('total_points', { ascending: false }).limit(100),
           supabase.from('current_streak_view').select('user_id, current_streak'),
+          currentRound ? getRoundMessages(currentRound) : Promise.resolve([]),
         ])
         setRows(data || [])
         const sm = {}
         streakData?.forEach(r => { sm[r.user_id] = r.current_streak })
         setStreaks(sm)
+        const mm = {}
+        msgs?.forEach(m => { mm[m.user_id] = m.message })
+        setMessages(mm)
       } else {
         const { data } = await supabase
           .from('round_leaderboard_view')
@@ -107,6 +113,9 @@ export default function LeaderboardPage() {
                     }
                   </div>
                   <div className="lb-name">{r.display_name}{r.display_name === 'CAT' && ' 🤖'}</div>
+                  {view === 'season' && messages[r.user_id] && (
+                    <div className="lb-trash">💬 {messages[r.user_id]}</div>
+                  )}
                   {streak >= 3 && <div className="lb-streak-badge">🔥 {streak}</div>}
                 </div>
                 <div className="lb-num">{ex(r) ?? 0}</div>

@@ -1,0 +1,6 @@
+[      22ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[      34ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[  210405ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[  300444ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[  390429ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[  390545ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0

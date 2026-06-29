@@ -126,6 +126,21 @@ export async function getCurrentRound() {
   return data?.[0]?.round ?? 1
 }
 
+export async function getRoundMessages(round) {
+  const { data } = await supabase
+    .from('round_messages')
+    .select('user_id, message')
+    .eq('round', round)
+  return data || []
+}
+
+export async function upsertRoundMessage(userId, round, message) {
+  const { error } = await supabase
+    .from('round_messages')
+    .upsert({ user_id: userId, round, message: message.slice(0, 20) }, { onConflict: 'user_id,round' })
+  if (error) throw error
+}
+
 export async function getMyStats(userId) {
   const [{ data, error }, { data: maxStreakData }] = await Promise.all([
     supabase

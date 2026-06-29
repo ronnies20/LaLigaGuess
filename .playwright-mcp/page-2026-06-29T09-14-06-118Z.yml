@@ -1,0 +1,86 @@
+- generic [ref=e20]:
+  - generic [ref=e21]:
+    - img "Barça" [ref=e22]
+    - generic [ref=e23]:
+      - generic [ref=e24]: תחרות הניחושים של הלה ליגה
+      - generic [ref=e25]: Barca Mania x FRIEREN · עונת 26/27
+  - generic [ref=e303]:
+    - generic [ref=e304]:
+      - button "עונה שלמה" [ref=e305] [cursor=pointer]
+      - button "לפי מחזור" [active] [ref=e306] [cursor=pointer]
+    - generic [ref=e362]:
+      - button "‹" [ref=e363] [cursor=pointer]
+      - generic [ref=e364]: מחזור 1
+      - button "›" [ref=e365] [cursor=pointer]
+    - generic [ref=e307]:
+      - generic [ref=e308]:
+        - generic [ref=e310]: שחקן
+        - generic [ref=e311]: מדויק
+        - generic [ref=e312]: כיוון
+        - generic [ref=e313]: נק׳
+      - generic [ref=e366]:
+        - generic [ref=e367]: 🥇
+        - generic [ref=e368]:
+          - generic [ref=e369]: P
+          - generic [ref=e370]: PedriKing
+          - generic [ref=e371]: 🔥 5
+        - generic [ref=e372]: "3"
+        - generic [ref=e373]: "2"
+        - generic [ref=e374]: "11"
+      - generic [ref=e375]:
+        - generic [ref=e376]: 🥈
+        - generic [ref=e377]:
+          - generic [ref=e378]: "Y"
+          - generic [ref=e379]: Yamal27
+          - generic [ref=e380]: 🔥 7
+        - generic [ref=e381]: "2"
+        - generic [ref=e382]: "5"
+        - generic [ref=e383]: "11"
+      - generic [ref=e384]:
+        - generic [ref=e385]: 🥉
+        - generic [ref=e386]:
+          - generic [ref=e387]: M
+          - generic [ref=e388]: Messi10
+          - generic [ref=e389]: 🔥 7
+        - generic [ref=e390]: "2"
+        - generic [ref=e391]: "5"
+        - generic [ref=e392]: "11"
+      - generic [ref=e393]:
+        - generic [ref=e394]: "4"
+        - generic [ref=e395]:
+          - generic [ref=e396]: R
+          - generic [ref=e397]: Roni⚽
+          - generic [ref=e398]: 🔥 5
+        - generic [ref=e399]: "2"
+        - generic [ref=e400]: "3"
+        - generic [ref=e401]: "9"
+      - generic [ref=e402]:
+        - generic [ref=e403]: "5"
+        - generic [ref=e404]:
+          - generic [ref=e405]: F
+          - generic [ref=e406]: FRIEREN
+          - generic [ref=e407]: 🔥 7
+        - generic [ref=e408]: "1"
+        - generic [ref=e409]: "6"
+        - generic [ref=e410]: "9"
+      - generic [ref=e411]:
+        - generic [ref=e412]: "6"
+        - generic [ref=e413]:
+          - generic [ref=e414]: G
+          - generic [ref=e415]: GaviKid
+        - generic [ref=e416]: "0"
+        - generic [ref=e417]: "2"
+        - generic [ref=e418]: "2"
+  - navigation [ref=e33]:
+    - button "פרופיל" [ref=e34] [cursor=pointer]:
+      - img [ref=e35]
+      - text: פרופיל
+    - button "ניחושים" [ref=e38] [cursor=pointer]:
+      - img [ref=e39]:
+        - generic [ref=e43]: "1"
+        - generic [ref=e44]: X
+        - generic [ref=e45]: "2"
+      - text: ניחושים
+    - button "טבלה" [ref=e46] [cursor=pointer]:
+      - img [ref=e47]
+      - text: טבלה

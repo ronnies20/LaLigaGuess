@@ -253,6 +253,25 @@ create policy "avatars_update" on storage.objects
   );
 
 -- =====================================================
+-- 10. ROUND MESSAGES (טראש טוק)
+-- =====================================================
+create table if not exists round_messages (
+  user_id    uuid references profiles(id) on delete cascade,
+  round      int  not null,
+  message    text not null check (char_length(message) <= 20),
+  created_at timestamptz default now(),
+  primary key (user_id, round)
+);
+
+alter table round_messages enable row level security;
+
+create policy "anyone can read messages"
+  on round_messages for select using (true);
+
+create policy "users manage own message"
+  on round_messages for all using (auth.uid() = user_id);
+
+-- =====================================================
 -- נתוני דוגמה — מחזור 36 (לבדיקה)
 -- שנה את התאריכים לתאריכים עתידיים
 -- =====================================================

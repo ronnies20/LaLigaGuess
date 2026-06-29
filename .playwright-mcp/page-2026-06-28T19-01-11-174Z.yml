@@ -1,0 +1,23 @@
+- generic [ref=e20]:
+  - generic [ref=e21]:
+    - img "Barça" [ref=e22]
+    - generic [ref=e23]:
+      - generic [ref=e24]: תחרות הניחושים של הלה ליגה
+      - generic [ref=e25]: Barca Mania x FRIEREN · עונת 26/27
+  - generic [ref=e28]:
+    - button "‹" [disabled] [ref=e29]
+    - generic [ref=e30]: מחזור 1
+    - button "›" [ref=e31] [cursor=pointer]
+  - navigation [ref=e33]:
+    - button "פרופיל" [ref=e34] [cursor=pointer]:
+      - img [ref=e35]
+      - text: פרופיל
+    - button "ניחושים" [ref=e38] [cursor=pointer]:
+      - img [ref=e39]:
+        - generic [ref=e43]: "1"
+        - generic [ref=e44]: X
+        - generic [ref=e45]: "2"
+      - text: ניחושים
+    - button "טבלה" [ref=e46] [cursor=pointer]:
+      - img [ref=e47]
+      - text: טבלה

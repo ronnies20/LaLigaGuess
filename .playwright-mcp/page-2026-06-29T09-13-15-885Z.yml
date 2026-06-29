@@ -1,0 +1,77 @@
+- generic [ref=e20]:
+  - generic [ref=e21]:
+    - img "Barça" [ref=e22]
+    - generic [ref=e23]:
+      - generic [ref=e24]: תחרות הניחושים של הלה ליגה
+      - generic [ref=e25]: Barca Mania x FRIEREN · עונת 26/27
+  - generic [ref=e303]:
+    - generic [ref=e304]:
+      - button "עונה שלמה" [ref=e305] [cursor=pointer]
+      - button "לפי מחזור" [ref=e306] [cursor=pointer]
+    - generic [ref=e307]:
+      - generic [ref=e308]:
+        - generic [ref=e310]: שחקן
+        - generic [ref=e311]: מדויק
+        - generic [ref=e312]: כיוון
+        - generic [ref=e313]: נק׳
+      - generic [ref=e314]:
+        - generic [ref=e315]: 🥇
+        - generic [ref=e316]:
+          - generic [ref=e317]: F
+          - generic [ref=e318]: FRIEREN
+        - generic [ref=e319]: "59"
+        - generic [ref=e320]: "83"
+        - generic [ref=e321]: "260"
+      - generic [ref=e322]:
+        - generic [ref=e323]: 🥈
+        - generic [ref=e324]:
+          - generic [ref=e325]: M
+          - generic [ref=e326]: Messi10
+        - generic [ref=e327]: "43"
+        - generic [ref=e328]: "74"
+        - generic [ref=e329]: "203"
+      - generic [ref=e330]:
+        - generic [ref=e331]: 🥉
+        - generic [ref=e332]:
+          - generic [ref=e333]: P
+          - generic [ref=e334]: PedriKing
+        - generic [ref=e335]: "40"
+        - generic [ref=e336]: "72"
+        - generic [ref=e337]: "192"
+      - generic [ref=e338]:
+        - generic [ref=e339]: "4"
+        - generic [ref=e340]:
+          - generic [ref=e341]: R
+          - generic [ref=e342]: Roni⚽
+        - generic [ref=e343]: "36"
+        - generic [ref=e344]: "74"
+        - generic [ref=e345]: "182"
+      - generic [ref=e346]:
+        - generic [ref=e347]: "5"
+        - generic [ref=e348]:
+          - generic [ref=e349]: G
+          - generic [ref=e350]: GaviKid
+        - generic [ref=e351]: "24"
+        - generic [ref=e352]: "51"
+        - generic [ref=e353]: "123"
+      - generic [ref=e354]:
+        - generic [ref=e355]: "6"
+        - generic [ref=e356]:
+          - generic [ref=e357]: "Y"
+          - generic [ref=e358]: Yamal27
+        - generic [ref=e359]: "15"
+        - generic [ref=e360]: "39"
+        - generic [ref=e361]: "84"
+  - navigation [ref=e33]:
+    - button "פרופיל" [ref=e34] [cursor=pointer]:
+      - img [ref=e35]
+      - text: פרופיל
+    - button "ניחושים" [ref=e38] [cursor=pointer]:
+      - img [ref=e39]:
+        - generic [ref=e43]: "1"
+        - generic [ref=e44]: X
+        - generic [ref=e45]: "2"
+      - text: ניחושים
+    - button "טבלה" [active] [ref=e46] [cursor=pointer]:
+      - img [ref=e47]
+      - text: טבלה

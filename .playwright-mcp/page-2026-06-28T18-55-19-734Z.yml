@@ -1,0 +1,18 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - img "Barça" [ref=e5]
+    - heading "תחרות הניחושים של הלה ליגה" [level=1] [ref=e6]
+    - paragraph [ref=e7]: Barca Mania x FRIEREN · עונת 26/27
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - button "התחברות" [ref=e10] [cursor=pointer]
+      - button "הרשמה" [ref=e11] [cursor=pointer]
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]: אימייל
+        - textbox "you@example.com" [ref=e15]: frieren@laliga.test
+      - generic [ref=e16]:
+        - generic [ref=e17]: סיסמה
+        - textbox "••••••••" [ref=e18]: Test1234!
+      - paragraph [ref=e20]: Invalid API key
+      - button "התחבר" [ref=e19] [cursor=pointer]

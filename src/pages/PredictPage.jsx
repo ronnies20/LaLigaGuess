@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase, upsertPrediction, getCurrentRound } from '../lib/supabase'
+import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, getTeamLogoUrl, calcPoints, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
@@ -39,7 +39,10 @@ function TeamDisplay({ name }) {
 
 export default function PredictPage() {
   const { user } = useAuth()
-  const [round, setRound]     = useState(null)
+  const [round, setRound]         = useState(null)
+  const [currentRound, setCurrentRound] = useState(null)
+  const [trashTalk, setTrashTalk]   = useState('')
+  const [trashSaved, setTrashSaved] = useState(false)
   const [matches, setMatches] = useState([])
   const [guesses, setGuesses] = useState({})
   const [saved, setSaved]     = useState({})
@@ -52,7 +55,7 @@ export default function PredictPage() {
   const celebratedRef         = useRef(getCelebrated())
 
   useEffect(() => {
-    getCurrentRound().then(r => setRound(r)).catch(() => setRound(1))
+    getCurrentRound().then(r => { setRound(r); setCurrentRound(r) }).catch(() => { setRound(1); setCurrentRound(1) })
   }, [])
 
   const loadRound = useCallback(async () => {
@@ -78,6 +81,13 @@ export default function PredictPage() {
   }, [round, user.id])
 
   useEffect(() => { loadRound() }, [loadRound])
+
+  useEffect(() => {
+    if (!currentRound) return
+    supabase.from('round_messages').select('message')
+      .eq('user_id', user.id).eq('round', currentRound).maybeSingle()
+      .then(({ data }) => { setTrashTalk(data?.message || ''); setTrashSaved(!!data?.message) })
+  }, [currentRound, user.id])
 
   useEffect(() => {
     if (!matches.length || !Object.keys(guesses).length) return
@@ -151,6 +161,12 @@ export default function PredictPage() {
     setTimeout(() => setSaveMsg(''), 3500)
   }
 
+  async function saveTrashTalk() {
+    if (!trashTalk.trim() || trashSaved) return
+    await upsertRoundMessage(user.id, currentRound, trashTalk.trim())
+    setTrashSaved(true)
+  }
+
   const openMatches = matches.filter(m => !isMatchLocked(m.kickoff) && m.home_score === null)
 
   return (
@@ -162,6 +178,29 @@ export default function PredictPage() {
           <div className="round-label">מחזור {round}</div>
           <button className="round-nav-btn" onClick={() => setRound(r => r >= TOTAL_ROUNDS ? 1 : r + 1)}>›</button>
         </div>
+
+        {round === currentRound && (
+          <div className="card trash-card">
+            <div className="trash-label">💬 טראש טוק למחזור {round}</div>
+            <div className="trash-row">
+              <input
+                type="text"
+                maxLength={20}
+                className={`trash-input${trashSaved ? ' trash-saved' : ''}`}
+                placeholder="מה יש לך להגיד? 😤"
+                value={trashTalk}
+                onChange={e => { setTrashTalk(e.target.value); setTrashSaved(false) }}
+                onBlur={saveTrashTalk}
+              />
+              <span className="trash-counter" style={{ color: trashTalk.length >= 18 ? '#f44336' : undefined }}>
+                {trashTalk.length}/20
+              </span>
+              <button className="trash-btn" onClick={saveTrashTalk} disabled={trashSaved || !trashTalk.trim()}>
+                {trashSaved ? '✓' : 'שלח'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="spinner" />

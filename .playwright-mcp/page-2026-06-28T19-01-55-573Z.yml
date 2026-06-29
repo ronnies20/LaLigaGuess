@@ -1,0 +1,71 @@
+- generic [ref=e20]:
+  - generic [ref=e21]:
+    - img "Barça" [ref=e22]
+    - generic [ref=e23]:
+      - generic [ref=e24]: תחרות הניחושים של הלה ליגה
+      - generic [ref=e25]: Barca Mania x FRIEREN · עונת 26/27
+  - generic [ref=e320]:
+    - generic [ref=e321]:
+      - generic [ref=e322] [cursor=pointer]:
+        - generic [ref=e323]: "8"
+        - generic [ref=e324]: PEDRI
+        - generic [ref=e325]: 📷
+      - generic [ref=e326]:
+        - generic [ref=e327]: FRIEREN
+        - generic [ref=e328]: frieren@laliga.test
+      - generic [ref=e329]:
+        - generic [ref=e330]: "#1"
+        - generic [ref=e331]: דירוג
+    - generic [ref=e332]:
+      - generic [ref=e333]: סטטיסטיקות עונה
+      - generic [ref=e334]:
+        - generic [ref=e335]:
+          - generic [ref=e336]: "59"
+          - generic [ref=e337]: מדויקות
+        - generic [ref=e338]:
+          - generic [ref=e339]: "83"
+          - generic [ref=e340]: כיוון נכון
+        - generic [ref=e341]:
+          - generic [ref=e342]: "260"
+          - generic [ref=e343]: סה״כ נק׳
+      - generic [ref=e344]:
+        - generic [ref=e345]:
+          - generic [ref=e346]: "164"
+          - generic [ref=e347]: ניחושים
+        - generic [ref=e348]:
+          - generic [ref=e349]: 87%
+          - generic [ref=e350]: "% הצלחה"
+        - generic [ref=e351]:
+          - generic [ref=e352]: "1.6"
+          - generic [ref=e353]: נק׳ לניחוש
+      - generic [ref=e354]: הזמן חברים
+      - generic [ref=e355]:
+        - paragraph [ref=e356]: שתף קישור זה כדי שחברים יוכלו להצטרף לליגה
+        - generic [ref=e357]: LL2627
+        - button "📋 העתק קישור" [ref=e358] [cursor=pointer]
+      - generic [ref=e359]: חוקים
+      - generic [ref=e360]:
+        - generic [ref=e361]:
+          - generic [ref=e362]: "3"
+          - generic [ref=e363]: תוצאה מדויקת — ניחשת 2:1 ויצא 2:1
+        - generic [ref=e364]:
+          - generic [ref=e365]: "1"
+          - generic [ref=e366]: כיוון נכון — ניצחון/תיקו/הפסד נכון, תוצאה שגויה
+        - generic [ref=e367]:
+          - generic [ref=e368]: "0"
+          - generic [ref=e369]: ניחוש שגוי לחלוטין
+        - generic [ref=e370]: 🔒 ניחושים ננעלים 5 דקות לפני תחילת כל משחק · עונת 26/27
+      - button "התנתקות" [ref=e371] [cursor=pointer]
+  - navigation [ref=e33]:
+    - button "פרופיל" [active] [ref=e34] [cursor=pointer]:
+      - img [ref=e35]
+      - text: פרופיל
+    - button "ניחושים" [ref=e38] [cursor=pointer]:
+      - img [ref=e39]:
+        - generic [ref=e43]: "1"
+        - generic [ref=e44]: X
+        - generic [ref=e45]: "2"
+      - text: ניחושים
+    - button "טבלה" [ref=e46] [cursor=pointer]:
+      - img [ref=e47]
+      - text: טבלה

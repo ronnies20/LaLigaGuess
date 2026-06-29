@@ -1,0 +1,237 @@
+[     107ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[     153ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[     260ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[ 1516481ms] [ERROR] ReferenceError: computeStreaks is not defined
+    at loadData (http://localhost:4000/src/pages/LeaderboardPage.jsx?t=1782725863451:57:24) @ http://localhost:4000/src/pages/LeaderboardPage.jsx?t=1782725863451:62
+[ 1523209ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/current_streak_view?select=user_id%2Ccurrent_streak:0
+[ 2700833ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:1 (2.108.2) 2026-06-29T09:57:28.308Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[ 2700898ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782724341915:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[ 2700904ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782724341915:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[ 2700906ms] [ERROR] The above error occurred in the <App> component:
+
+    at App (http://localhost:4000/src/App.jsx?t=1782724341915:111:29)
+    at AuthProvider (http://localhost:4000/src/lib/AuthContext.jsx?t=1782727048272:21:32)
+    at Root
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14031
+[ 2700915ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782724341915:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19753:22)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+    at renderRootSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19116:15)
+    at recoverFromConcurrentError (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18736:28)
+    at performSyncWorkOnRoot (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18879:28)
+[ 7021353ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[ 7021445ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[ 7111329ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[ 7111416ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[ 7201252ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[ 7201359ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[ 7201437ms] [ERROR] Failed to load resource: the server responded with a status of 400 () @ https://jgzscpqnqvymnrpktikf.supabase.co/auth/v1/token?grant_type=refresh_token:0
+[ 7226518ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:2 (2.108.2) 2026-06-29T11:12:53.994Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[ 7226544ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782727048272:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[ 7226545ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782727048272:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[ 7226545ms] [ERROR] The above error occurred in the <App> component:
+
+    at App (http://localhost:4000/src/App.jsx?t=1782727048272:111:29)
+    at AuthProvider (http://localhost:4000/src/lib/AuthContext.jsx?t=1782731573957:21:32)
+    at Root
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14031
+[ 7226546ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782727048272:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19753:22)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+    at renderRootSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19116:15)
+    at recoverFromConcurrentError (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18736:28)
+    at performSyncWorkOnRoot (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18879:28)
+[ 7226706ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[ 8239754ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:3 (2.108.2) 2026-06-29T11:29:47.230Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[ 8239774ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782731573957:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[ 8239775ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782731573957:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[ 8239776ms] [ERROR] The above error occurred in the <App> component:
+
+    at App (http://localhost:4000/src/App.jsx?t=1782731573957:111:29)
+    at AuthProvider (http://localhost:4000/src/lib/AuthContext.jsx?t=1782732587212:21:32)
+    at Root
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14031
+[ 8239776ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782731573957:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19753:22)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+    at renderRootSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19116:15)
+    at recoverFromConcurrentError (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18736:28)
+    at performSyncWorkOnRoot (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18879:28)
+[ 8239919ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[ 9303381ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:4 (2.108.2) 2026-06-29T11:47:30.857Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[ 9303401ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782732587212:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[ 9303401ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782732587212:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[ 9303402ms] [ERROR] The above error occurred in the <App> component:
+
+    at App (http://localhost:4000/src/App.jsx?t=1782732587212:111:29)
+    at AuthProvider (http://localhost:4000/src/lib/AuthContext.jsx?t=1782733650828:21:32)
+    at Root
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14031
+[ 9303402ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782732587212:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19753:22)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+    at renderRootSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19116:15)
+    at recoverFromConcurrentError (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18736:28)
+    at performSyncWorkOnRoot (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18879:28)
+[ 9303527ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[10718335ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[10718341ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[11351737ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[11351789ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[11351931ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[12761058ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[12761060ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[13782393ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[13782638ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[13782737ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[17236292ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:1 (2.108.2) 2026-06-29T13:59:43.768Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[17236320ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782733865535:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[17236322ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782733865535:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3699:24)
+    at invokeGuardedCallback (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:3733:39)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19765:15)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+[17236326ms] [ERROR] The above error occurred in the <App> component:
+
+    at App (http://localhost:4000/src/App.jsx?t=1782733865535:111:29)
+    at AuthProvider (http://localhost:4000/src/lib/AuthContext.jsx?t=1782741583737:21:32)
+    at Root
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14031
+[17236329ms] TypeError: Cannot destructure property 'user' of 'useAuth(...)' as it is null.
+    at App (http://localhost:4000/src/App.jsx?t=1782733865535:111:11)
+    at renderWithHooks (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:11548:26)
+    at mountIndeterminateComponent (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:14926:21)
+    at beginWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:15914:22)
+    at beginWork$1 (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19753:22)
+    at performUnitOfWork (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19198:20)
+    at workLoopSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19137:13)
+    at renderRootSync (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:19116:15)
+    at recoverFromConcurrentError (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18736:28)
+    at performSyncWorkOnRoot (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18879:28)
+[17236473ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0

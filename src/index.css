@@ -526,3 +526,33 @@ body {
 }
 .near-miss-label { color: #ff9800; }
 .reversed-label  { color: #f44336; }
+
+/* ---- Trash Talk ---- */
+.trash-card { padding: 12px 14px; }
+.trash-label {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  margin-bottom: 8px; letter-spacing: 0.3px;
+}
+.trash-row { display: flex; align-items: center; gap: 8px; }
+.trash-input {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border: 1.5px solid var(--border-hi); border-radius: 8px;
+  color: var(--fg); font-size: 14px; padding: 8px 10px;
+  direction: rtl; font-family: inherit; transition: border-color .15s;
+}
+.trash-input:focus { outline: none; border-color: var(--gold); }
+.trash-input.trash-saved { border-color: #4caf50; color: #4caf50; }
+.trash-counter { font-size: 11px; color: var(--muted); min-width: 30px; text-align: center; }
+.trash-btn {
+  background: linear-gradient(135deg, var(--gold-l), var(--gold));
+  color: #000; border: none; border-radius: 8px;
+  padding: 8px 14px; font-weight: 800; font-size: 13px;
+  cursor: pointer; transition: opacity .15s;
+}
+.trash-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Leaderboard trash talk badge */
+.lb-trash {
+  font-size: 11px; color: var(--gold); font-style: italic;
+  opacity: 0.9; margin-top: 2px; font-weight: 600;
+}

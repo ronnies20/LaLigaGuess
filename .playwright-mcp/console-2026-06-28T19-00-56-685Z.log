@@ -1,0 +1,90 @@
+[     499ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[     527ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[     624ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[ 1139967ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[ 1139969ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[ 5206467ms] [ERROR] TypeError: Failed to fetch
+    at http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:12956:23
+    at _handleRequest2 (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13281:20)
+    at _request (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13271:22)
+    at http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:19048:22
+    at http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13022:32
+    at http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13034:7
+    at new Promise (<anonymous>)
+    at retryable (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13017:19)
+    at SupabaseAuthClient._refreshAccessToken (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:19043:20)
+    at SupabaseAuthClient._callRefreshToken (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:19176:42) @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13282
+[ 5206587ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[ 5206667ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[ 5208382ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[ 5208393ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[ 5208593ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[ 5208595ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[ 5208596ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[ 5208627ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/matches?select=*&round=eq.1&order=kickoff.asc:0
+[ 5208627ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/matches?select=*&round=eq.1&order=kickoff.asc:0
+[ 5478083ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[ 5478131ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[ 5487195ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[ 5487198ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[ 5585914ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[ 5588677ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[ 5589961ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[ 5589963ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[ 5605549ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[ 5605657ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[ 5609557ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[ 5609558ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[ 6017650ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[ 6018785ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[ 6022995ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[ 6022996ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[ 6185504ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[ 6185533ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[ 6189032ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[ 6189033ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[ 6191921ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[ 6191975ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[ 6196138ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[ 6196139ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[11166673ms] [ERROR] TypeError: Failed to fetch
+    at http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:12956:23
+    at _handleRequest2 (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13281:20)
+    at _request (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13271:22)
+    at http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:19048:22
+    at http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13022:32
+    at http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13034:7
+    at new Promise (<anonymous>)
+    at retryable (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13017:19)
+    at SupabaseAuthClient._refreshAccessToken (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:19043:20)
+    at SupabaseAuthClient._callRefreshToken (http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:19176:42) @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:13282
+[11166824ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[11167199ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[11229800ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[11229950ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11229951ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11229951ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11230098ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[11230140ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[11230183ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11230194ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11230196ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11231200ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11231211ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11231211ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11233217ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11233217ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11233217ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11233837ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[11233838ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[11313908ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11313909ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11313909ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/profiles?select=*&id=eq.e32b1490-9dd1-49aa-a750-e7768db784b0:0
+[11313933ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/matches?select=*&round=eq.1&order=kickoff.asc:0
+[11313933ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://jgzscpqnqvymnrpktikf.supabase.co/rest/v1/matches?select=*&round=eq.1&order=kickoff.asc:0
+[11316426ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[11316571ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[11338939ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[11338941ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[11341994ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[11342102ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
