@@ -4,12 +4,14 @@ import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, getTeamLogoUrl, calcPoints, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
-function PtsBadge({ pts }) {
+function PtsBadge({ pts, isJoker, isSpecial }) {
   if (pts === null) return <div className="pts-badge pts-none">?</div>
-  if (pts === 6)    return <div className="pts-badge pts-exact pts-joker">🃏6</div>
-  if (pts === 3)    return <div className="pts-badge pts-exact">3</div>
-  if (pts === 1)    return <div className="pts-badge pts-dir">1</div>
-  if (pts === -1)   return <div className="pts-badge pts-miss pts-joker">🃏-1</div>
+  if (pts === 6  && isJoker)   return <div className="pts-badge pts-exact pts-joker">🃏6</div>
+  if (pts === 6  && isSpecial) return <div className="pts-badge pts-exact pts-special">⭐6</div>
+  if (pts === 3)               return <div className="pts-badge pts-exact">3</div>
+  if (pts === 2)               return <div className="pts-badge pts-dir pts-special">⭐2</div>
+  if (pts === 1)               return <div className="pts-badge pts-dir">1</div>
+  if (pts === -1)              return <div className="pts-badge pts-miss pts-joker">🃏-1</div>
   return <div className="pts-badge pts-miss">0</div>
 }
 
@@ -104,7 +106,7 @@ export default function PredictPage() {
       if (!g || g.h === '' || g.a === '') return
       const hg = parseInt(g.h), ag = parseInt(g.a)
       const isJokerPred = !!g.joker
-      const pts = calcPoints(hg, ag, m.home_score, m.away_score, isJokerPred)
+      const pts = calcPoints(hg, ag, m.home_score, m.away_score, isJokerPred, !!m.is_special)
       celebratedRef.current.add(m.id)
       markCelebrated(m.id)
       const mid = m.id
@@ -117,7 +119,7 @@ export default function PredictPage() {
       } else if (pts === 3) {
         setTimeout(() => { playJackpotSound(); fireConfetti() }, delay)
         delay += 700
-      } else if (pts === 1) {
+      } else if (pts === 1 || pts === 2) {
         setTimeout(playCoinSound, delay)
         delay += 250
       } else if (pts === -1) {
@@ -244,12 +246,13 @@ export default function PredictPage() {
               const isThisJoker     = jokerMatchId === m.id
               const jokerTaken      = jokerMatchId !== null && !isThisJoker
               const pts             = hasReal && hasGuess
-                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker)
+                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker, m.is_special)
                 : null
-              const guessClass = pts === 6 ? 'guess-exact' : pts === 3 ? 'guess-exact' : pts === 1 ? 'guess-dir' : (pts === 0 || pts === -1) ? 'guess-miss' : 'guess-none'
+              const guessClass = (pts >= 3) ? 'guess-exact' : (pts === 1 || pts === 2) ? 'guess-dir' : (pts !== null && pts <= 0) ? 'guess-miss' : 'guess-none'
 
               return (
-                <div className={`card${isThisJoker ? ' joker-card' : ''}`} key={m.id}>
+                <div className={`card${isThisJoker ? ' joker-card' : ''}${m.is_special ? ' special-card' : ''}`} key={m.id}>
+                  {m.is_special && <div className="special-strip">⭐ משחק מיוחד — ניחוש שווה כפל נקודות</div>}
                   <div className="match-header">
                     <span className="match-date">{formatKickoff(m.kickoff)}</span>
                     {locked && !hasReal && <span className="badge badge-lock" style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}>🔒 נעול</span>}
@@ -284,7 +287,7 @@ export default function PredictPage() {
                           <div className="result-sep" />
                           <div className="result-col">
                             <span className="result-col-label">נק׳</span>
-                            <PtsBadge pts={pts} />
+                            <PtsBadge pts={pts} isJoker={!!g.joker} isSpecial={!!m.is_special} />
                           </div>
                         </div>
                       ) : (

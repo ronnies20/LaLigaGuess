@@ -574,3 +574,19 @@ body {
 }
 .joker-btn.joker-taken { opacity: 0.2; cursor: default; }
 .pts-joker { font-size: 11px !important; letter-spacing: -0.5px; }
+
+/* ---- Special Match ---- */
+.special-strip {
+  background: linear-gradient(90deg, rgba(253,185,39,0.12), rgba(253,185,39,0.04));
+  border-bottom: 1px solid rgba(253,185,39,0.2);
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  padding: 5px 12px;
+  letter-spacing: 0.3px;
+}
+.special-card {
+  border-color: rgba(253,185,39,0.35) !important;
+}
+.pts-special { font-size: 11px !important; letter-spacing: -0.5px; }

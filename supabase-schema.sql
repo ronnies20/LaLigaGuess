@@ -101,7 +101,11 @@ begin
     update predictions
     set points = case
       when is_joker = true then
+        -- joker: בינארי — מדויק=6, כל טעות=-1
         case when home_guess = new.home_score and away_guess = new.away_score then 6 else -1 end
+      when new.is_special = true then
+        -- משחק מיוחד: כפל נקודות
+        calculate_points(home_guess, away_guess, new.home_score, new.away_score) * 2
       else
         calculate_points(home_guess, away_guess, new.home_score, new.away_score)
     end
