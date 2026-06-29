@@ -6,6 +6,7 @@ import AuthPage from './pages/AuthPage'
 import PredictPage from './pages/PredictPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import ProfilePage from './pages/ProfilePage'
+import RulesPage from './pages/RulesPage'
 import './index.css'
 
 function NavIcon({ name }) {
@@ -34,6 +35,15 @@ function NavIcon({ name }) {
         <line x1="9" y1="9"  x2="9"  y2="21"/>
       </svg>
     ),
+    rules: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        <line x1="9" y1="7"  x2="15" y2="7"/>
+        <line x1="9" y1="11" x2="15" y2="11"/>
+        <line x1="9" y1="15" x2="12" y2="15"/>
+      </svg>
+    ),
   }
   return icons[name] || null
 }
@@ -54,16 +64,20 @@ function App() {
 
   if (!user) return <AuthPage />
 
-  // RTL order: profile (right), predict (center), table (left)
   const tabs = [
     { id: 'profile', label: 'פרופיל'  },
     { id: 'predict', label: 'ניחושים' },
     { id: 'table',   label: 'טבלה'    },
+    { id: 'rules',   label: 'חוקים'   },
   ]
 
   return (
     <div>
-      <div className="topbar" style={{ flexDirection:'column', alignItems:'center', gap:6, paddingTop:16, paddingBottom:14 }}>
+      <div
+        className="topbar"
+        style={{ flexDirection:'column', alignItems:'center', gap:6, paddingTop:16, paddingBottom:14, cursor:'pointer' }}
+        onClick={() => setTab('profile')}
+      >
         <img
           src="https://media.api-sports.io/football/teams/529.png"
           alt="Barça"
@@ -78,6 +92,7 @@ function App() {
       {tab === 'predict' && <PredictPage />}
       {tab === 'table'   && <LeaderboardPage />}
       {tab === 'profile' && <ProfilePage />}
+      {tab === 'rules'   && <RulesPage />}
 
       <nav className="bottom-nav">
         {tabs.map(t => (

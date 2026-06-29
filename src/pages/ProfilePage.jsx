@@ -85,9 +85,7 @@ export default function ProfilePage() {
       const url = await uploadAvatar(file, user.id)
       await updateProfile(user.id, { avatar_url: url })
       refreshProfile()
-    } catch (err) {
-      console.error('Upload failed:', err)
-    }
+    } catch (err) { console.error('Upload failed:', err) }
     setUploading(false)
   }
 
@@ -135,14 +133,14 @@ export default function ProfilePage() {
                 <div className="stat-lbl">כיוון נכון</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{stats.total}</div>
-                <div className="stat-lbl">סה״כ נק׳</div>
+                <div className="stat-val" style={{ color:'#00BCD4' }}>{stats.penaltyHits}</div>
+                <div className="stat-lbl">פנדלים 🎯</div>
               </div>
             </div>
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-val">{stats.played}</div>
-                <div className="stat-lbl">ניחושים</div>
+                <div className="stat-val">{stats.total}</div>
+                <div className="stat-lbl">ניקוד כולל</div>
               </div>
               <div className="stat-card">
                 <div className="stat-val">{pct}%</div>
@@ -150,7 +148,7 @@ export default function ProfilePage() {
               </div>
               <div className="stat-card">
                 <div className="stat-val" style={{ color:'#ff6600' }}>{stats.maxStreak > 0 ? `🔥${stats.maxStreak}` : '—'}</div>
-                <div className="stat-lbl">סטרייק מקסימלי</div>
+                <div className="stat-lbl">סטרייק מקס׳</div>
               </div>
             </div>
           </>
@@ -163,25 +161,6 @@ export default function ProfilePage() {
           <button className="btn btn-outline btn-sm" onClick={copyInvite}>
             {copied ? '✓ הועתק!' : '📋 העתק קישור'}
           </button>
-        </div>
-
-        <div className="section-title" style={{ marginTop:16 }}>חוקים</div>
-        <div className="card-section" style={{ fontSize:13, lineHeight:1.8 }}>
-          <div style={{ display:'flex', gap:10, marginBottom:10, alignItems:'center' }}>
-            <span style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#00C853,#00E676)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0, boxShadow:'0 0 12px rgba(0,230,118,0.5)' }}>3</span>
-            <span style={{ color:'#EEEEFF', textAlign:'center', flex:1 }}>תוצאה מדויקת - ניחשת 2:1 ויצא 2:1</span>
-          </div>
-          <div style={{ display:'flex', gap:10, marginBottom:10, alignItems:'center' }}>
-            <span style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#FFE566,#C4901A)', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0, boxShadow:'0 0 12px rgba(253,185,39,0.5)' }}>1</span>
-            <span style={{ color:'#EEEEFF', textAlign:'center', flex:1 }}>כיוון נכון - ניצחון/תיקו/הפסד נכון, תוצאה שגויה</span>
-          </div>
-          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-            <span style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,23,68,0.15)', color:'#FF1744', border:'1px solid rgba(255,23,68,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0 }}>0</span>
-            <span style={{ color:'#7060A0', textAlign:'center', flex:1 }}>ניחוש שגוי לחלוטין</span>
-          </div>
-          <div style={{ marginTop:12, padding:'10px 12px', background:'rgba(255,100,0,0.08)', borderRadius:8, fontSize:12, color:'#FF7A00', border:'1px solid rgba(255,100,0,0.15)', textAlign:'center' }}>
-            🔒 ניחושים ננעלים 5 דקות לפני תחילת כל משחק
-          </div>
         </div>
 
         <button className="btn btn-outline btn-full" style={{ marginTop:16, color:'#FF4444', borderColor:'rgba(255,68,68,0.3)' }}

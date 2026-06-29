@@ -162,18 +162,17 @@ export async function getLiveMatchGuesses(liveMatchIds) {
 }
 
 export async function getMyStats(userId) {
-  const [{ data, error }, { data: maxStreakData }] = await Promise.all([
-    supabase
-      .from('predictions')
-      .select('points')
-      .eq('user_id', userId)
-      .not('points', 'is', null),
+  const [{ data: lb }, { data: maxStreakData }, { data: penPreds }] = await Promise.all([
+    supabase.from('leaderboard_view').select('*').eq('user_id', userId).maybeSingle(),
     supabase.rpc('get_max_streak', { p_user_id: userId }),
+    supabase.from('predictions').select('penalty_bonus').eq('user_id', userId).gt('penalty_bonus', 0),
   ])
-  if (error) throw error
-
-  const exact = data.filter(p => p.points === 3).length
-  const dir   = data.filter(p => p.points === 1).length
-  const total = data.reduce((s, p) => s + p.points, 0)
-  return { exact, dir, total, played: data.length, maxStreak: maxStreakData ?? 0 }
+  return {
+    exact:       lb?.exact_count       ?? 0,
+    dir:         lb?.direction_count   ?? 0,
+    total:       lb?.total_points      ?? 0,
+    played:      lb?.total_predictions ?? 0,
+    maxStreak:   maxStreakData         ?? 0,
+    penaltyHits: (penPreds || []).length,
+  }
 }
