@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
-import { getTeamInfo, getTeamLogoUrl, isMatchLocked, isMatchLive, isMatchFinished, getStatusLabel, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
+import { getTeamInfo, getTeamLogoUrl, isMatchLocked, isMatchLive, isMatchFinished, getStatusLabel, formatKickoff, TOTAL_ROUNDS, LIVE_STATUSES } from '../lib/teams'
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
 function generateShareCanvas({ matches, guesses, round, userStreak, displayName }) {
@@ -239,6 +239,21 @@ export default function PredictPage() {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, payload => {
         if (payload.new.round !== round) return
         setMatches(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m))
+        // When a match goes live for the first time, load its predictions for distribution stats
+        const justWentLive = LIVE_STATUSES.includes(payload.new.status) && !LIVE_STATUSES.includes(payload.old?.status)
+        if (justWentLive) {
+          supabase
+            .from('predictions')
+            .select('match_id, home_guess, away_guess')
+            .eq('match_id', payload.new.id)
+            .then(({ data }) => {
+              if (!data) return
+              setOthersGuesses(prev => ({
+                ...prev,
+                [payload.new.id]: data.map(p => ({ h: p.home_guess, a: p.away_guess }))
+              }))
+            })
+        }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'predictions' }, payload => {
         if (payload.new.user_id !== user.id) return
