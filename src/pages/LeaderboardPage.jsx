@@ -1,35 +1,128 @@
-import { useState, useEffect } from 'react'
-import { supabase, getCurrentRound, getRoundMessages } from '../lib/supabase'
+import { useState, useEffect, useCallback } from 'react'
+import { supabase, getCurrentRound, getRoundMessages, getPlayerHistory, getLiveMatchGuesses } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import { getTeamInfo, LIVE_STATUSES } from '../lib/teams'
 
 const COLORS = ['#004D9E','#00883A','#CE1021','#534AB7','#C9A84C','#EF7D00','#005AA7','#D4002A','#6A0DAD','#0F6E56']
 const BGS    = ['#e8f0ff','#e8f8ee','#ffe8ea','#EEEDFE','#fff8e8','#fff3e0','#e8f0ff','#ffe8ea','#f0e8ff','#e1f5ee']
 
 function initial(name) { return name ? name[0].toUpperCase() : '?' }
 
+function PtsBadge({ pts, isJoker }) {
+  if (pts === null || pts === undefined) return <span className="hst-pts-none">?</span>
+  if (isJoker && pts >= 6)  return <span className="hst-pts-exact">🃏{pts}</span>
+  if (isJoker && pts < 0)   return <span className="hst-pts-miss">🃏{pts}</span>
+  if (pts >= 5)             return <span className="hst-pts-exact">🔥{pts}</span>
+  if (pts === 3)            return <span className="hst-pts-exact">{pts}</span>
+  if (pts === 2)            return <span className="hst-pts-dir">⭐{pts}</span>
+  if (pts === 1)            return <span className="hst-pts-dir">{pts}</span>
+  return <span className="hst-pts-miss">{pts}</span>
+}
+
+function PlayerHistoryModal({ player, onClose }) {
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getPlayerHistory(player.user_id)
+      .then(data => { setHistory(data); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [player.user_id])
+
+  const total = history.reduce((s, p) => s + (p.points ?? 0) + (p.penalty_bonus ?? 0), 0)
+  const exact = history.filter(p => p.home_guess === p.matches.home_score && p.away_guess === p.matches.away_score).length
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card history-modal" onClick={e => e.stopPropagation()}>
+        <div className="history-header">
+          <div className="history-avatar">
+            {player.avatar_url
+              ? <img src={player.avatar_url} alt={player.display_name} />
+              : initial(player.display_name)}
+          </div>
+          <div>
+            <div className="history-name">{player.display_name}</div>
+            <div className="history-summary">{total} נק׳ · {exact} מדויקים · {history.length} משחקים</div>
+          </div>
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
+        </div>
+
+        {loading ? (
+          <div className="spinner" style={{ margin: '24px auto' }} />
+        ) : history.length === 0 ? (
+          <div className="empty" style={{ padding: '24px' }}>אין ניחושים עדיין</div>
+        ) : (
+          <div className="history-list">
+            {history.map((p, i) => {
+              const m = p.matches
+              const homeInfo = getTeamInfo(m.home_team)
+              const awayInfo = getTeamInfo(m.away_team)
+              const isExact  = p.home_guess === m.home_score && p.away_guess === m.away_score
+              const guessDir = Math.sign(p.home_guess - p.away_guess)
+              const realDir  = Math.sign(m.home_score - m.away_score)
+              const isDir    = !isExact && guessDir === realDir
+              const rowCls   = isExact ? 'hst-exact' : isDir ? 'hst-dir' : 'hst-miss'
+              const d = new Date(m.kickoff)
+              const dateStr = d.toLocaleDateString('he-IL', { day:'numeric', month:'numeric' })
+              return (
+                <div key={i} className={`history-row ${rowCls}`}>
+                  <div className="history-round">מ{m.round}</div>
+                  <div className="history-teams">
+                    <span className="history-team" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
+                    <div className="history-scores">
+                      <span className="hst-result">{m.home_score}:{m.away_score}</span>
+                      <span className="hst-guess">{p.home_guess}:{p.away_guess}{p.is_joker ? ' 🃏' : ''}</span>
+                    </div>
+                    <span className="history-team" style={{ color: awayInfo.color }}>{awayInfo.short}</span>
+                  </div>
+                  <div className="history-pts-col">
+                    <PtsBadge pts={p.points} isJoker={p.is_joker} />
+                    {(p.penalty_bonus ?? 0) > 0 && <span className="hst-pen-bonus">+{p.penalty_bonus}🎯</span>}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function LeaderboardPage() {
   const { user } = useAuth()
-  const [view, setView]       = useState('season')
-  const [rows, setRows]       = useState([])
-  const [streaks, setStreaks] = useState({})
+  const [view, setView]         = useState('season')
+  const [rows, setRows]         = useState([])
+  const [streaks, setStreaks]   = useState({})
   const [messages, setMessages] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [round, setRound]     = useState(null)
+  const [loading, setLoading]   = useState(true)
+  const [round, setRound]       = useState(null)
   const [currentRound, setCurrentRound] = useState(null)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [refreshKey, setRefreshKey]     = useState(0)
+  const [liveMatches, setLiveMatches]   = useState([])
+  const [liveGuesses, setLiveGuesses]   = useState({})
+  const [selectedPlayer, setSelectedPlayer] = useState(null)
 
   useEffect(() => {
-    getCurrentRound().then(r => { setRound(r); setCurrentRound(r) }).catch(() => { setRound(1); setCurrentRound(1) })
+    getCurrentRound()
+      .then(r => { setRound(r); setCurrentRound(r) })
+      .catch(() => { setRound(1); setCurrentRound(1) })
   }, [])
 
   useEffect(() => { if (round !== null) loadData() }, [view, round, refreshKey])
 
   useEffect(() => {
-    const channel = supabase
-      .channel('lb-live')
+    const channel = supabase.channel('lb-live')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'predictions' }, () => {
         setRefreshKey(k => k + 1)
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, payload => {
+        // If a match goes live or finishes, refresh live guesses
+        const status = payload.new?.status
+        if (status && (LIVE_STATUSES.includes(status) || status === 'FT' || status === 'AET' || status === 'PEN')) {
+          setRefreshKey(k => k + 1)
+        }
       })
       .subscribe()
     return () => supabase.removeChannel(channel)
@@ -39,6 +132,25 @@ export default function LeaderboardPage() {
     setLoading(true)
     setStreaks({})
     try {
+      // Check for live matches
+      const { data: liveMData } = await supabase
+        .from('matches')
+        .select('id, home_team, away_team, home_score, away_score, status')
+        .in('status', LIVE_STATUSES)
+      setLiveMatches(liveMData || [])
+      if (liveMData?.length) {
+        const livePreds = await getLiveMatchGuesses(liveMData.map(m => m.id))
+        const lg = {}
+        livePreds.forEach(p => {
+          if (!lg[p.user_id]) lg[p.user_id] = []
+          const matchInfo = liveMData.find(m => m.id === p.match_id)
+          lg[p.user_id].push({ matchId: p.match_id, h: p.home_guess, a: p.away_guess, joker: p.is_joker, matchInfo })
+        })
+        setLiveGuesses(lg)
+      } else {
+        setLiveGuesses({})
+      }
+
       if (view === 'season') {
         const [{ data }, { data: streakData }, msgs] = await Promise.all([
           supabase.from('leaderboard_view').select('*').order('total_points', { ascending: false }).limit(100),
@@ -65,9 +177,9 @@ export default function LeaderboardPage() {
     setLoading(false)
   }
 
-  const pts  = r => view === 'season' ? r.total_points    : r.round_points
-  const ex   = r => view === 'season' ? r.exact_count     : r.round_exact
-  const dir  = r => view === 'season' ? r.direction_count : r.round_direction
+  const pts = r => view === 'season' ? r.total_points    : r.round_points
+  const ex  = r => view === 'season' ? r.exact_count     : r.round_exact
+  const dir = r => view === 'season' ? r.direction_count : r.round_direction
 
   return (
     <div className="page">
@@ -82,6 +194,16 @@ export default function LeaderboardPage() {
             <button className="round-nav-btn" onClick={() => setRound(r => r <= 1 ? 38 : r - 1)}>‹</button>
             <div className="round-label">מחזור {round}</div>
             <button className="round-nav-btn" onClick={() => setRound(r => r >= 38 ? 1 : r + 1)}>›</button>
+          </div>
+        )}
+
+        {liveMatches.length > 0 && (
+          <div className="live-banner">
+            {liveMatches.map(m => (
+              <span key={m.id} className="live-banner-match">
+                🔴 {getTeamInfo(m.home_team).short} {m.home_score}:{m.away_score} {getTeamInfo(m.away_team).short}
+              </span>
+            ))}
           </div>
         )}
 
@@ -102,8 +224,13 @@ export default function LeaderboardPage() {
             const colorIdx = i % COLORS.length
             const medal    = i===0?'🥇':i===1?'🥈':i===2?'🥉':null
             const streak   = view === 'season' ? (streaks[r.user_id] ?? 0) : 0
+            const userLive = liveGuesses[r.user_id] || []
             return (
-              <div key={r.user_id} className={`lb-row${isMe?' me':''}`}>
+              <div
+                key={r.user_id}
+                className={`lb-row${isMe?' me':''} lb-row-clickable`}
+                onClick={() => setSelectedPlayer(r)}
+              >
                 <div className={`lb-rank${i<3?' g'+(i+1):''}`}>{medal || (i+1)}</div>
                 <div className="lb-user">
                   <div className="lb-avatar" style={{ background:BGS[colorIdx], color:COLORS[colorIdx], overflow:'hidden', padding:0 }}>
@@ -112,11 +239,28 @@ export default function LeaderboardPage() {
                       : initial(r.display_name)
                     }
                   </div>
-                  <div className="lb-name">{r.display_name}{r.display_name === 'CAT' && ' 🤖'}</div>
-                  {view === 'season' && messages[r.user_id] && (
-                    <div className="lb-trash">💬 {messages[r.user_id]}</div>
-                  )}
-                  {streak >= 3 && <div className="lb-streak-badge">🔥 {streak}</div>}
+                  <div className="lb-user-info">
+                    <div className="lb-name">{r.display_name}{r.display_name === 'CAT' && ' 🤖'}</div>
+                    {view === 'season' && messages[r.user_id] && (
+                      <div className="lb-trash">💬 {messages[r.user_id]}</div>
+                    )}
+                    {streak >= 3 && <div className="lb-streak-badge">🔥 {streak}</div>}
+                    {userLive.map((g, gi) => {
+                      const m = g.matchInfo
+                      if (!m) return null
+                      const homeInfo = getTeamInfo(m.home_team)
+                      const awayInfo = getTeamInfo(m.away_team)
+                      return (
+                        <div key={gi} className="lb-live-guess">
+                          <span className="lb-lg-dot">🔴</span>
+                          <span className="lb-lg-team" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
+                          <span className="lb-lg-score">{g.h}:{g.a}</span>
+                          <span className="lb-lg-team" style={{ color: awayInfo.color }}>{awayInfo.short}</span>
+                          {g.joker && <span className="lb-lg-joker">🃏</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
                 <div className="lb-num">{ex(r) ?? 0}</div>
                 <div className="lb-num">{dir(r) ?? 0}</div>
@@ -126,6 +270,13 @@ export default function LeaderboardPage() {
           })}
         </div>
       </div>
+
+      {selectedPlayer && (
+        <PlayerHistoryModal
+          player={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
     </div>
   )
 }

@@ -141,6 +141,26 @@ export async function upsertRoundMessage(userId, round, message) {
   if (error) throw error
 }
 
+export async function getPlayerHistory(userId) {
+  const { data, error } = await supabase
+    .from('predictions')
+    .select('home_guess, away_guess, points, is_joker, penalty_bonus, matches!inner(id, home_team, away_team, home_score, away_score, kickoff, round, is_special)')
+    .eq('user_id', userId)
+    .not('matches.home_score', 'is', null)
+  if (error) throw error
+  return (data || []).sort((a, b) => new Date(b.matches.kickoff) - new Date(a.matches.kickoff))
+}
+
+export async function getLiveMatchGuesses(liveMatchIds) {
+  if (!liveMatchIds.length) return []
+  const { data, error } = await supabase
+    .from('predictions')
+    .select('user_id, match_id, home_guess, away_guess, is_joker')
+    .in('match_id', liveMatchIds)
+  if (error) throw error
+  return data || []
+}
+
 export async function getMyStats(userId) {
   const [{ data, error }, { data: maxStreakData }] = await Promise.all([
     supabase
