@@ -102,9 +102,14 @@ export async function updateProfile(userId, updates) {
 }
 
 export async function uploadAvatar(file, userId) {
+  // Delete any existing avatar files to avoid CDN caching stale images
+  const { data: existing } = await supabase.storage.from('avatars').list(userId)
+  if (existing?.length) {
+    await supabase.storage.from('avatars').remove(existing.map(f => `${userId}/${f.name}`))
+  }
   const ext = file.name.split('.').pop()
-  const path = `${userId}/avatar.${ext}`
-  const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+  const path = `${userId}/avatar-${Date.now()}.${ext}`
+  const { error } = await supabase.storage.from('avatars').upload(path, file)
   if (error) throw error
   const { data } = supabase.storage.from('avatars').getPublicUrl(path)
   return data.publicUrl

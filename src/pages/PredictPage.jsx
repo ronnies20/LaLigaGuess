@@ -48,6 +48,7 @@ export default function PredictPage() {
   const [saving, setSaving]   = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const saveBtnRef            = useRef(null)
+  const celebratedRef         = useRef(getCelebrated())
 
   useEffect(() => {
     getCurrentRound().then(r => setRound(r)).catch(() => setRound(1))
@@ -79,13 +80,13 @@ export default function PredictPage() {
 
   useEffect(() => {
     if (!matches.length || !Object.keys(guesses).length) return
-    const celebrated = getCelebrated()
     let delay = 0
     matches.forEach(m => {
-      if (m.home_score === null || celebrated.has(m.id)) return
+      if (m.home_score === null || celebratedRef.current.has(m.id)) return
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') return
       const pts = calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score)
+      celebratedRef.current.add(m.id)
       markCelebrated(m.id)
       if (pts === 3) {
         setTimeout(() => { playJackpotSound(); fireConfetti() }, delay)
