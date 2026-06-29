@@ -169,11 +169,11 @@ export default function ProfilePage() {
         <div className="card-section" style={{ fontSize:13, lineHeight:1.8 }}>
           <div style={{ display:'flex', gap:10, marginBottom:10, alignItems:'center' }}>
             <span style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#00C853,#00E676)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0, boxShadow:'0 0 12px rgba(0,230,118,0.5)' }}>3</span>
-            <span style={{ color:'#EEEEFF', textAlign:'center', flex:1 }}>תוצאה מדויקת — ניחשת 2:1 ויצא 2:1</span>
+            <span style={{ color:'#EEEEFF', textAlign:'center', flex:1 }}>תוצאה מדויקת - ניחשת 2:1 ויצא 2:1</span>
           </div>
           <div style={{ display:'flex', gap:10, marginBottom:10, alignItems:'center' }}>
             <span style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#FFE566,#C4901A)', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0, boxShadow:'0 0 12px rgba(253,185,39,0.5)' }}>1</span>
-            <span style={{ color:'#EEEEFF', textAlign:'center', flex:1 }}>כיוון נכון — ניצחון/תיקו/הפסד נכון, תוצאה שגויה</span>
+            <span style={{ color:'#EEEEFF', textAlign:'center', flex:1 }}>כיוון נכון - ניצחון/תיקו/הפסד נכון, תוצאה שגויה</span>
           </div>
           <div style={{ display:'flex', gap:10, alignItems:'center' }}>
             <span style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,23,68,0.15)', color:'#FF1744', border:'1px solid rgba(255,23,68,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0 }}>0</span>
