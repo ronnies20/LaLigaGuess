@@ -113,12 +113,20 @@ export async function uploadAvatar(file, userId) {
 export async function getMyStats(userId) {
   const { data, error } = await supabase
     .from('predictions')
-    .select('points')
+    .select('points, matches(kickoff)')
     .eq('user_id', userId)
     .not('points', 'is', null)
   if (error) throw error
+
+  const sorted = [...data].sort((a, b) => new Date(a.matches.kickoff) - new Date(b.matches.kickoff))
+  let maxStreak = 0, cur = 0
+  for (const p of sorted) {
+    if (p.points === 3) { cur++; if (cur > maxStreak) maxStreak = cur }
+    else cur = 0
+  }
+
   const exact = data.filter(p => p.points === 3).length
   const dir   = data.filter(p => p.points === 1).length
   const total = data.reduce((s, p) => s + p.points, 0)
-  return { exact, dir, total, played: data.length }
+  return { exact, dir, total, played: data.length, maxStreak }
 }

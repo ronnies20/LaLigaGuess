@@ -92,8 +92,7 @@ export default function ProfilePage() {
   }
 
   function copyInvite() {
-    const link = `${window.location.origin}?invite=LL2627`
-    navigator.clipboard.writeText(link).catch(() => {})
+    navigator.clipboard.writeText(window.location.origin).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
   }
@@ -113,7 +112,6 @@ export default function ProfilePage() {
         {uploading && <div style={{ fontSize:11, color:'#A07FCC' }}>מעלה תמונה...</div>}
         <div style={{ textAlign:'center' }}>
           <div style={{ fontSize:17, fontWeight:800, color:'#FDB927' }}>{displayName}</div>
-          <div style={{ fontSize:12, color:'#7060A0', marginTop:2 }}>{user?.email}</div>
         </div>
         {rank && (
           <div style={{ background:'rgba(253,185,39,0.1)', border:'1px solid rgba(253,185,39,0.3)', borderRadius:10, padding:'6px 20px', textAlign:'center' }}>
@@ -151,8 +149,8 @@ export default function ProfilePage() {
                 <div className="stat-lbl">% הצלחה</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{stats.played > 0 ? (stats.total / stats.played).toFixed(1) : '0'}</div>
-                <div className="stat-lbl">נק׳ לניחוש</div>
+                <div className="stat-val" style={{ color:'#ff6600' }}>{stats.maxStreak > 0 ? `🔥${stats.maxStreak}` : '—'}</div>
+                <div className="stat-lbl">סטרייק מקסימלי</div>
               </div>
             </div>
           </>
@@ -161,7 +159,7 @@ export default function ProfilePage() {
         <div className="section-title" style={{ marginTop:8 }}>הזמן חברים</div>
         <div className="invite-box">
           <p style={{ fontSize:13, color:'#7060A0', marginBottom:8 }}>שתף קישור זה כדי שחברים יוכלו להצטרף לליגה</p>
-          <div className="invite-code">LL2627</div>
+          <div className="invite-code" style={{ fontSize:12, wordBreak:'break-all', userSelect:'all', letterSpacing:0 }}>{window.location.origin}</div>
           <button className="btn btn-outline btn-sm" onClick={copyInvite}>
             {copied ? '✓ הועתק!' : '📋 העתק קישור'}
           </button>
@@ -171,18 +169,18 @@ export default function ProfilePage() {
         <div className="card-section" style={{ fontSize:13, lineHeight:1.8 }}>
           <div style={{ display:'flex', gap:10, marginBottom:10, alignItems:'center' }}>
             <span style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#00C853,#00E676)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0, boxShadow:'0 0 12px rgba(0,230,118,0.5)' }}>3</span>
-            <span style={{ color:'#EEEEFF' }}>תוצאה מדויקת — ניחשת 2:1 ויצא 2:1</span>
+            <span style={{ color:'#EEEEFF', textAlign:'center', flex:1 }}>תוצאה מדויקת — ניחשת 2:1 ויצא 2:1</span>
           </div>
           <div style={{ display:'flex', gap:10, marginBottom:10, alignItems:'center' }}>
             <span style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#FFE566,#C4901A)', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0, boxShadow:'0 0 12px rgba(253,185,39,0.5)' }}>1</span>
-            <span style={{ color:'#EEEEFF' }}>כיוון נכון — ניצחון/תיקו/הפסד נכון, תוצאה שגויה</span>
+            <span style={{ color:'#EEEEFF', textAlign:'center', flex:1 }}>כיוון נכון — ניצחון/תיקו/הפסד נכון, תוצאה שגויה</span>
           </div>
           <div style={{ display:'flex', gap:10, alignItems:'center' }}>
             <span style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,23,68,0.15)', color:'#FF1744', border:'1px solid rgba(255,23,68,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14, flexShrink:0 }}>0</span>
-            <span style={{ color:'#7060A0' }}>ניחוש שגוי לחלוטין</span>
+            <span style={{ color:'#7060A0', textAlign:'center', flex:1 }}>ניחוש שגוי לחלוטין</span>
           </div>
-          <div style={{ marginTop:12, padding:'10px 12px', background:'rgba(255,100,0,0.08)', borderRadius:8, fontSize:12, color:'#FF7A00', border:'1px solid rgba(255,100,0,0.15)' }}>
-            🔒 ניחושים ננעלים 5 דקות לפני תחילת כל משחק · עונת 26/27
+          <div style={{ marginTop:12, padding:'10px 12px', background:'rgba(255,100,0,0.08)', borderRadius:8, fontSize:12, color:'#FF7A00', border:'1px solid rgba(255,100,0,0.15)', textAlign:'center' }}>
+            🔒 ניחושים ננעלים 5 דקות לפני תחילת כל משחק
           </div>
         </div>
 
