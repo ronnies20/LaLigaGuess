@@ -79,11 +79,17 @@ async function fillMissingPredictions() {
   const existing  = await get(`/predictions?match_id=in.(${matchIds})&select=user_id,match_id`)
   const existingSet = new Set(existing.map(p => `${p.user_id}:${p.match_id}`))
 
+  // One prediction per match — same for all users (CAT's "opinion" on each game)
+  const matchPred = {}
+  for (const match of matches) {
+    matchPred[match.id] = { home_guess: randomGoals(), away_guess: randomGoals() }
+  }
+
   const rows = []
   for (const user of profiles) {
     for (const match of matches) {
       if (!existingSet.has(`${user.id}:${match.id}`)) {
-        rows.push({ user_id: user.id, match_id: match.id, home_guess: randomGoals(), away_guess: randomGoals() })
+        rows.push({ user_id: user.id, match_id: match.id, ...matchPred[match.id] })
       }
     }
   }
