@@ -93,10 +93,10 @@ export function fireConfetti(originX, originY) {
 
 const CELEBRATED_KEY = 'casino_celebrated'
 export function getCelebrated() {
-  try { return new Set(JSON.parse(sessionStorage.getItem(CELEBRATED_KEY) || '[]')) }
+  try { return new Set(JSON.parse(localStorage.getItem(CELEBRATED_KEY) || '[]')) }
   catch { return new Set() }
 }
 export function markCelebrated(id) {
   const s = getCelebrated(); s.add(id)
-  sessionStorage.setItem(CELEBRATED_KEY, JSON.stringify([...s]))
+  localStorage.setItem(CELEBRATED_KEY, JSON.stringify([...s]))
 }

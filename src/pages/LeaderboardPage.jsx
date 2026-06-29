@@ -51,11 +51,9 @@ export default function LeaderboardPage() {
     setLoading(false)
   }
 
-  const pts  = r => view === 'season' ? r.total_points  : r.round_points
-  const ex   = r => view === 'season' ? r.exact_count   : r.round_exact
+  const pts  = r => view === 'season' ? r.total_points    : r.round_points
+  const ex   = r => view === 'season' ? r.exact_count     : r.round_exact
   const dir  = r => view === 'season' ? r.direction_count : r.round_direction
-
-  const myIdx = rows.findIndex(r => r.user_id === user?.id)
 
   return (
     <div className="page">
@@ -67,9 +65,9 @@ export default function LeaderboardPage() {
 
         {view === 'round' && (
           <div className="round-nav" style={{ marginBottom:'12px' }}>
-            <button className="round-nav-btn" onClick={() => setRound(r => r-1)} disabled={round<=1}>‹</button>
+            <button className="round-nav-btn" onClick={() => setRound(r => r <= 1 ? 38 : r - 1)}>‹</button>
             <div className="round-label">מחזור {round}</div>
-            <button className="round-nav-btn" onClick={() => setRound(r => r+1)} disabled={round>=38}>›</button>
+            <button className="round-nav-btn" onClick={() => setRound(r => r >= 38 ? 1 : r + 1)}>›</button>
           </div>
         )}
 
@@ -86,9 +84,10 @@ export default function LeaderboardPage() {
           ) : rows.length === 0 ? (
             <div className="empty">אין נתונים עדיין</div>
           ) : rows.map((r, i) => {
-            const isMe = r.user_id === user?.id
+            const isMe     = r.user_id === user?.id
             const colorIdx = i % COLORS.length
-            const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':null
+            const medal    = i===0?'🥇':i===1?'🥈':i===2?'🥉':null
+            const streak   = view === 'round' ? (ex(r) ?? 0) + (dir(r) ?? 0) : 0
             return (
               <div key={r.user_id} className={`lb-row${isMe?' me':''}`}>
                 <div className={`lb-rank${i<3?' g'+(i+1):''}`}>{medal || (i+1)}</div>
@@ -96,7 +95,8 @@ export default function LeaderboardPage() {
                   <div className="lb-avatar" style={{ background:BGS[colorIdx], color:COLORS[colorIdx] }}>
                     {initial(r.display_name)}
                   </div>
-                  <div className="lb-name">{r.display_name}{isMe ? ' (אני)' : ''}</div>
+                  <div className="lb-name">{r.display_name}</div>
+                  {streak >= 3 && <div className="lb-streak-badge">🔥 {streak}</div>}
                 </div>
                 <div className="lb-num">{ex(r) ?? 0}</div>
                 <div className="lb-num">{dir(r) ?? 0}</div>
@@ -105,12 +105,6 @@ export default function LeaderboardPage() {
             )
           })}
         </div>
-
-        {myIdx > -1 && (
-          <div style={{ textAlign:'center', fontSize:'12px', color:'#888', marginTop:'8px' }}>
-            המיקום שלך: #{myIdx+1} מתוך {rows.length} שחקנים
-          </div>
-        )}
       </div>
     </div>
   )
