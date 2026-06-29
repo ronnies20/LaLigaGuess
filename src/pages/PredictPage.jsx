@@ -600,7 +600,7 @@ export default function PredictPage() {
                     return (
                       <>
                         <button className="others-toggle-btn dist-toggle-btn" onClick={() => setExpandedMatch(p => p === m.id ? null : m.id)}>
-                          📊 הסתברות הימורים ({total}) {expandedMatch === m.id ? '▲' : '▼'}
+                          📊 הסתברות הימורים {expandedMatch === m.id ? '▲' : '▼'}
                         </button>
                         {expandedMatch === m.id && (
                           <div className="dist-list">
