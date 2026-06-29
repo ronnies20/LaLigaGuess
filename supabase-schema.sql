@@ -198,7 +198,36 @@ group by o.user_id;
 
 grant select on current_streak_view to anon, authenticated;
 
--- 9. STORAGE — bucket לאווטרים
+-- 9. פונקציה לחישוב סטרייק מקסימלי לשחקן (SQL מובטח לפי סדר kickoff)
+create or replace function get_max_streak(p_user_id uuid)
+returns int language plpgsql stable security definer as $$
+declare
+  max_streak int := 0;
+  cur_streak int := 0;
+  rec        record;
+begin
+  for rec in
+    select p.points
+    from predictions p
+    join matches m on m.id = p.match_id
+    where p.user_id = p_user_id
+      and p.points is not null
+    order by m.kickoff asc
+  loop
+    if rec.points = 3 then
+      cur_streak := cur_streak + 1;
+      if cur_streak > max_streak then max_streak := cur_streak; end if;
+    else
+      cur_streak := 0;
+    end if;
+  end loop;
+  return max_streak;
+end;
+$$;
+
+grant execute on function get_max_streak(uuid) to anon, authenticated;
+
+-- 10. STORAGE — bucket לאווטרים
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
