@@ -116,6 +116,7 @@ create or replace view leaderboard_view as
 select
   p.user_id,
   pr.display_name,
+  pr.avatar_url,
   coalesce(sum(p.points), 0)             as total_points,
   count(*) filter (where p.points = 3)   as exact_count,
   count(*) filter (where p.points = 1)   as direction_count,
@@ -124,13 +125,14 @@ select
 from predictions p
 join profiles pr on pr.id = p.user_id
 where p.points is not null
-group by p.user_id, pr.display_name;
+group by p.user_id, pr.display_name, pr.avatar_url;
 
 -- 6. VIEW: טבלת דירוג לפי מחזור
 create or replace view round_leaderboard_view as
 select
   p.user_id,
   pr.display_name,
+  pr.avatar_url,
   m.round,
   coalesce(sum(p.points), 0)             as round_points,
   count(*) filter (where p.points = 3)   as round_exact,
@@ -139,7 +141,7 @@ from predictions p
 join profiles pr on pr.id = p.user_id
 join matches m   on m.id  = p.match_id
 where p.points is not null
-group by p.user_id, pr.display_name, m.round;
+group by p.user_id, pr.display_name, pr.avatar_url, m.round;
 
 -- 7. ROW LEVEL SECURITY
 alter table profiles    enable row level security;

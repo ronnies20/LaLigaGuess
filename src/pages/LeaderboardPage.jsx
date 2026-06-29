@@ -97,8 +97,11 @@ export default function LeaderboardPage() {
               <div key={r.user_id} className={`lb-row${isMe?' me':''}`}>
                 <div className={`lb-rank${i<3?' g'+(i+1):''}`}>{medal || (i+1)}</div>
                 <div className="lb-user">
-                  <div className="lb-avatar" style={{ background:BGS[colorIdx], color:COLORS[colorIdx] }}>
-                    {initial(r.display_name)}
+                  <div className="lb-avatar" style={{ background:BGS[colorIdx], color:COLORS[colorIdx], overflow:'hidden', padding:0 }}>
+                    {r.avatar_url
+                      ? <img src={r.avatar_url} alt={r.display_name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }} />
+                      : initial(r.display_name)
+                    }
                   </div>
                   <div className="lb-name">{r.display_name}</div>
                   {streak >= 3 && <div className="lb-streak-badge">🔥 {streak}</div>}

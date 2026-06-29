@@ -408,7 +408,7 @@ body {
   padding: 14px; text-align: center;
 }
 .stat-val { font-size: 34px; font-weight: 800; color: var(--gold); }
-.stat-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-lbl { font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* ---- Badges ---- */
 .badge {
