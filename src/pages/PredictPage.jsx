@@ -6,8 +6,10 @@ import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCeleb
 
 function PtsBadge({ pts }) {
   if (pts === null) return <div className="pts-badge pts-none">?</div>
+  if (pts === 6)    return <div className="pts-badge pts-exact pts-joker">🃏6</div>
   if (pts === 3)    return <div className="pts-badge pts-exact">3</div>
   if (pts === 1)    return <div className="pts-badge pts-dir">1</div>
+  if (pts === -1)   return <div className="pts-badge pts-miss pts-joker">🃏-1</div>
   return <div className="pts-badge pts-miss">0</div>
 }
 
@@ -39,10 +41,11 @@ function TeamDisplay({ name }) {
 
 export default function PredictPage() {
   const { user } = useAuth()
-  const [round, setRound]         = useState(null)
+  const [round, setRound]               = useState(null)
   const [currentRound, setCurrentRound] = useState(null)
-  const [trashTalk, setTrashTalk]   = useState('')
-  const [trashSaved, setTrashSaved] = useState(false)
+  const [jokerMatchId, setJokerMatchId] = useState(null)
+  const [trashTalk, setTrashTalk]       = useState('')
+  const [trashSaved, setTrashSaved]     = useState(false)
   const [matches, setMatches] = useState([])
   const [guesses, setGuesses] = useState({})
   const [saved, setSaved]     = useState({})
@@ -70,12 +73,15 @@ export default function PredictPage() {
         .in('match_id', (matchData || []).map(m => m.id))
       setMatches(matchData || [])
       const g = {}, s = {}
+      let joker = null
       ;(predData || []).forEach(p => {
-        g[p.match_id] = { h: String(p.home_guess ?? ''), a: String(p.away_guess ?? '') }
+        g[p.match_id] = { h: String(p.home_guess ?? ''), a: String(p.away_guess ?? ''), joker: !!p.is_joker }
         s[p.match_id] = true
+        if (p.is_joker) joker = p.match_id
       })
       setGuesses(g)
       setSaved(s)
+      setJokerMatchId(joker)
     } catch (err) { console.error(err) }
     setLoading(false)
   }, [round, user.id])
@@ -97,20 +103,34 @@ export default function PredictPage() {
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') return
       const hg = parseInt(g.h), ag = parseInt(g.a)
-      const pts = calcPoints(hg, ag, m.home_score, m.away_score)
+      const isJokerPred = !!g.joker
+      const pts = calcPoints(hg, ag, m.home_score, m.away_score, isJokerPred)
       celebratedRef.current.add(m.id)
       markCelebrated(m.id)
-      if (pts === 3) {
+      const mid = m.id
+      if (pts === 6) {
+        setTimeout(() => {
+          playJackpotSound(); fireConfetti()
+          setTimeout(() => { playJackpotSound(); fireConfetti() }, 350)
+        }, delay)
+        delay += 900
+      } else if (pts === 3) {
         setTimeout(() => { playJackpotSound(); fireConfetti() }, delay)
         delay += 700
       } else if (pts === 1) {
         setTimeout(playCoinSound, delay)
         delay += 250
+      } else if (pts === -1) {
+        setTimeout(() => {
+          playReversedSound()
+          setMatchAnims(a => ({ ...a, [mid]: 'reversed' }))
+          setTimeout(() => setMatchAnims(a => { const n = { ...a }; delete n[mid]; return n }), 1600)
+        }, delay)
+        delay += 700
       } else {
         const isReversed = hg === m.away_score && ag === m.home_score
         const distance = Math.abs(hg - m.home_score) + Math.abs(ag - m.away_score)
         const isNearMiss = !isReversed && distance === 1
-        const mid = m.id
         if (isReversed) {
           setTimeout(() => {
             playReversedSound()
@@ -143,7 +163,7 @@ export default function PredictPage() {
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') continue
       try {
-        await upsertPrediction(user.id, m.id, parseInt(g.h), parseInt(g.a))
+        await upsertPrediction(user.id, m.id, parseInt(g.h), parseInt(g.a), jokerMatchId === m.id)
         setSaved(s => ({ ...s, [m.id]: true }))
         setFlash(f => ({ ...f, [m.id]: true }))
         setTimeout(() => setFlash(f => ({ ...f, [m.id]: false })), 400)
@@ -219,18 +239,29 @@ export default function PredictPage() {
               const locked          = isMatchLocked(m.kickoff)
               const hasReal         = m.home_score !== null
               const effectiveLocked = locked || hasReal
-              const g               = guesses[m.id] || { h: '', a: '' }
+              const g               = guesses[m.id] || { h: '', a: '', joker: false }
               const hasGuess        = g.h !== '' && g.a !== ''
+              const isThisJoker     = jokerMatchId === m.id
+              const jokerTaken      = jokerMatchId !== null && !isThisJoker
               const pts             = hasReal && hasGuess
-                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score)
+                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker)
                 : null
-              const guessClass = pts === 3 ? 'guess-exact' : pts === 1 ? 'guess-dir' : pts === 0 ? 'guess-miss' : 'guess-none'
+              const guessClass = pts === 6 ? 'guess-exact' : pts === 3 ? 'guess-exact' : pts === 1 ? 'guess-dir' : (pts === 0 || pts === -1) ? 'guess-miss' : 'guess-none'
 
               return (
-                <div className="card" key={m.id}>
+                <div className={`card${isThisJoker ? ' joker-card' : ''}`} key={m.id}>
                   <div className="match-header">
                     <span className="match-date">{formatKickoff(m.kickoff)}</span>
                     {locked && !hasReal && <span className="badge badge-lock" style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}>🔒 נעול</span>}
+                    {!effectiveLocked && (
+                      <button
+                        className={`joker-btn${isThisJoker ? ' joker-active' : ''}${jokerTaken ? ' joker-taken' : ''}`}
+                        onClick={() => setJokerMatchId(isThisJoker ? null : m.id)}
+                        style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}
+                        title="ג׳וקר — מדויק = 6 נקודות, טעות = -1"
+                      >🃏</button>
+                    )}
+                    {hasReal && g.joker && <span style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)',fontSize:'16px'}}>🃏</span>}
                   </div>
                   <div className="match-body">
                     <TeamDisplay name={m.away_team} />

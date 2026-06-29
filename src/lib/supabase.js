@@ -53,11 +53,11 @@ export async function getPredictions(userId, round) {
   return data
 }
 
-export async function upsertPrediction(userId, matchId, homeGuess, awayGuess) {
+export async function upsertPrediction(userId, matchId, homeGuess, awayGuess, isJoker = false) {
   const { data, error } = await supabase
     .from('predictions')
     .upsert(
-      { user_id: userId, match_id: matchId, home_guess: homeGuess, away_guess: awayGuess },
+      { user_id: userId, match_id: matchId, home_guess: homeGuess, away_guess: awayGuess, is_joker: isJoker },
       { onConflict: 'user_id,match_id' }
     )
     .select()

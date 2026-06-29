@@ -99,7 +99,12 @@ returns trigger language plpgsql security definer as $$
 begin
   if new.home_score is not null then
     update predictions
-    set points = calculate_points(home_guess, away_guess, new.home_score, new.away_score)
+    set points = case
+      when is_joker = true then
+        case when home_guess = new.home_score and away_guess = new.away_score then 6 else -1 end
+      else
+        calculate_points(home_guess, away_guess, new.home_score, new.away_score)
+    end
     where match_id = new.id;
   end if;
   return new;

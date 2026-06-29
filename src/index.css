@@ -556,3 +556,21 @@ body {
   font-size: 11px; color: var(--gold); font-style: italic;
   opacity: 0.9; margin-top: 2px; font-weight: 600;
 }
+
+/* ---- Joker ---- */
+.joker-card {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 22px rgba(253,185,39,0.35) !important;
+}
+.joker-btn {
+  font-size: 17px; background: none;
+  border: 1.5px solid rgba(253,185,39,0.25); border-radius: 8px;
+  padding: 2px 7px; cursor: pointer; transition: all .15s; line-height: 1;
+}
+.joker-btn.joker-active {
+  background: rgba(253,185,39,0.15);
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(253,185,39,0.4);
+}
+.joker-btn.joker-taken { opacity: 0.2; cursor: default; }
+.pts-joker { font-size: 11px !important; letter-spacing: -0.5px; }

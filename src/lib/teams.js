@@ -29,9 +29,12 @@ export function getTeamLogoUrl(logoId) {
   return logoId ? `https://media.api-sports.io/football/teams/${logoId}.png` : null
 }
 
-export function calcPoints(homeGuess, awayGuess, homeReal, awayReal) {
+export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = false) {
   if (homeReal === null || homeReal === undefined) return null
-  if (homeGuess === null || homeGuess === undefined) return 0
+  if (homeGuess === null || homeGuess === undefined) return isJoker ? -1 : 0
+  if (isJoker) {
+    return (homeGuess === homeReal && awayGuess === awayReal) ? 6 : -1
+  }
   if (homeGuess === homeReal && awayGuess === awayReal) return 3
   const realDir = Math.sign(homeReal - awayReal)
   const guessDir = Math.sign(homeGuess - awayGuess)
