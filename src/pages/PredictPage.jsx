@@ -1,17 +1,22 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
-import { getTeamInfo, getTeamLogoUrl, calcPoints, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
+import { getTeamInfo, getTeamLogoUrl, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
 function PtsBadge({ pts, isJoker, isSpecial }) {
-  if (pts === null) return <div className="pts-badge pts-none">?</div>
-  if (pts === 6  && isJoker)   return <div className="pts-badge pts-exact pts-joker">🃏6</div>
-  if (pts === 6  && isSpecial) return <div className="pts-badge pts-exact pts-special">⭐6</div>
-  if (pts === 3)               return <div className="pts-badge pts-exact">3</div>
-  if (pts === 2)               return <div className="pts-badge pts-dir pts-special">⭐2</div>
-  if (pts === 1)               return <div className="pts-badge pts-dir">1</div>
+  if (pts === null)            return <div className="pts-badge pts-none">?</div>
+  if (pts === 12)              return <div className="pts-badge pts-exact pts-joker">🃏12</div>
+  if (pts === 10)              return <div className="pts-badge pts-exact pts-joker">🃏10</div>
+  if (pts === 6  && isJoker)  return <div className="pts-badge pts-exact pts-joker">🃏6</div>
+  if (pts === -3)              return <div className="pts-badge pts-miss pts-joker">🃏-3</div>
   if (pts === -1)              return <div className="pts-badge pts-miss pts-joker">🃏-1</div>
+  if (pts === 6  && isSpecial) return <div className="pts-badge pts-exact pts-special">⭐6</div>
+  if (pts === 2)               return <div className="pts-badge pts-dir pts-special">⭐2</div>
+  if (pts === 6)               return <div className="pts-badge pts-exact pts-streak">🔥6</div>
+  if (pts === 5)               return <div className="pts-badge pts-exact pts-streak">🔥5</div>
+  if (pts === 3)               return <div className="pts-badge pts-exact">3</div>
+  if (pts === 1)               return <div className="pts-badge pts-dir">1</div>
   return <div className="pts-badge pts-miss">0</div>
 }
 
@@ -46,6 +51,7 @@ export default function PredictPage() {
   const [round, setRound]               = useState(null)
   const [currentRound, setCurrentRound] = useState(null)
   const [jokerMatchId, setJokerMatchId] = useState(null)
+  const [userStreak, setUserStreak]     = useState(0)
   const [trashTalk, setTrashTalk]       = useState('')
   const [trashSaved, setTrashSaved]     = useState(false)
   const [matches, setMatches] = useState([])
@@ -77,13 +83,18 @@ export default function PredictPage() {
       const g = {}, s = {}
       let joker = null
       ;(predData || []).forEach(p => {
-        g[p.match_id] = { h: String(p.home_guess ?? ''), a: String(p.away_guess ?? ''), joker: !!p.is_joker }
+        g[p.match_id] = { h: String(p.home_guess ?? ''), a: String(p.away_guess ?? ''), joker: !!p.is_joker, pts: p.points }
         s[p.match_id] = true
         if (p.is_joker) joker = p.match_id
       })
       setGuesses(g)
       setSaved(s)
       setJokerMatchId(joker)
+
+      const { data: streakData } = await supabase
+        .from('current_streak_view').select('current_streak')
+        .eq('user_id', user.id).maybeSingle()
+      setUserStreak(streakData?.current_streak ?? 0)
     } catch (err) { console.error(err) }
     setLoading(false)
   }, [round, user.id])
@@ -104,13 +115,19 @@ export default function PredictPage() {
       if (m.home_score === null || celebratedRef.current.has(m.id)) return
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') return
-      const hg = parseInt(g.h), ag = parseInt(g.a)
-      const isJokerPred = !!g.joker
-      const pts = calcPoints(hg, ag, m.home_score, m.away_score, isJokerPred, !!m.is_special)
+      const pts = g.pts ?? null
+      if (pts === null) return
       celebratedRef.current.add(m.id)
       markCelebrated(m.id)
       const mid = m.id
-      if (pts === 6) {
+      if (pts >= 10) {
+        setTimeout(() => {
+          playJackpotSound(); fireConfetti()
+          setTimeout(() => { playJackpotSound(); fireConfetti() }, 250)
+          setTimeout(() => { playJackpotSound(); fireConfetti() }, 500)
+        }, delay)
+        delay += 1200
+      } else if (pts >= 5) {
         setTimeout(() => {
           playJackpotSound(); fireConfetti()
           setTimeout(() => { playJackpotSound(); fireConfetti() }, 350)
@@ -122,7 +139,7 @@ export default function PredictPage() {
       } else if (pts === 1 || pts === 2) {
         setTimeout(playCoinSound, delay)
         delay += 250
-      } else if (pts === -1) {
+      } else if (pts < 0) {
         setTimeout(() => {
           playReversedSound()
           setMatchAnims(a => ({ ...a, [mid]: 'reversed' }))
@@ -130,6 +147,7 @@ export default function PredictPage() {
         }, delay)
         delay += 700
       } else {
+        const hg = parseInt(g.h), ag = parseInt(g.a)
         const isReversed = hg === m.away_score && ag === m.home_score
         const distance = Math.abs(hg - m.home_score) + Math.abs(ag - m.away_score)
         const isNearMiss = !isReversed && distance === 1
@@ -224,6 +242,27 @@ export default function PredictPage() {
           </div>
         )}
 
+        {userStreak >= 1 && userStreak <= 2 && (
+          <div className="streak-mini">
+            {'🔥'.repeat(userStreak)} {userStreak} ברצף — עוד {3 - userStreak} לבונוס
+          </div>
+        )}
+        {userStreak === 3 && (
+          <div className="streak-banner streak-warning">
+            🔥🔥🔥 3 ניחושים ברצף! הניחוש המדויק הבא יהיה שווה <strong>5 נקודות</strong>
+          </div>
+        )}
+        {userStreak === 4 && (
+          <div className="streak-banner streak-bonus">
+            🔥🔥🔥🔥 4 ברצף! ניחוש מדויק הבא = <strong>6 נקודות</strong>
+          </div>
+        )}
+        {userStreak >= 5 && (
+          <div className="streak-banner streak-bonus">
+            {'🔥'.repeat(Math.min(userStreak, 6))} {userStreak} ברצף! ניחוש מדויק = <strong>6 נקודות</strong> 🎯
+          </div>
+        )}
+
         {loading ? (
           <div className="spinner" />
         ) : matches.length === 0 ? (
@@ -245,9 +284,7 @@ export default function PredictPage() {
               const hasGuess        = g.h !== '' && g.a !== ''
               const isThisJoker     = jokerMatchId === m.id
               const jokerTaken      = jokerMatchId !== null && !isThisJoker
-              const pts             = hasReal && hasGuess
-                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker, m.is_special)
-                : null
+              const pts        = hasReal && hasGuess ? (g.pts ?? null) : null
               const guessClass = (pts >= 3) ? 'guess-exact' : (pts === 1 || pts === 2) ? 'guess-dir' : (pts !== null && pts <= 0) ? 'guess-miss' : 'guess-none'
 
               return (

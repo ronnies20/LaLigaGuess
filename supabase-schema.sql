@@ -93,23 +93,64 @@ begin
 end;
 $$;
 
--- עדכון נקודות אחרי עדכון תוצאת משחק
+-- עדכון נקודות אחרי עדכון תוצאת משחק (כולל בונוס סטרייק)
 create or replace function update_match_points()
 returns trigger language plpgsql security definer as $$
+declare
+  rec          record;
+  streak_count int;
+  is_exact_pred boolean;
+  final_pts    int;
 begin
   if new.home_score is not null then
-    update predictions
-    set points = case
-      when is_joker = true then
-        -- joker: בינארי — מדויק=6, כל טעות=-1
-        case when home_guess = new.home_score and away_guess = new.away_score then 6 else -1 end
-      when new.is_special = true then
-        -- משחק מיוחד: כפל נקודות
-        calculate_points(home_guess, away_guess, new.home_score, new.away_score) * 2
+    for rec in select * from predictions where match_id = new.id loop
+      is_exact_pred := (rec.home_guess = new.home_score and rec.away_guess = new.away_score);
+
+      -- חישוב סטרייק של היוזר לפני המשחק הנוכחי (לפי סדר kickoff)
+      with ordered_preds as (
+        select
+          case when p.home_guess = m.home_score and p.away_guess = m.away_score then 1 else 0 end as is_exact,
+          row_number() over (order by m.kickoff desc) as rn
+        from predictions p
+        join matches m on m.id = p.match_id
+        where p.user_id = rec.user_id
+          and m.kickoff < new.kickoff
+          and m.home_score is not null
+      ),
+      first_miss as (
+        select min(rn) as miss_rn from ordered_preds where is_exact = 0
+      )
+      select coalesce(count(*)::int, 0) into streak_count
+      from ordered_preds
+      left join first_miss on true
+      where is_exact = 1
+        and (first_miss.miss_rn is null or ordered_preds.rn < first_miss.miss_rn);
+
+      if rec.is_joker then
+        if is_exact_pred then
+          if    streak_count >= 5 then final_pts := 12;
+          elsif streak_count >= 4 then final_pts := 10;
+          else                         final_pts := 6;
+          end if;
+        else
+          final_pts := case when streak_count >= 4 then -3 else -1 end;
+        end if;
+      elsif new.is_special then
+        -- משחק מיוחד: x2 (סטרייק לא מצטבר עם Special)
+        final_pts := calculate_points(rec.home_guess, rec.away_guess, new.home_score, new.away_score) * 2;
       else
-        calculate_points(home_guess, away_guess, new.home_score, new.away_score)
-    end
-    where match_id = new.id;
+        if is_exact_pred then
+          if    streak_count >= 5 then final_pts := 6;
+          elsif streak_count >= 4 then final_pts := 5;
+          else                         final_pts := 3;
+          end if;
+        else
+          final_pts := calculate_points(rec.home_guess, rec.away_guess, new.home_score, new.away_score);
+        end if;
+      end if;
+
+      update predictions set points = final_pts where id = rec.id;
+    end loop;
   end if;
   return new;
 end;
@@ -126,13 +167,15 @@ select
   p.user_id,
   pr.display_name,
   pr.avatar_url,
-  coalesce(sum(p.points), 0)             as total_points,
-  count(*) filter (where p.points = 3)   as exact_count,
-  count(*) filter (where p.points = 1)   as direction_count,
-  count(*) filter (where p.points = 0)   as miss_count,
-  count(*)                               as total_predictions
+  coalesce(sum(p.points), 0)                                                                     as total_points,
+  count(*) filter (where p.home_guess = m.home_score and p.away_guess = m.away_score)            as exact_count,
+  count(*) filter (where p.points > 0
+                     and not (p.home_guess = m.home_score and p.away_guess = m.away_score))      as direction_count,
+  count(*) filter (where p.points <= 0)                                                          as miss_count,
+  count(*)                                                                                       as total_predictions
 from predictions p
 join profiles pr on pr.id = p.user_id
+join matches   m  on m.id  = p.match_id
 where p.points is not null
 group by p.user_id, pr.display_name, pr.avatar_url;
 
@@ -177,18 +220,17 @@ create policy "predictions_update" on predictions for update
     not (select is_match_locked(kickoff) from matches where id = match_id)
   );
 
--- 8. VIEW: רצף נוכחי של ניחושים מדויקים רצופים (לפי כיפוף זמן)
--- סופר כמה ניחושים מדויקים אחרונים יש לכל שחקן ברצף, ללא הפסקה
+-- 8. VIEW: רצף נוכחי — לפי דיוק אמיתי (לא לפי נקודות, כי ניחוש בסטרייק שווה 5/6)
 create or replace view current_streak_view as
 with ordered as (
   select
     p.user_id,
     m.kickoff,
-    case when p.points = 3 then 1 else 0 end as is_exact,
+    case when p.home_guess = m.home_score and p.away_guess = m.away_score then 1 else 0 end as is_exact,
     row_number() over (partition by p.user_id order by m.kickoff desc) as rn
   from predictions p
   join matches m on m.id = p.match_id
-  where p.points is not null
+  where m.home_score is not null
 ),
 first_miss as (
   select user_id, min(rn) as miss_rn
@@ -216,14 +258,15 @@ declare
   rec        record;
 begin
   for rec in
-    select p.points
+    select
+      case when p.home_guess = m.home_score and p.away_guess = m.away_score then true else false end as is_exact
     from predictions p
     join matches m on m.id = p.match_id
     where p.user_id = p_user_id
-      and p.points is not null
+      and m.home_score is not null
     order by m.kickoff asc
   loop
-    if rec.points = 3 then
+    if rec.is_exact then
       cur_streak := cur_streak + 1;
       if cur_streak > max_streak then max_streak := cur_streak; end if;
     else

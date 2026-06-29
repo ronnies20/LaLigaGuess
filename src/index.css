@@ -590,3 +590,25 @@ body {
   border-color: rgba(253,185,39,0.35) !important;
 }
 .pts-special { font-size: 11px !important; letter-spacing: -0.5px; }
+
+/* ---- Streak ---- */
+.streak-mini {
+  text-align: center; font-size: 12px; color: #f4a261;
+  padding: 6px 0 2px; opacity: 0.85;
+}
+.streak-banner {
+  border-radius: 10px; padding: 10px 16px;
+  font-size: 13px; text-align: center; margin-bottom: 6px;
+  font-weight: 600;
+}
+.streak-warning {
+  background: rgba(244,162,97,0.12);
+  border: 1px solid rgba(244,162,97,0.3);
+  color: #f4a261;
+}
+.streak-bonus {
+  background: rgba(253,185,39,0.13);
+  border: 1px solid rgba(253,185,39,0.35);
+  color: var(--gold);
+}
+.pts-streak { font-size: 11px !important; letter-spacing: -0.5px; }
