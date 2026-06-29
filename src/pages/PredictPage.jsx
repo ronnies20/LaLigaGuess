@@ -599,8 +599,8 @@ export default function PredictPage() {
                     const maxCount = top5[0][1]
                     return (
                       <>
-                        <button className="others-toggle-btn" onClick={() => setExpandedMatch(p => p === m.id ? null : m.id)}>
-                          📊 ניחושים ({total}) {expandedMatch === m.id ? '▲' : '▼'}
+                        <button className="others-toggle-btn dist-toggle-btn" onClick={() => setExpandedMatch(p => p === m.id ? null : m.id)}>
+                          📊 הסתברות הימורים ({total}) {expandedMatch === m.id ? '▲' : '▼'}
                         </button>
                         {expandedMatch === m.id && (
                           <div className="dist-list">
