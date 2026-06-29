@@ -2,33 +2,110 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, getTeamLogoUrl, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
+import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
-function buildShareText({ matches, guesses, round, userStreak, displayName }) {
-  const lines = [`🎰 LaLiga Guess • מחזור ${round}`, `👤 ${displayName}`, '']
-  let total = 0, count = 0
-  for (const m of matches) {
-    if (m.home_score === null) continue
+function generateShareCanvas({ matches, guesses, round, userStreak, displayName }) {
+  const W = 420, PAD = 22, ROW_H = 52, HEADER_H = 96, FOOTER_H = 76
+  const results = matches.filter(m => m.home_score !== null && guesses[m.id]?.pts != null)
+  if (!results.length) return null
+  const H = HEADER_H + results.length * ROW_H + FOOTER_H
+
+  const canvas = document.createElement('canvas')
+  canvas.width = W * 2; canvas.height = H * 2
+  const ctx = canvas.getContext('2d')
+  ctx.scale(2, 2)
+
+  ctx.fillStyle = '#0d0d0a'
+  ctx.fillRect(0, 0, W, H)
+
+  ctx.fillStyle = '#FDB927'
+  ctx.fillRect(0, 0, W, 4)
+
+  const hGrad = ctx.createLinearGradient(0, 4, W, 4)
+  hGrad.addColorStop(0, 'rgba(253,185,39,0.1)')
+  hGrad.addColorStop(1, 'rgba(253,185,39,0.02)')
+  ctx.fillStyle = hGrad
+  ctx.fillRect(0, 4, W, HEADER_H - 4)
+
+  ctx.direction = 'ltr'; ctx.textAlign = 'center'
+  ctx.font = 'bold 23px Arial, sans-serif'
+  ctx.fillStyle = '#FDB927'
+  ctx.fillText('🎰 LaLiga Guess', W / 2, 44)
+
+  ctx.font = '14px Arial, sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.6)'
+  ctx.fillText(`מחזור ${round}  •  ${displayName}`, W / 2, 70)
+
+  ctx.fillStyle = 'rgba(253,185,39,0.2)'
+  ctx.fillRect(PAD, HEADER_H - 1, W - PAD * 2, 1)
+
+  results.forEach((m, i) => {
     const g = guesses[m.id]
-    if (!g || g.pts == null) continue
-    count++
-    total += g.pts
+    const pts = g.pts
+    const rowY = HEADER_H + i * ROW_H
+    const midY = rowY + ROW_H / 2
+
+    if (i % 2 === 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.03)'
+      ctx.fillRect(0, rowY, W, ROW_H)
+    }
+
+    const icon = pts >= 5 ? '🔥' : pts >= 3 ? '✅' : pts >= 1 ? '➡️' : pts < 0 ? '🃏' : '❌'
+    ctx.font = '17px Arial, sans-serif'
+    ctx.textAlign = 'left'; ctx.direction = 'ltr'
+    ctx.fillStyle = '#fff'
+    ctx.fillText(icon, PAD, midY + 7)
+
     const awayS = getTeamInfo(m.away_team).short
     const homeS = getTeamInfo(m.home_team).short
-    const pts   = g.pts
-    const icon  = pts >= 5 ? '🔥' : pts >= 3 ? '✅' : pts >= 1 ? '➡️' : pts < 0 ? '🃏' : '❌'
-    const badge = (g.joker ? '🃏' : '') + (m.is_special ? '⭐' : '')
-    const ptsStr = pts >= 0 ? `+${pts}` : String(pts)
-    lines.push(`${icon}${badge} ${awayS} ${g.a}:${g.h} ${homeS}  →  ${m.away_score}:${m.home_score}  ${ptsStr}נק׳`)
+    ctx.font = 'bold 13px Arial, sans-serif'
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'
+    ctx.fillText(awayS, PAD + 30, midY + 1)
+    ctx.font = 'bold 14px Arial, sans-serif'
+    ctx.fillStyle = '#FDB927'
+    ctx.fillText(`${m.away_score}:${m.home_score}`, PAD + 64, midY + 1)
+    ctx.font = 'bold 13px Arial, sans-serif'
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'
+    ctx.fillText(homeS, PAD + 100, midY + 1)
+
+    ctx.font = '11px Arial, sans-serif'
+    ctx.fillStyle = 'rgba(255,255,255,0.38)'
+    ctx.fillText(`ניחוש ${g.a}:${g.h}`, PAD + 30, midY + 19)
+
+    const ptsColor = pts >= 5 ? '#FDB927' : pts >= 3 ? '#66bb6a' : pts >= 1 ? '#42a5f5' : '#ef5350'
+    const ptsStr = (pts >= 0 ? '+' : '') + pts + 'נק׳'
+    const extras = (g.joker ? '🃏' : '') + (m.is_special ? '⭐' : '') + (pts >= 5 && !g.joker ? '🔥' : '')
+
+    ctx.font = 'bold 14px Arial, sans-serif'
+    ctx.fillStyle = ptsColor
+    ctx.textAlign = 'right'
+    ctx.fillText(ptsStr, W - PAD, midY + 3)
+    if (extras) {
+      ctx.font = '13px Arial, sans-serif'
+      ctx.fillText(extras, W - PAD, midY + 19)
+    }
+  })
+
+  const footerY = HEADER_H + results.length * ROW_H
+  ctx.fillStyle = 'rgba(253,185,39,0.05)'
+  ctx.fillRect(0, footerY, W, FOOTER_H)
+  ctx.fillStyle = 'rgba(253,185,39,0.2)'
+  ctx.fillRect(PAD, footerY, W - PAD * 2, 1)
+
+  const total = results.reduce((s, m) => s + (guesses[m.id]?.pts ?? 0), 0)
+  ctx.direction = 'ltr'; ctx.textAlign = 'center'
+  ctx.font = 'bold 20px Arial, sans-serif'
+  ctx.fillStyle = '#FDB927'
+  ctx.fillText(`📊 ${total} נקודות`, W / 2, footerY + 32)
+
+  if (userStreak > 0) {
+    ctx.font = '13px Arial, sans-serif'
+    ctx.fillStyle = '#f4a261'
+    ctx.fillText(`🔥 סטרייק: ${userStreak}`, W / 2, footerY + 54)
   }
-  if (!count) return null
-  lines.push('')
-  lines.push(`📊 מחזור ${round}: ${total} נקודות`)
-  if (userStreak > 0) lines.push(`🔥 סטרייק: ${userStreak}`)
-  lines.push('')
-  lines.push('LaLiga Guess 🎰')
-  return lines.join('\n')
+
+  return canvas
 }
-import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
 function PtsBadge({ pts, isJoker, isSpecial }) {
   if (pts === null)            return <div className="pts-badge pts-none">?</div>
@@ -79,6 +156,9 @@ export default function PredictPage() {
   const [jokerMatchId, setJokerMatchId] = useState(null)
   const [userStreak, setUserStreak]     = useState(0)
   const [shareMsg, setShareMsg]         = useState('')
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareImageUrl, setShareImageUrl]   = useState('')
+  const shareFileRef = useRef(null)
   const [trashTalk, setTrashTalk]       = useState('')
   const [trashSaved, setTrashSaved]     = useState(false)
   const [matches, setMatches] = useState([])
@@ -228,20 +308,27 @@ export default function PredictPage() {
     setTimeout(() => setSaveMsg(''), 3500)
   }
 
-  async function shareRound() {
-    const text = buildShareText({
+  function shareRound() {
+    const canvas = generateShareCanvas({
       matches, guesses, round, userStreak,
       displayName: profile?.display_name || 'שחקן',
     })
-    if (!text) return
-    if (navigator.share) {
-      try { await navigator.share({ text }); return } catch {}
+    if (!canvas) return
+    canvas.toBlob(blob => {
+      if (shareImageUrl) URL.revokeObjectURL(shareImageUrl)
+      const url = URL.createObjectURL(blob)
+      shareFileRef.current = new File([blob], `laliga-round-${round}.png`, { type: 'image/png' })
+      setShareImageUrl(url)
+      setShowShareModal(true)
+    }, 'image/png')
+  }
+
+  async function handleModalShare() {
+    const file = shareFileRef.current
+    if (file && navigator.share && navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: `LaLiga Guess • מחזור ${round}` }); return } catch {}
     }
-    try {
-      await navigator.clipboard.writeText(text)
-      setShareMsg('הועתק! 📋')
-      setTimeout(() => setShareMsg(''), 2500)
-    } catch {}
+    if (shareImageUrl) window.open(shareImageUrl, '_blank')
   }
 
   async function saveTrashTalk() {
@@ -414,7 +501,20 @@ export default function PredictPage() {
           <button className="btn share-btn" onClick={shareRound}>
             📤 שתף מחזור {round}
           </button>
-          {shareMsg && <div className="share-msg">{shareMsg}</div>}
+        </div>
+      )}
+
+      {showShareModal && (
+        <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
+          <div className="modal share-modal" onClick={e => e.stopPropagation()}>
+            <div className="share-modal-title">📤 שתף מחזור {round}</div>
+            <img src={shareImageUrl} className="share-preview" alt="כרטיס שיתוף" />
+            <p className="share-hint">במובייל: לחץ שתף. בדסקטופ: ייפתח בטאב חדש לשמירה.</p>
+            <div className="share-modal-btns">
+              <button className="btn btn-primary" onClick={handleModalShare}>📤 שתף</button>
+              <button className="btn btn-secondary" onClick={() => setShowShareModal(false)}>סגור</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
