@@ -866,3 +866,8 @@ body {
   text-align: center !important;
   justify-content: center;
 }
+
+.dist-subtitle {
+  text-align: center; font-size: 11px;
+  color: rgba(255,255,255,0.25); margin-top: -2px; margin-bottom: 2px;
+}
