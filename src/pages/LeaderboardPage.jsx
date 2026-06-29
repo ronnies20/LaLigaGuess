@@ -8,10 +8,33 @@ const BGS    = ['#e8f0ff','#e8f8ee','#ffe8ea','#EEEDFE','#fff8e8','#fff3e0','#e8
 
 function initial(name) { return name ? name[0].toUpperCase() : '?' }
 
+function computeStreaks(roundData) {
+  // Group by user, sorted desc by round
+  const byUser = {}
+  roundData.forEach(r => {
+    if (!byUser[r.user_id]) byUser[r.user_id] = []
+    byUser[r.user_id].push(r)
+  })
+  const streakMap = {}
+  Object.entries(byUser).forEach(([uid, rounds]) => {
+    // rounds already sorted desc — count consecutive rounds with round_exact > 0
+    let streak = 0
+    let expected = rounds[0].round
+    for (const r of rounds) {
+      if (r.round !== expected) break   // gap in rounds
+      if (r.round_exact > 0) { streak++; expected-- }
+      else break
+    }
+    streakMap[uid] = streak
+  })
+  return streakMap
+}
+
 export default function LeaderboardPage() {
   const { user } = useAuth()
   const [view, setView]       = useState('season')
   const [rows, setRows]       = useState([])
+  const [streaks, setStreaks] = useState({})
   const [loading, setLoading] = useState(true)
   const [round, setRound]     = useState(CURRENT_ROUND)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -30,14 +53,15 @@ export default function LeaderboardPage() {
 
   async function loadData() {
     setLoading(true)
+    setStreaks({})
     try {
       if (view === 'season') {
-        const { data } = await supabase
-          .from('leaderboard_view')
-          .select('*')
-          .order('total_points', { ascending: false })
-          .limit(100)
+        const [{ data }, { data: roundData }] = await Promise.all([
+          supabase.from('leaderboard_view').select('*').order('total_points', { ascending: false }).limit(100),
+          supabase.from('round_leaderboard_view').select('user_id, round, round_exact').order('round', { ascending: false }),
+        ])
         setRows(data || [])
+        if (roundData) setStreaks(computeStreaks(roundData))
       } else {
         const { data } = await supabase
           .from('round_leaderboard_view')
@@ -73,7 +97,7 @@ export default function LeaderboardPage() {
 
         <div className="card">
           <div className="lb-header">
-            <div></div>
+            <div style={{textAlign:'center'}}>מיקום</div>
             <div>שחקן</div>
             <div style={{textAlign:'center'}}>מדויק</div>
             <div style={{textAlign:'center'}}>כיוון</div>
@@ -87,7 +111,7 @@ export default function LeaderboardPage() {
             const isMe     = r.user_id === user?.id
             const colorIdx = i % COLORS.length
             const medal    = i===0?'🥇':i===1?'🥈':i===2?'🥉':null
-            const streak   = view === 'round' ? (ex(r) ?? 0) + (dir(r) ?? 0) : 0
+            const streak   = view === 'season' ? (streaks[r.user_id] ?? 0) : 0
             return (
               <div key={r.user_id} className={`lb-row${isMe?' me':''}`}>
                 <div className={`lb-rank${i<3?' g'+(i+1):''}`}>{medal || (i+1)}</div>
