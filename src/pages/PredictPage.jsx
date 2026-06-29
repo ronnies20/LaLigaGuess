@@ -403,7 +403,7 @@ export default function PredictPage() {
           <button className="round-nav-btn" onClick={() => setRound(r => r >= TOTAL_ROUNDS ? 1 : r + 1)}>›</button>
         </div>
 
-        {round === currentRound && (
+        {round === currentRound && openMatches.length > 0 && (
           <div className="card trash-card">
             <div className="trash-label">💬 טראש טוק למחזור {round}</div>
             <div className="trash-row">
@@ -411,7 +411,7 @@ export default function PredictPage() {
                 type="text"
                 maxLength={20}
                 className={`trash-input${trashSaved ? ' trash-saved' : ''}`}
-                placeholder="מה יש לך להגיד? 😤"
+                placeholder="מה יש לך להגיד לשאר הליגה? 👀"
                 value={trashTalk}
                 onChange={e => { setTrashTalk(e.target.value); setTrashSaved(false) }}
                 onBlur={saveTrashTalk}
@@ -621,27 +621,7 @@ export default function PredictPage() {
           <div className="save-msg">{saveMsg}</div>
         </div>
       )}
-      {matches.some(m => m.home_score !== null && guesses[m.id]?.pts != null) && (
-        <div className="share-bar">
-          <button className="btn share-btn" onClick={shareRound}>
-            📤 שתף מחזור {round}
-          </button>
-        </div>
-      )}
-
-      {showShareModal && (
-        <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
-          <div className="modal share-modal" onClick={e => e.stopPropagation()}>
-            <div className="share-modal-title">📤 שתף מחזור {round}</div>
-            <img src={shareImageUrl} className="share-preview" alt="כרטיס שיתוף" />
-            <p className="share-hint">במובייל: לחץ שתף. בדסקטופ: ייפתח בטאב חדש לשמירה.</p>
-            <div className="share-modal-btns">
-              <button className="btn btn-primary" onClick={handleModalShare}>📤 שתף</button>
-              <button className="btn btn-secondary" onClick={() => setShowShareModal(false)}>סגור</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* share card disabled — kept for future use */}
     </div>
   )
 }
