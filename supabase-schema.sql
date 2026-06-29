@@ -272,6 +272,43 @@ create policy "users manage own message"
   on round_messages for all using (auth.uid() = user_id);
 
 -- =====================================================
+-- 11. PUSH SUBSCRIPTIONS
+-- =====================================================
+create table if not exists push_subscriptions (
+  user_id    uuid primary key references profiles(id) on delete cascade,
+  endpoint   text not null,
+  p256dh     text not null,
+  auth       text not null,
+  created_at timestamptz default now()
+);
+
+alter table push_subscriptions enable row level security;
+
+create policy "users manage own subscription"
+  on push_subscriptions for all using (auth.uid() = user_id);
+
+create policy "service role reads all subscriptions"
+  on push_subscriptions for select using (true);
+
+-- =====================================================
+-- 12. NOTIFICATION LOG
+-- =====================================================
+create table if not exists notification_log (
+  id       uuid default gen_random_uuid() primary key,
+  user_id  uuid references profiles(id) on delete cascade,
+  type     text not null,
+  round    int,
+  metadata jsonb,
+  sent_at  timestamptz default now(),
+  unique(user_id, type, round)
+);
+
+alter table notification_log enable row level security;
+
+create policy "service role manages notification log"
+  on notification_log for all using (true);
+
+-- =====================================================
 -- נתוני דוגמה — מחזור 36 (לבדיקה)
 -- שנה את התאריכים לתאריכים עתידיים
 -- =====================================================

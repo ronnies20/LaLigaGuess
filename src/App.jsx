@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './lib/AuthContext'
+import { supabase } from './lib/supabase'
+import { registerPush } from './lib/push'
 import AuthPage from './pages/AuthPage'
 import PredictPage from './pages/PredictPage'
 import LeaderboardPage from './pages/LeaderboardPage'
@@ -39,6 +41,10 @@ function NavIcon({ name }) {
 function App() {
   const { user, loading } = useAuth()
   const [tab, setTab] = useState('predict')
+
+  useEffect(() => {
+    if (user) setTimeout(() => registerPush(user.id, supabase), 3000)
+  }, [user?.id])
 
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100dvh', background:'#050210' }}>
