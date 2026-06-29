@@ -3,9 +3,10 @@
 
 const { SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env
 
-const CAT_USER_ID = 'c47c47c4-7c47-4c47-8c47-c47c47c47c47'
-const CAT_EMAIL   = 'cat@laligaguess.internal'
-const CAT_NAME    = 'CAT'
+const CAT_USER_ID  = 'c47c47c4-7c47-4c47-8c47-c47c47c47c47'
+const CAT_EMAIL    = 'cat@laligaguess.internal'
+const CAT_NAME     = 'CAT'
+const CAT_AVATAR   = 'https://vufirabiwpfzalidbjtw.supabase.co/storage/v1/object/public/cat/cat'
 
 const headers = {
   'apikey': SUPABASE_SERVICE_KEY,
@@ -60,7 +61,7 @@ async function ensureCatUser() {
   }
 
   // Upsert profile
-  await post('/profiles?on_conflict=id', { id: CAT_USER_ID, display_name: CAT_NAME }, 'resolution=merge-duplicates')
+  await post('/profiles?on_conflict=id', { id: CAT_USER_ID, display_name: CAT_NAME, avatar_url: CAT_AVATAR }, 'resolution=merge-duplicates')
   console.log('CAT user created')
 }
 
