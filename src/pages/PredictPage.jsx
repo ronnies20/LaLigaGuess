@@ -207,18 +207,17 @@ export default function PredictPage() {
       setSaved(s)
       setJokerMatchId(joker)
 
-      // Others' predictions — only for locked matches
-      const lockedIds = (matchData || []).filter(m => isMatchLocked(m.kickoff)).map(m => m.id)
-      if (lockedIds.length) {
-        const { data: othersData } = await supabase
+      // All predictions for started/live matches — for guess distribution stats
+      const startedIds = (matchData || []).filter(m => isMatchLocked(m.kickoff)).map(m => m.id)
+      if (startedIds.length) {
+        const { data: allPreds } = await supabase
           .from('predictions')
-          .select('match_id, user_id, home_guess, away_guess, points, is_joker, profiles(display_name, avatar_url)')
-          .in('match_id', lockedIds)
-          .neq('user_id', user.id)
+          .select('match_id, home_guess, away_guess')
+          .in('match_id', startedIds)
         const og = {}
-        ;(othersData || []).forEach(p => {
+        ;(allPreds || []).forEach(p => {
           if (!og[p.match_id]) og[p.match_id] = []
-          og[p.match_id].push({ userId: p.user_id, name: p.profiles?.display_name, avatar: p.profiles?.avatar_url, h: p.home_guess, a: p.away_guess, pts: p.points, joker: !!p.is_joker })
+          og[p.match_id].push({ h: p.home_guess, a: p.away_guess })
         })
         setOthersGuesses(og)
       }
@@ -576,35 +575,39 @@ export default function PredictPage() {
                     </div>
                   )}
 
-                  {/* Others' predictions — locked matches */}
-                  {effectiveLocked && (
-                    <button className="others-toggle-btn" onClick={() => setExpandedMatch(p => p === m.id ? null : m.id)}>
-                      👥 {others.length} ניחושים {expandedMatch === m.id ? '▲' : '▼'}
-                    </button>
-                  )}
-                  {expandedMatch === m.id && (
-                    <div className="others-list">
-                      {others.length === 0
-                        ? <div className="others-empty">אין ניחושים נוספים</div>
-                        : others.map(o => {
-                            const oCls = o.pts >= 3 ? 'o-exact' : o.pts >= 1 ? 'o-dir' : o.pts != null ? 'o-miss' : ''
-                            return (
-                              <div key={o.userId} className="others-row">
-                                <div className="others-avatar">
-                                  {o.avatar ? <img src={o.avatar} alt={o.name} /> : (o.name?.[0] || '?')}
+                  {/* Guess distribution — only after match started (live or finished) */}
+                  {(live || hasScore) && others.length > 0 && (() => {
+                    const freq = {}
+                    others.forEach(o => { const k = `${o.h}:${o.a}`; freq[k] = (freq[k] || 0) + 1 })
+                    const total = others.length
+                    const top5 = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,5)
+                    const maxCount = top5[0][1]
+                    return (
+                      <>
+                        <button className="others-toggle-btn" onClick={() => setExpandedMatch(p => p === m.id ? null : m.id)}>
+                          📊 ניחושים ({total}) {expandedMatch === m.id ? '▲' : '▼'}
+                        </button>
+                        {expandedMatch === m.id && (
+                          <div className="dist-list">
+                            {top5.map(([score, count]) => {
+                              const pct = Math.round((count / total) * 100)
+                              const barW = Math.round((count / maxCount) * 100)
+                              return (
+                                <div key={score} className="dist-row">
+                                  <span className="dist-score">{score}</span>
+                                  <div className="dist-bar-wrap">
+                                    <div className="dist-bar" style={{ width: `${barW}%` }} />
+                                  </div>
+                                  <span className="dist-pct">{pct}%</span>
+                                  <span className="dist-count">{count}</span>
                                 </div>
-                                <span className="others-name">{o.name}</span>
-                                {o.joker && <span className="others-joker">🃏</span>}
-                                <span className={`others-guess ${oCls}`}>{o.a}:{o.h}</span>
-                                {o.pts != null && (
-                                  <span className={`others-pts ${oCls}`}>{o.pts >= 0 ? '+' : ''}{o.pts}</span>
-                                )}
-                              </div>
-                            )
-                          })
-                      }
-                    </div>
-                  )}
+                              )
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               )
             })}

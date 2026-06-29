@@ -822,3 +822,32 @@ body {
 .hst-pts-miss  { color: rgba(255,255,255,0.25); font-size: 13px; }
 .hst-pts-none  { color: rgba(255,255,255,0.2); font-size: 13px; }
 .hst-pen-bonus { font-size: 10px; color: #66bb6a; }
+
+/* ---- Guess distribution ---- */
+.dist-list {
+  padding: 8px 14px 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.dist-row {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px;
+}
+.dist-score {
+  font-family: monospace; font-weight: 700; font-size: 13px;
+  color: #fff; min-width: 32px; text-align: center;
+}
+.dist-bar-wrap {
+  flex: 1; height: 6px; background: rgba(255,255,255,0.08);
+  border-radius: 3px; overflow: hidden;
+}
+.dist-bar {
+  height: 100%; background: linear-gradient(90deg, #FDB927, #ff8800);
+  border-radius: 3px; transition: width .3s ease;
+}
+.dist-pct {
+  color: #FDB927; font-weight: 700; min-width: 30px; text-align: right;
+}
+.dist-count {
+  color: rgba(255,255,255,0.3); font-size: 11px; min-width: 18px; text-align: right;
+}
