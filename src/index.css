@@ -480,3 +480,49 @@ body {
   color: var(--gold); margin: 10px 0;
   text-shadow: 0 0 24px rgba(253,185,39,0.55);
 }
+
+/* ---- Near Miss / Reversed Animations ---- */
+@keyframes nearMissShake {
+  0%,100% { transform: translateX(0); }
+  15%      { transform: translateX(-5px); }
+  30%      { transform: translateX(5px); }
+  50%      { transform: translateX(-4px); }
+  70%      { transform: translateX(4px); }
+  85%      { transform: translateX(-2px); }
+}
+@keyframes reversedShake {
+  0%,100% { transform: translateX(0) scale(1); }
+  10%     { transform: translateX(-7px) scale(1.06); }
+  25%     { transform: translateX(7px) scale(1.06); }
+  40%     { transform: translateX(-5px) scale(1.03); }
+  55%     { transform: translateX(5px) scale(1.03); }
+  70%     { transform: translateX(-3px); }
+  85%     { transform: translateX(3px); }
+}
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-22px); }
+}
+.near-miss-anim {
+  animation: nearMissShake 0.6s ease;
+  box-shadow: 0 0 14px rgba(255,152,0,0.85) !important;
+}
+.reversed-anim {
+  animation: reversedShake 0.8s ease;
+  box-shadow: 0 0 18px rgba(244,67,54,0.9) !important;
+}
+.float-label {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  animation: floatUp 1.3s ease forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+.near-miss-label { color: #ff9800; }
+.reversed-label  { color: #f44336; }

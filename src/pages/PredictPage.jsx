@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, upsertPrediction, getCurrentRound } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, getTeamLogoUrl, calcPoints, isMatchLocked, formatKickoff, TOTAL_ROUNDS } from '../lib/teams'
-import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated } from '../lib/effects'
+import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
 function PtsBadge({ pts }) {
   if (pts === null) return <div className="pts-badge pts-none">?</div>
@@ -47,6 +47,7 @@ export default function PredictPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
+  const [matchAnims, setMatchAnims] = useState({})
   const saveBtnRef            = useRef(null)
   const celebratedRef         = useRef(getCelebrated())
 
@@ -85,7 +86,8 @@ export default function PredictPage() {
       if (m.home_score === null || celebratedRef.current.has(m.id)) return
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') return
-      const pts = calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score)
+      const hg = parseInt(g.h), ag = parseInt(g.a)
+      const pts = calcPoints(hg, ag, m.home_score, m.away_score)
       celebratedRef.current.add(m.id)
       markCelebrated(m.id)
       if (pts === 3) {
@@ -94,6 +96,26 @@ export default function PredictPage() {
       } else if (pts === 1) {
         setTimeout(playCoinSound, delay)
         delay += 250
+      } else {
+        const isReversed = hg === m.away_score && ag === m.home_score
+        const distance = Math.abs(hg - m.home_score) + Math.abs(ag - m.away_score)
+        const isNearMiss = !isReversed && distance === 1
+        const mid = m.id
+        if (isReversed) {
+          setTimeout(() => {
+            playReversedSound()
+            setMatchAnims(a => ({ ...a, [mid]: 'reversed' }))
+            setTimeout(() => setMatchAnims(a => { const n = { ...a }; delete n[mid]; return n }), 1600)
+          }, delay)
+          delay += 700
+        } else if (isNearMiss) {
+          setTimeout(() => {
+            playNearMissSound()
+            setMatchAnims(a => ({ ...a, [mid]: 'near-miss' }))
+            setTimeout(() => setMatchAnims(a => { const n = { ...a }; delete n[mid]; return n }), 1300)
+          }, delay)
+          delay += 600
+        }
       }
     })
   }, [matches, guesses])
@@ -178,7 +200,11 @@ export default function PredictPage() {
                         <div className="result-area">
                           <div className="result-col">
                             <span className="result-col-label">ניחוש</span>
-                            <div className={`guess-chip ${guessClass}`}>{hasGuess ? `${g.h}:${g.a}` : '—'}</div>
+                            <div style={{ position: 'relative' }}>
+                              {matchAnims[m.id] === 'near-miss' && <span className="float-label near-miss-label">כמעט 😤</span>}
+                              {matchAnims[m.id] === 'reversed' && <span className="float-label reversed-label">הפוך! 💀</span>}
+                              <div className={`guess-chip ${guessClass}${matchAnims[m.id] ? ' ' + matchAnims[m.id] + '-anim' : ''}`}>{hasGuess ? `${g.h}:${g.a}` : '—'}</div>
+                            </div>
                           </div>
                           <div className="result-sep" />
                           <div className="result-col">

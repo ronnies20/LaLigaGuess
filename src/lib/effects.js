@@ -91,6 +91,43 @@ export function fireConfetti(originX, originY) {
   requestAnimationFrame(animate)
 }
 
+export function playNearMissSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.45)
+    gain.gain.setValueAtTime(0.2, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.5)
+  } catch {}
+}
+
+export function playReversedSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const notes = [400, 330, 280, 220]
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sawtooth'
+      osc.frequency.value = freq
+      const t = ctx.currentTime + i * 0.16
+      gain.gain.setValueAtTime(0.15, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15)
+      osc.start(t)
+      osc.stop(t + 0.18)
+    })
+  } catch {}
+}
+
 const CELEBRATED_KEY = 'casino_celebrated'
 export function getCelebrated() {
   try { return new Set(JSON.parse(localStorage.getItem(CELEBRATED_KEY) || '[]')) }
