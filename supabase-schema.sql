@@ -555,13 +555,23 @@ create policy "feedback_admin_update" on feedback
   for update using (auth.jwt() ->> 'email' = 'mikaswiftt@gmail.com');
 
 -- =====================================================
--- 17. STORAGE — avatar file type restriction (MED-5)
+-- 17. STORAGE — avatar file type restriction (MED-5 + MED-20)
 -- =====================================================
-drop policy if exists "avatars_insert" on storage.objects;
+drop policy if exists "avatars_insert"           on storage.objects;
+drop policy if exists "avatars_insert_validated" on storage.objects;
 create policy "avatars_insert_validated" on storage.objects
   for insert with check (
     bucket_id = 'avatars'
     and auth.role() = 'authenticated'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and lower(storage.extension(name)) in ('jpg', 'jpeg', 'png', 'gif', 'webp')
+  );
+
+-- update policy גם מוודא סיומת (MED-20 fix)
+drop policy if exists "avatars_update" on storage.objects;
+create policy "avatars_update" on storage.objects
+  for update using (
+    bucket_id = 'avatars'
     and (storage.foldername(name))[1] = auth.uid()::text
     and lower(storage.extension(name)) in ('jpg', 'jpeg', 'png', 'gif', 'webp')
   );
@@ -571,6 +581,16 @@ create policy "avatars_insert_validated" on storage.objects
 -- =====================================================
 alter table profiles add constraint if not exists display_name_length
   check (char_length(display_name) >= 1 and char_length(display_name) <= 50);
+
+-- =====================================================
+-- 19. penalty_min/max whitelist constraint (MED-8)
+-- =====================================================
+alter table predictions drop constraint if exists valid_penalty_range;
+alter table predictions add constraint valid_penalty_range
+  check (
+    (penalty_min is null and penalty_max is null)
+    or (penalty_min, penalty_max) in ((1,17),(18,32),(33,45),(46,62),(63,77),(78,90))
+  );
 
 -- =====================================================
 -- נתוני דוגמה — מחזור 36 (לבדיקה)
