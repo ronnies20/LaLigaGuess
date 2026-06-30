@@ -552,7 +552,6 @@ export default function PredictPage() {
     streakAtRisk                                  ? 'streak-risk' :
     missedRound && round === currentRound         ? 'missed-round' :
     round >= 34                                   ? 'phase-sprint' :
-    (round >= 20 && round < 34)                   ? 'phase-two' :
     userStreak >= 5                               ? 'streak5' :
     userStreak === 4                              ? 'streak4' :
     userStreak === 3                              ? 'streak3' :
@@ -574,10 +573,6 @@ export default function PredictPage() {
         {headline === 'phase-sprint' && (
           <div className="phase-banner phase-sprint">⚡ ספרינט! {38 - round + 1} מחזורים אחרונים — מדויק = 7 נק׳, כיוון = 3 נק׳</div>
         )}
-        {headline === 'phase-two' && (
-          <div className="phase-banner phase-two">🔥 פאזה 2 — מדויק = 5 נק׳, כיוון = 2 נק׳</div>
-        )}
-
         {/* Headline status banner — missed round loss framing */}
         {headline === 'missed-round' && (
           <div className="missed-round-card">
@@ -617,7 +612,7 @@ export default function PredictPage() {
         {/* Headline status banner — round points from finished matches */}
         {headline === 'round-pts' && (
           <div className="round-pts-chip">
-            📊 {roundPts > 0 ? '+' : ''}{roundPts} נק׳ במחזור {round}
+            📊 מחזור {round} — {roundPts > 0 ? '+' : ''}{roundPts} נק׳
           </div>
         )}
 
@@ -641,21 +636,18 @@ export default function PredictPage() {
                 {trashSaved ? '✓' : 'שלח'}
               </button>
             </div>
+            {trashUnlocked
+              ? trashMessages.length > 0 && (
+                  <div className="trash-reveal-inner">
+                    <div className="trash-reveal-label">💬 מה אחרים כתבו</div>
+                    {trashMessages.slice(0, 3).map((msg, i) => (
+                      <div key={i} className="trash-reveal-msg">"{msg.message}"</div>
+                    ))}
+                  </div>
+                )
+              : <div className="trash-fomo-inner">👀 שמור ניחושים כדי לגלות מה אחרים כתבו...</div>
+            }
           </div>
-        )}
-
-        {/* Trash FOMO reveal */}
-        {round === currentRound && openMatches.length > 0 && (
-          trashUnlocked
-            ? trashMessages.length > 0 && (
-                <div className="trash-reveal-card">
-                  <div className="trash-reveal-label">💬 מה אחרים כתבו</div>
-                  {trashMessages.slice(0, 3).map((msg, i) => (
-                    <div key={i} className="trash-reveal-msg">"{msg.message}"</div>
-                  ))}
-                </div>
-              )
-            : <div className="trash-fomo-card">👀 שמור ניחושים כדי לגלות מה אחרים כתבו...</div>
         )}
 
         {/* Headline status banner — streak at risk warning */}
@@ -763,9 +755,9 @@ export default function PredictPage() {
                           <div className="result-sep" />
                           <div className="result-col">
                             <span className="result-col-label">{live ? 'לייב' : 'סופי'}</span>
-                            <div className="final-score-chip" style={live && hasGuess ? {
-                              color: guessClass === 'guess-exact' ? '#00E676' : guessClass === 'guess-dir' ? '#FDB927' : '#ff5252',
-                              borderColor: guessClass === 'guess-exact' ? 'rgba(0,230,118,0.4)' : guessClass === 'guess-dir' ? 'rgba(253,185,39,0.4)' : 'rgba(255,82,82,0.4)',
+                            <div className="final-score-chip" style={hasGuess ? {
+                              color: guessClass === 'guess-exact' ? '#00E676' : guessClass === 'guess-dir' ? '#FDB927' : guessClass === 'guess-miss' ? '#ff5252' : undefined,
+                              borderColor: guessClass === 'guess-exact' ? 'rgba(0,230,118,0.4)' : guessClass === 'guess-dir' ? 'rgba(253,185,39,0.4)' : guessClass === 'guess-miss' ? 'rgba(255,82,82,0.4)' : undefined,
                             } : {}}>{m.home_score}:{m.away_score}</div>
                           </div>
                           <div className="result-sep" />
@@ -805,7 +797,7 @@ export default function PredictPage() {
                         title={isThisJoker ? 'לחץ להסרת ג׳וקר' : 'לחץ להפעלת ג׳וקר'}
                       >
                         <span>🃏</span>
-                        <span className="joker-side-label">{isThisJoker ? 'ג׳וקר' : 'לחץ'}</span>
+                        <span className="joker-side-label">ג׳וקר</span>
                       </button>
                     ) : g.joker ? (
                       <div className="joker-side-btn joker-active" style={{ cursor: 'default' }}>
