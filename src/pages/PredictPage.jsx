@@ -634,7 +634,7 @@ export default function PredictPage() {
                             {!hasPred
                               ? <span className="pen-no">לא ניחשת</span>
                               : bonus > 0
-                                ? <span className="pen-hit">✅ +{bonus}נק׳ ({hits > 1 ? `${hits} פנדלים בטווח` : 'ניחוש מדויק'})</span>
+                                ? <span className="pen-hit">✅ +{bonus}נק׳{hits > 1 ? ` (${hits} פנדלים בטווח)` : ''}</span>
                                 : <span className="pen-miss">❌ ניחשת {rangeLabel}</span>}
                           </div>
                         )

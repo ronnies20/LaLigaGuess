@@ -68,11 +68,14 @@ async function main() {
       try {
         const events = await api(`/fixtures/events?fixture=${extId}`)
 
-        // All SCORED Real Madrid penalties
+        // All Real Madrid penalties (scored OR missed — points awarded regardless of outcome)
+        // api-football: scored → type:"Goal" detail:"Penalty"
+        //               missed → type:"Goal" detail:"Missed Penalty"  OR  type:"Miss"
         const scored = events.filter(e =>
-          e.type === 'Goal' &&
-          e.detail === 'Penalty' &&
-          e.team?.id === REAL_MADRID_ID
+          e.team?.id === REAL_MADRID_ID && (
+            (e.type === 'Goal' && (e.detail === 'Penalty' || e.detail === 'Missed Penalty')) ||
+            (e.type === 'Miss' && e.detail === 'Missed Penalty')
+          )
         )
 
         // De-duplicate by elapsed+extra (guards against API duplicate events;

@@ -339,6 +339,7 @@ end;
 $$;
 
 -- טריגר: מחשב penalty_bonus לכל ניחוש כשמתעדכן penalty_events (או penalty_minute לאחורה)
+-- penalty_events כולל כל פנדל שניתן לריאל מדריד, נכבש או הוחמץ — הנקודות לא תלויות בתוצאה
 create or replace function update_penalty_bonus()
 returns trigger language plpgsql security definer as $$
 declare
