@@ -475,7 +475,7 @@ export default function PredictPage() {
     }
     setSaving(false)
     if (count > 0) {
-      setSaveMsg(`🎰 ${count} ניחושים נשמרו!`)
+      setSaveMsg(`🎰 ניחושים נשמרו! (${count})`)
       if (count >= 3) setTimeout(() => { playJackpotSound(); fireConfetti() }, count * 90 + 150)
     } else {
       setSaveMsg('✓ ניחושים עודכנו')
@@ -915,11 +915,7 @@ export default function PredictPage() {
           >
             <span className="save-emoji">{saving ? '🎲' : '🎰'}</span>
             <span>
-              {saving
-                ? 'שומר...'
-                : unsavedCount > 0
-                  ? `שמור ${unsavedCount} ניחושים`
-                  : 'שמור ניחושים'}
+              {saving ? 'שומר...' : 'שמור ניחושים'}
             </span>
             {unsavedCount > 0 && !saving && (
               <span className="unsaved-badge">{unsavedCount}</span>
