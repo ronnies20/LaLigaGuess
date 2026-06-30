@@ -30,17 +30,28 @@ export function getTeamLogoUrl(logoId, logoUrl) {
   return logoId ? `https://media.api-sports.io/football/teams/${logoId}.png` : null
 }
 
-export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = false, isSpecial = false) {
+// Phase-based scoring:
+// Rounds  1-19: exact=3, dir=1  (base)
+// Rounds 20-33: exact=5, dir=2  (Phase 2)
+// Rounds 34-38: exact=7, dir=3  (Sprint)
+export function getPhaseBase(round = 1) {
+  if (round >= 34) return { exact: 7, dir: 3 }
+  if (round >= 20) return { exact: 5, dir: 2 }
+  return { exact: 3, dir: 1 }
+}
+
+export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = false, isSpecial = false, round = 1) {
   if (homeReal === null || homeReal === undefined) return null
   if (homeGuess === null || homeGuess === undefined) return isJoker ? -1 : 0
+  const { exact, dir } = getPhaseBase(round)
   if (isJoker) {
-    return (homeGuess === homeReal && awayGuess === awayReal) ? 6 : -1
+    return (homeGuess === homeReal && awayGuess === awayReal) ? exact * 2 : -1
   }
-  if (homeGuess === homeReal && awayGuess === awayReal) return isSpecial ? 6 : 3
+  if (homeGuess === homeReal && awayGuess === awayReal) return isSpecial ? exact * 2 : exact
   const realDir = Math.sign(homeReal - awayReal)
   const guessDir = Math.sign(homeGuess - awayGuess)
-  const dir = realDir === guessDir ? 1 : 0
-  return isSpecial ? dir * 2 : dir
+  const d = realDir === guessDir ? dir : 0
+  return isSpecial ? d * 2 : d
 }
 
 export const LIVE_STATUSES     = ['1H','HT','2H','ET','BT','P','INT']

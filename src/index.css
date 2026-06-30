@@ -1460,3 +1460,106 @@ body {
   text-align: center;
   margin-bottom: 10px;
 }
+
+/* ================================================================
+   MEDIUM FEATURES — rounds-to-close, near-miss, joker ritual,
+   streak shield, phase banners, shield profile
+   ================================================================ */
+
+/* Feature 8 — rounds to close gap */
+.lb-rounds-close {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.2);
+  margin-top: 1px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+/* Feature 10 — streak shield */
+.streak-risk-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.shield-btn {
+  background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(168,85,247,0.15));
+  border: 1px solid rgba(168,85,247,0.5);
+  border-radius: 8px;
+  color: #C084FC;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.shield-btn:active { background: rgba(168,85,247,0.4); }
+.shield-used-tag {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  font-weight: 600;
+}
+
+/* Shield status in ProfilePage */
+.shield-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(168,85,247,0.05);
+  border: 1px solid rgba(168,85,247,0.15);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+}
+.shield-status-val { color: #C084FC; font-weight: 800; }
+.shield-status-val.used { color: rgba(255,255,255,0.3); }
+
+/* Feature 11 — joker hold button */
+.joker-hold-bar {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(168,85,247,0.6), rgba(253,185,39,0.4));
+  border-radius: inherit;
+  transition: width 0.03s linear;
+  z-index: 0;
+}
+.joker-side-btn > span { position: relative; z-index: 1; }
+.joker-side-label { position: relative; z-index: 1; }
+.joker-holding {
+  border-color: rgba(168,85,247,0.7) !important;
+  animation: joker-hold-pulse 0.4s ease-in-out infinite !important;
+}
+@keyframes joker-hold-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.5); }
+  50%      { box-shadow: 0 0 8px 3px rgba(168,85,247,0.3); }
+}
+
+/* Feature 13/14 — phase banners */
+.phase-banner {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 7px 14px;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+.phase-two {
+  background: rgba(253,185,39,0.07);
+  border: 1px solid rgba(253,185,39,0.2);
+  color: #FDB927;
+}
+.phase-sprint {
+  background: rgba(255,82,82,0.07);
+  border: 1px solid rgba(255,82,82,0.3);
+  color: #FF6B6B;
+  animation: sprint-pulse 2s ease-in-out infinite;
+}
+@keyframes sprint-pulse {
+  0%,100% { border-color: rgba(255,82,82,0.3); }
+  50%      { border-color: rgba(255,82,82,0.6); }
+}

@@ -92,32 +92,45 @@ create trigger predictions_updated_at
   for each row execute function update_updated_at();
 
 -- 4. פונקציה לחישוב נקודות לאחר עדכון תוצאה
+-- Phase scoring: rounds 1-19: exact=3,dir=1 | 20-33: exact=5,dir=2 | 34+: exact=7,dir=3
 create or replace function calculate_points(
   home_guess int, away_guess int,
-  home_real int,  away_real int
+  home_real  int, away_real  int,
+  p_round    int default 1
 ) returns int language plpgsql as $$
+declare
+  exact_pts int;
+  dir_pts   int;
 begin
   if home_real is null then return null; end if;
-  if home_guess = home_real and away_guess = away_real then return 3; end if;
-  if sign(home_guess - away_guess) = sign(home_real - away_real) then return 1; end if;
+  exact_pts := case when p_round >= 34 then 7 when p_round >= 20 then 5 else 3 end;
+  dir_pts   := case when p_round >= 34 then 3 when p_round >= 20 then 2 else 1 end;
+  if home_guess = home_real and away_guess = away_real then return exact_pts; end if;
+  if sign(home_guess - away_guess) = sign(home_real - away_real) then return dir_pts; end if;
   return 0;
 end;
 $$;
 
--- עדכון נקודות אחרי עדכון תוצאת משחק (כולל בונוס סטרייק)
+-- עדכון נקודות אחרי עדכון תוצאת משחק (כולל בונוס סטרייק + phase scoring)
 create or replace function update_match_points()
 returns trigger language plpgsql security definer as $$
 declare
-  rec          record;
-  streak_count int;
+  rec           record;
+  streak_count  int;
   is_exact_pred boolean;
-  final_pts    int;
+  final_pts     int;
+  base_exact    int;
+  base_dir      int;
 begin
   if new.home_score is not null then
+    -- Phase-based scoring
+    base_exact := case when new.round >= 34 then 7 when new.round >= 20 then 5 else 3 end;
+    base_dir   := case when new.round >= 34 then 3 when new.round >= 20 then 2 else 1 end;
+
     for rec in select * from predictions where match_id = new.id loop
       is_exact_pred := (rec.home_guess = new.home_score and rec.away_guess = new.away_score);
 
-      -- חישוב סטרייק של היוזר לפני המשחק הנוכחי (לפי סדר kickoff)
+      -- סטרייק לפני המשחק הנוכחי
       with ordered_preds as (
         select
           case when p.home_guess = m.home_score and p.away_guess = m.away_score then 1 else 0 end as is_exact,
@@ -139,24 +152,25 @@ begin
 
       if rec.is_joker then
         if is_exact_pred then
-          if    streak_count >= 5 then final_pts := 12;
-          elsif streak_count >= 4 then final_pts := 10;
-          else                         final_pts := 6;
+          -- joker = base_exact × 2, streak bonus +2/+3
+          if    streak_count >= 5 then final_pts := base_exact * 2 + 3;
+          elsif streak_count >= 4 then final_pts := base_exact * 2 + 1;
+          else                         final_pts := base_exact * 2;
           end if;
         else
           final_pts := case when streak_count >= 4 then -3 else -1 end;
         end if;
       elsif new.is_special then
-        -- משחק מיוחד: x2 (סטרייק לא מצטבר עם Special)
-        final_pts := calculate_points(rec.home_guess, rec.away_guess, new.home_score, new.away_score) * 2;
+        -- Special match: ×2 of phase scoring (no streak stacking)
+        final_pts := calculate_points(rec.home_guess, rec.away_guess, new.home_score, new.away_score, new.round) * 2;
       else
         if is_exact_pred then
-          if    streak_count >= 5 then final_pts := 6;
-          elsif streak_count >= 4 then final_pts := 5;
-          else                         final_pts := 3;
+          if    streak_count >= 5 then final_pts := base_exact + 3;
+          elsif streak_count >= 4 then final_pts := base_exact + 2;
+          else                         final_pts := base_exact;
           end if;
         else
-          final_pts := calculate_points(rec.home_guess, rec.away_guess, new.home_score, new.away_score);
+          final_pts := calculate_points(rec.home_guess, rec.away_guess, new.home_score, new.away_score, new.round);
         end if;
       end if;
 
@@ -593,7 +607,10 @@ alter table predictions add constraint valid_penalty_range
   );
 
 -- =====================================================
--- 20. ENGAGEMENT — count_round_predictions RPC
+-- 20. Streak shield (one per season per user)
+alter table profiles add column if not exists streak_shield boolean default true;
+
+-- 21. ENGAGEMENT — count_round_predictions RPC
 -- =====================================================
 -- Returns count of distinct users who have at least one prediction in the round
 -- Used for social proof ("X players already predicted")

@@ -128,6 +128,24 @@ export function playReversedSound() {
   } catch {}
 }
 
+// Spawn DOM particle burst at (x, y) — used for exact-score celebrations
+export function spawnParticles(x, y, count = 18) {
+  const colors = ['#FDB927', '#FFE566', '#ffffff', '#00E676', '#A855F7']
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div')
+    el.className = 'particle'
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.7
+    const dist = 45 + Math.random() * 85
+    el.style.left = x + 'px'
+    el.style.top  = y + 'px'
+    el.style.setProperty('--tx', (Math.cos(angle) * dist) + 'px')
+    el.style.setProperty('--ty', (Math.sin(angle) * dist) + 'px')
+    el.style.setProperty('--color', colors[Math.floor(Math.random() * colors.length)])
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 950)
+  }
+}
+
 function celebratedKey(userId) { return `casino_celebrated_${userId || 'anon'}` }
 export function getCelebrated(userId) {
   try { return new Set(JSON.parse(localStorage.getItem(celebratedKey(userId)) || '[]')) }

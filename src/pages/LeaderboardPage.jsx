@@ -372,6 +372,9 @@ export default function LeaderboardPage() {
             const medal    = i===0?'🥇':i===1?'🥈':i===2?'🥉':null
             const streak   = view === 'season' ? (streaks[r.user_id] ?? 0) : 0
             const penHits  = penCounts[r.user_id] || 0
+            const gap      = i > 0 ? leaderPts - (pts(r) ?? 0) : 0
+            const avgRound = (pts(r) ?? 0) > 0 && currentRound > 0 ? (pts(r) ?? 0) / currentRound : 0
+            const roundsToClose = i > 0 && avgRound > 0 ? Math.ceil(gap / avgRound) : null
 
             return (
               <div
@@ -405,7 +408,10 @@ export default function LeaderboardPage() {
                 <div className="lb-pts">
                   {pts(r) ?? 0}
                   {view === 'season' && i > 0 && leaderPts > 0 && (
-                    <div className="lb-gap">−{leaderPts - (pts(r) ?? 0)}</div>
+                    <div className="lb-gap">−{gap}</div>
+                  )}
+                  {view === 'season' && i > 0 && roundsToClose !== null && roundsToClose <= 20 && (
+                    <div className="lb-rounds-close">~{roundsToClose} מח׳</div>
                   )}
                 </div>
               </div>

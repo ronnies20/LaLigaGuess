@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage, countRoundParticipants } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, getTeamLogoUrl, isMatchLocked, isMatchLive, isMatchFinished, getStatusLabel, formatKickoff, TOTAL_ROUNDS, LIVE_STATUSES, calcPoints } from '../lib/teams'
-import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
-import { playSubmit, playExactScore, playNearMiss as playNearMissNew, playJokerWin, playJokerLoss, playStreakMilestone } from '../lib/audio'
+import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound, spawnParticles } from '../lib/effects'
+import { playSubmit, playExactScore, playNearMiss as playNearMissNew, playJokerWin, playJokerLoss, playStreakMilestone, playTick, playJokerActivate } from '../lib/audio'
+import { getPhaseBase } from '../lib/teams'
 
 function generateShareCanvas({ matches, guesses, round, userStreak, displayName }) {
   const W = 420, PAD = 22, ROW_H = 52, HEADER_H = 96, FOOTER_H = 76
@@ -108,20 +109,18 @@ function generateShareCanvas({ matches, guesses, round, userStreak, displayName 
   return canvas
 }
 
-function PtsBadge({ pts, isJoker, isSpecial }) {
-  if (pts === null)            return <div className="pts-badge pts-none">?</div>
-  if (pts === 12)              return <div className="pts-badge pts-exact pts-joker">🃏12</div>
-  if (pts === 10)              return <div className="pts-badge pts-exact pts-joker">🃏10</div>
-  if (pts === 6  && isJoker)  return <div className="pts-badge pts-exact pts-joker">🃏6</div>
-  if (pts === -3)              return <div className="pts-badge pts-miss pts-joker">🃏-3</div>
-  if (pts === -1)              return <div className="pts-badge pts-miss pts-joker">🃏-1</div>
-  if (pts === 6  && isSpecial) return <div className="pts-badge pts-exact pts-special">⭐6</div>
-  if (pts === 2)               return <div className="pts-badge pts-dir pts-special">⭐2</div>
-  if (pts === 6)               return <div className="pts-badge pts-exact pts-streak">🔥6</div>
-  if (pts === 5)               return <div className="pts-badge pts-exact pts-streak">🔥5</div>
-  if (pts === 3)               return <div className="pts-badge pts-exact">3</div>
-  if (pts === 1)               return <div className="pts-badge pts-dir">1</div>
-  return <div className="pts-badge pts-miss">0</div>
+function PtsBadge({ pts, isJoker, isSpecial, round = 1 }) {
+  if (pts === null || pts === undefined) return <div className="pts-badge pts-none">?</div>
+  if (isJoker && pts > 0)  return <div className="pts-badge pts-exact pts-joker">🃏{pts}</div>
+  if (pts < 0)             return <div className="pts-badge pts-miss pts-joker">🃏{pts}</div>
+  if (pts === 0)           return <div className="pts-badge pts-miss">0</div>
+  const exactBase = getPhaseBase(round).exact
+  if (pts >= exactBase) {
+    if (pts > exactBase) return <div className="pts-badge pts-exact pts-streak">🔥{pts}</div>
+    return <div className="pts-badge pts-exact">{pts}</div>
+  }
+  if (isSpecial && pts > 0) return <div className="pts-badge pts-dir pts-special">⭐{pts}</div>
+  return <div className="pts-badge pts-dir">{pts}</div>
 }
 
 function TeamDisplay({ name }) {
@@ -168,7 +167,7 @@ const PEN_RANGES = [
 ]
 
 export default function PredictPage() {
-  const { user, profile } = useAuth()
+  const { user, profile, refreshProfile } = useAuth()
   const [round, setRound]               = useState(null)
   const [currentRound, setCurrentRound] = useState(null)
   const [jokerMatchId, setJokerMatchId] = useState(null)
@@ -198,6 +197,9 @@ export default function PredictPage() {
   const [missedRound, setMissedRound]           = useState(null)
   const [trashUnlocked, setTrashUnlocked]       = useState(false)
   const [trashMessages, setTrashMessages]       = useState([])
+  const [jokerHolding, setJokerHolding]         = useState(null)
+  const [jokerHoldPct, setJokerHoldPct]         = useState(0)
+  const jokerHoldRef          = useRef(null)
   const saveBtnRef            = useRef(null)
   const celebratedRef         = useRef(getCelebrated(user.id))
 
@@ -374,7 +376,10 @@ export default function PredictPage() {
         }, delay)
         delay += 900
       } else if (pts === 3) {
-        setTimeout(() => { playJackpotSound(); fireConfetti() }, delay)
+        setTimeout(() => {
+          playJackpotSound(); fireConfetti()
+          spawnParticles(window.innerWidth / 2, window.innerHeight * 0.42)
+        }, delay)
         delay += 700
       } else if (pts === 1 || pts === 2) {
         setTimeout(playCoinSound, delay)
@@ -409,6 +414,42 @@ export default function PredictPage() {
       }
     })
   }, [matches, guesses])
+
+  function startJokerHold(matchId) {
+    if (jokerHoldRef.current) return
+    let tickCount = 0
+    const startTime = Date.now()
+    const HOLD_MS = 2200
+    setJokerHolding(matchId)
+    setJokerHoldPct(0)
+    jokerHoldRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const pct = Math.min(100, (elapsed / HOLD_MS) * 100)
+      setJokerHoldPct(pct)
+      const newTick = Math.floor(elapsed / 550)
+      if (newTick > tickCount) { tickCount = newTick; playJokerRitual(newTick - 1) }
+      if (elapsed >= HOLD_MS) {
+        clearInterval(jokerHoldRef.current); jokerHoldRef.current = null
+        setJokerHolding(null); setJokerHoldPct(0)
+        setJokerMatchId(matchId)
+        playJokerActivate()
+      }
+    }, 30)
+  }
+
+  function cancelJokerHold() {
+    if (jokerHoldRef.current) { clearInterval(jokerHoldRef.current); jokerHoldRef.current = null }
+    setJokerHolding(null); setJokerHoldPct(0)
+  }
+
+  async function activateStreakShield() {
+    try {
+      await supabase.from('profiles').update({ streak_shield: false }).eq('id', user.id)
+      refreshProfile()
+      setSaveMsg('🛡️ המגן הופעל! הסטרייק שלך מוגן')
+      setTimeout(() => setSaveMsg(''), 4000)
+    } catch {}
+  }
 
   function handleInput(matchId, side, val) {
     const clean = val.replace(/\D/g, '').slice(0, 2)
@@ -535,6 +576,14 @@ export default function PredictPage() {
           <button className="round-nav-btn" onClick={() => setRound(r => r >= TOTAL_ROUNDS ? 1 : r + 1)}>›</button>
         </div>
 
+        {/* Phase banner — appears from round 20 */}
+        {round >= 34 && (
+          <div className="phase-banner phase-sprint">⚡ ספרינט! {38 - round + 1} מחזורים אחרונים — מדויק = 7 נק׳, כיוון = 3 נק׳</div>
+        )}
+        {round >= 20 && round < 34 && (
+          <div className="phase-banner phase-two">🔥 פאזה 2 — מדויק = 5 נק׳, כיוון = 2 נק׳</div>
+        )}
+
         {/* Missed round loss framing */}
         {missedRound && round === currentRound && (
           <div className="missed-round-card">
@@ -618,7 +667,12 @@ export default function PredictPage() {
         {/* Streak at risk warning */}
         {userStreak >= 1 && openMatches.length > 0 && predictedCount === 0 && (
           <div className="streak-risk-banner">
-            ⚠️ יש לך סטרייק של {userStreak} {'🔥'.repeat(Math.min(userStreak,5))} — נחש לפני הנעילה כדי לשמור עליו!
+            <div>⚠️ יש לך סטרייק של {userStreak} {'🔥'.repeat(Math.min(userStreak,5))} — נחש לפני הנעילה כדי לשמור עליו!</div>
+            {profile?.streak_shield !== false ? (
+              <button className="shield-btn" onPointerDown={e => { e.preventDefault(); activateStreakShield() }}>🛡️ הפעל מגן</button>
+            ) : (
+              <span className="shield-used-tag">🛡️ מגן נוצל</span>
+            )}
           </div>
         )}
 
@@ -669,10 +723,22 @@ export default function PredictPage() {
               // For live matches: calculate pts client-side (trigger only runs on finish)
               const dbPts      = hasScore && hasGuess ? (g.pts ?? null) : null
               const livePts    = live && hasGuess && hasScore
-                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker, m.is_special)
+                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker, m.is_special, round)
                 : null
               const pts        = livePts ?? dbPts
-              const guessClass = (pts >= 3) ? 'guess-exact' : (pts === 1 || pts === 2) ? 'guess-dir' : (pts !== null && pts <= 0) ? 'guess-miss' : 'guess-none'
+              const { exact: exactBase } = getPhaseBase(round)
+              const guessClass = pts >= exactBase ? 'guess-exact'
+                : (pts !== null && pts > 0) ? 'guess-dir'
+                : (pts !== null && pts <= 0) ? 'guess-miss' : 'guess-none'
+              const nearMissLabel = (() => {
+                if (!hasGuess || !hasScore) return 'כמעט 😤'
+                const hg = parseInt(g.h), ag = parseInt(g.a)
+                const dirRight = Math.sign(m.home_score - m.away_score) === Math.sign(hg - ag)
+                const dist = Math.abs(hg - m.home_score) + Math.abs(ag - m.away_score)
+                if (dirRight && dist === 1) return 'כמעט! פספסת בגול אחד ⚽'
+                if (dirRight) return 'כמעט! ניחשת נכון את הכיוון ⭐'
+                return 'כמעט! הפרש של גול 😤'
+              })()
               const isRMMatch       = m.home_team === 'Real Madrid' || m.away_team === 'Real Madrid'
               const others          = othersGuesses[m.id] || []
 
@@ -694,7 +760,7 @@ export default function PredictPage() {
                           <div className="result-col">
                             <span className="result-col-label">ניחוש</span>
                             <div style={{ position: 'relative' }}>
-                              {matchAnims[m.id] === 'near-miss' && <span className="float-label near-miss-label">כמעט 😤</span>}
+                              {matchAnims[m.id] === 'near-miss' && <span className="float-label near-miss-label">{nearMissLabel}</span>}
                               {matchAnims[m.id] === 'reversed' && <span className="float-label reversed-label">הפוך! 💀</span>}
                               <div className={`guess-chip ${guessClass}${matchAnims[m.id] ? ' ' + matchAnims[m.id] + '-anim' : ''}`}>{hasGuess ? `${g.h}:${g.a}` : '—'}</div>
                             </div>
@@ -710,7 +776,7 @@ export default function PredictPage() {
                           <div className="result-sep" />
                           <div className="result-col">
                             <span className="result-col-label">נק׳</span>
-                            <PtsBadge pts={pts} isJoker={!!g.joker} isSpecial={!!m.is_special} />
+                            <PtsBadge pts={pts} isJoker={!!g.joker} isSpecial={!!m.is_special} round={round} />
                             {(g.penBonus ?? 0) > 0 && <div className="pen-bonus-badge">+{g.penBonus}🎯</div>}
                           </div>
                         </div>
@@ -739,12 +805,19 @@ export default function PredictPage() {
                     </div>
                     {!effectiveLocked ? (
                       <button
-                        className={`joker-side-btn${isThisJoker ? ' joker-active' : ''}${jokerTaken ? ' joker-taken' : ''}`}
-                        onClick={() => setJokerMatchId(isThisJoker ? null : m.id)}
-                        title="ג׳וקר — מדויק = 6 נקודות, טעות = -1"
+                        className={`joker-side-btn${isThisJoker ? ' joker-active' : ''}${jokerTaken ? ' joker-taken' : ''}${jokerHolding === m.id ? ' joker-holding' : ''}`}
+                        style={{ touchAction: 'none', userSelect: 'none', position: 'relative', overflow: 'hidden' }}
+                        onPointerDown={e => { e.preventDefault(); isThisJoker ? setJokerMatchId(null) : (!jokerTaken && startJokerHold(m.id)) }}
+                        onPointerUp={cancelJokerHold}
+                        onPointerLeave={cancelJokerHold}
+                        onPointerCancel={cancelJokerHold}
+                        title={isThisJoker ? 'לחץ להסרת ג׳וקר' : 'לחץ ממושך להפעלת ג׳וקר'}
                       >
+                        {jokerHolding === m.id && (
+                          <div className="joker-hold-bar" style={{ width: `${jokerHoldPct}%` }} />
+                        )}
                         <span>🃏</span>
-                        <span className="joker-side-label">ג׳וקר</span>
+                        <span className="joker-side-label">{isThisJoker ? 'ג׳וקר' : 'לחץ'}</span>
                       </button>
                     ) : g.joker ? (
                       <div className="joker-side-btn joker-active" style={{ cursor: 'default' }}>

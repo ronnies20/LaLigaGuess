@@ -329,6 +329,14 @@ export default function ProfilePage() {
                 </div>
               )}
 
+              {/* Streak shield status */}
+              <div className="shield-status-row">
+                <span>🛡️ מגן סטרייק</span>
+                <span className={`shield-status-val${profile?.streak_shield === false ? ' used' : ''}`}>
+                  {profile?.streak_shield === false ? 'נוצל' : 'זמין'}
+                </span>
+              </div>
+
               {/* Season investment */}
               <div className="season-invest">
                 <div className="invest-title">השקעה בעונה</div>

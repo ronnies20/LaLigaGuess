@@ -155,3 +155,31 @@ export function playTick() {
     note(c, 1000, c.currentTime, 0.03, 0.05)
   } catch {}
 }
+
+// Joker hold ritual — rising tension tick during hold
+export function playJokerRitual(tickNum = 0) {
+  try {
+    const c = getCtx(); const t = c.currentTime
+    const freqs = [110, 147, 196, 262]
+    const f = freqs[Math.min(tickNum, freqs.length - 1)]
+    note(c, f, t, 0.12, 0.12, 'sawtooth')
+    noise(c, t, 0.05, 150, 0.06)
+  } catch {}
+}
+
+// Joker successfully activated after hold
+export function playJokerActivate() {
+  try {
+    const c = getCtx(); const t = c.currentTime
+    noise(c, t, 0.06, 250, 0.30)
+    const osc = c.createOscillator(); const g = c.createGain()
+    osc.type = 'sawtooth'
+    osc.frequency.setValueAtTime(80, t)
+    osc.frequency.exponentialRampToValueAtTime(520, t + 0.35)
+    g.gain.setValueAtTime(0.18, t)
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.45)
+    osc.connect(g).connect(c.destination)
+    osc.start(t); osc.stop(t + 0.5)
+    ;[523, 659, 784].forEach((f, i) => note(c, f, t + 0.38 + i * 0.06, 0.3, 0.18))
+  } catch {}
+}
