@@ -56,7 +56,7 @@ export function getStatusLabel(status) {
 
 export function isMatchLocked(kickoff) {
   const kickoffDate = new Date(kickoff)
-  const lockTime = new Date(kickoffDate.getTime() - 5 * 60 * 1000)
+  const lockTime = new Date(kickoffDate.getTime() - 60 * 60 * 1000)
   return new Date() >= lockTime
 }
 
