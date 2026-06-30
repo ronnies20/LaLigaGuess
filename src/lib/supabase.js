@@ -162,10 +162,10 @@ export async function getLiveMatchGuesses(liveMatchIds) {
 }
 
 // ---- Feedback ----
-export async function submitFeedback(userId, displayName, message) {
+export async function submitFeedback(userId, displayName, userEmail, message) {
   const { error } = await supabase
     .from('feedback')
-    .insert({ user_id: userId, display_name: displayName, message })
+    .insert({ user_id: userId, display_name: displayName, user_email: userEmail, message })
   if (error) throw error
 }
 

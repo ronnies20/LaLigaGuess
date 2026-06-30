@@ -16,7 +16,7 @@ function FeedbackModal({ user, profile, onClose }) {
     setErr(null)
     try {
       const name = profile?.display_name || user?.email?.split('@')[0] || 'אנונימי'
-      await submitFeedback(user.id, name, msg.trim())
+      await submitFeedback(user.id, name, user.email, msg.trim())
       setSent(true)
     } catch (e) { setErr('שגיאה בשליחה, נסה שוב') }
     setSending(false)
@@ -36,13 +36,13 @@ function FeedbackModal({ user, profile, onClose }) {
         ) : (
           <>
             <div style={{ fontSize:18, fontWeight:800, color:'#FDB927', marginBottom:6 }}>📨 שלח פידבק</div>
-            <div style={{ fontSize:14, color:'#7060A0', marginBottom:16 }}>באג? הצעה? כתוב כאן, FRIEREN תקרא</div>
+            <div style={{ fontSize:14, color:'#7060A0', marginBottom:16 }}>באג? הצעה? כתוב כאן ונתייחס. תודה ❤️</div>
             <textarea
               value={msg}
               onChange={e => setMsg(e.target.value)}
               placeholder="תאר את הבעיה או ההצעה..."
               rows={5}
-              style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(253,185,39,0.2)', borderRadius:10, padding:'10px 12px', color:'#F0EDFF', fontSize:14, resize:'vertical', fontFamily:'inherit', direction:'rtl', boxSizing:'border-box', textAlign:'right' }}
+              style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(253,185,39,0.2)', borderRadius:10, padding:'10px 12px', color:'#F0EDFF', fontSize:14, resize:'vertical', fontFamily:'inherit', direction:'rtl', boxSizing:'border-box', textAlign:'center' }}
             />
             {err && <div style={{ fontSize:12, color:'#FF4444', marginTop:6 }}>{err}</div>}
             <button
@@ -101,10 +101,11 @@ function AdminFeedbackPanel() {
              const dateStr = d.toLocaleDateString('he-IL', { day:'numeric', month:'numeric' }) + ' ' + d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit' })
              return (
                <div key={item.id} style={{ padding:'12px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', background: item.read ? 'transparent' : 'rgba(253,185,39,0.04)' }}>
-                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                    <span style={{ fontWeight:700, fontSize:13, color: item.read ? '#7060A0' : '#FDB927' }}>{item.display_name}</span>
                    <span style={{ fontSize:10, color:'#7060A0' }}>{dateStr}</span>
                  </div>
+                 {item.user_email && <div style={{ fontSize:11, color:'#5588BB', marginBottom:5 }}>📧 {item.user_email}</div>}
                  <div style={{ fontSize:13, color:'#F0EDFF', lineHeight:1.5, whiteSpace:'pre-wrap' }}>{item.message}</div>
                  {!item.read && (
                    <button
