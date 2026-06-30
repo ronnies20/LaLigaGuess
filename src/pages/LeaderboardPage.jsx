@@ -170,18 +170,21 @@ export default function LeaderboardPage() {
       setPenCounts(pc)
 
       if (view === 'season') {
-        const [{ data }, { data: streakData }, msgs] = await Promise.all([
+        const [{ data }, msgs] = await Promise.all([
           supabase.from('leaderboard_view').select('*').order('total_points', { ascending: false }).limit(100),
-          supabase.from('current_streak_view').select('user_id, current_streak'),
           currentRound ? getRoundMessages(currentRound) : Promise.resolve([]),
         ])
         setRows(data || [])
-        const sm = {}
-        streakData?.forEach(r => { sm[r.user_id] = r.current_streak })
-        setStreaks(sm)
         const mm = {}
         msgs?.forEach(m => { mm[m.user_id] = m.message })
         setMessages(mm)
+        // streak view may not exist in all environments
+        try {
+          const { data: streakData } = await supabase.from('current_streak_view').select('user_id, current_streak')
+          const sm = {}
+          streakData?.forEach(r => { sm[r.user_id] = r.current_streak })
+          setStreaks(sm)
+        } catch {}
       } else {
         const { data } = await supabase
           .from('round_leaderboard_view')
@@ -221,11 +224,7 @@ export default function LeaderboardPage() {
             <div style={{textAlign:'center'}}>מיקום</div>
             <div>שחקן</div>
             {hasLive && (
-              <div style={{textAlign:'center', fontSize:9, lineHeight:1.4, color:'#FF4444', fontWeight:800}}>
-                {liveMatches.map(m => (
-                  <div key={m.id}>{getTeamInfo(m.home_team).short}-{getTeamInfo(m.away_team).short}</div>
-                ))}
-              </div>
+              <div style={{textAlign:'center', fontSize:13, color:'#FF4444'}}>🔴</div>
             )}
             <div style={{textAlign:'center'}}>מדויק</div>
             <div style={{textAlign:'center'}}>כיוון</div>

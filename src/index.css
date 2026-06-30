@@ -669,9 +669,6 @@ body {
 }
 
 /* ---- Live scores ---- */
-.live-dot { animation: blink 1s step-start infinite; }
-@keyframes blink { 50% { opacity: 0; } }
-.result-live .result-col-label { color: #ff5252; }
 .live-score { color: #ff5252 !important; border-color: rgba(255,82,82,0.4) !important; }
 
 /* ---- Penalty prediction ---- */

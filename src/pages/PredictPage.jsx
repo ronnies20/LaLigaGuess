@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
-import { getTeamInfo, getTeamLogoUrl, isMatchLocked, isMatchLive, isMatchFinished, getStatusLabel, formatKickoff, TOTAL_ROUNDS, LIVE_STATUSES } from '../lib/teams'
+import { getTeamInfo, getTeamLogoUrl, isMatchLocked, isMatchLive, isMatchFinished, getStatusLabel, formatKickoff, TOTAL_ROUNDS, LIVE_STATUSES, calcPoints } from '../lib/teams'
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
 
 function generateShareCanvas({ matches, guesses, round, userStreak, displayName }) {
@@ -484,7 +484,12 @@ export default function PredictPage() {
               const hasGuess        = g.h !== '' && g.a !== ''
               const isThisJoker     = jokerMatchId === m.id
               const jokerTaken      = jokerMatchId !== null && !isThisJoker
-              const pts        = hasScore && hasGuess ? (g.pts ?? null) : null
+              // For live matches: calculate pts client-side (trigger only runs on finish)
+              const dbPts      = hasScore && hasGuess ? (g.pts ?? null) : null
+              const livePts    = live && hasGuess && hasScore
+                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker, m.is_special)
+                : null
+              const pts        = livePts ?? dbPts
               const guessClass = (pts >= 3) ? 'guess-exact' : (pts === 1 || pts === 2) ? 'guess-dir' : (pts !== null && pts <= 0) ? 'guess-miss' : 'guess-none'
               const isRMMatch       = m.home_team === 'Real Madrid' || m.away_team === 'Real Madrid'
               const others          = othersGuesses[m.id] || []
@@ -494,7 +499,6 @@ export default function PredictPage() {
                   {m.is_special && <div className="special-strip">⭐ משחק מיוחד — ניחוש שווה כפל נקודות</div>}
                   <div className="match-header">
                     <span className="match-date">
-                      {live ? <span className="live-dot">🔴</span> : null}
                       {getStatusLabel(m.status) || formatKickoff(m.kickoff)}
                     </span>
                     {locked && !hasScore && <span className="badge badge-lock" style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}>🔒 נעול</span>}
@@ -523,7 +527,7 @@ export default function PredictPage() {
                           </div>
                           <div className="result-sep" />
                           <div className="result-col">
-                            <span className="result-col-label">{live ? '🔴' : 'סופי'}</span>
+                            <span className="result-col-label">{live ? 'לייב' : 'סופי'}</span>
                             <div className={`final-score-chip${live ? ' live-score' : ''}`}>{m.home_score}:{m.away_score}</div>
                           </div>
                           <div className="result-sep" />

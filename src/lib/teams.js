@@ -50,7 +50,7 @@ export function isMatchLive(status)     { return LIVE_STATUSES.includes(status) 
 export function isMatchFinished(status) { return FINISHED_STATUSES.includes(status) }
 
 export function getStatusLabel(status) {
-  const map = { '1H':'🔴 מח׳ ראשונה', HT:'🔴 הפסקה', '2H':'🔴 מח׳ שנייה', ET:'🔴 הארכות', P:'🔴 פנדלים' }
+  const map = { '1H':'מח׳ ראשונה', HT:'הפסקה', '2H':'מח׳ שנייה', ET:'הארכות', P:'פנדלים' }
   return map[status] || null
 }
 
