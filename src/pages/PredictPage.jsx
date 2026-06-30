@@ -172,7 +172,7 @@ export default function PredictPage() {
   const [saveMsg, setSaveMsg] = useState('')
   const [matchAnims, setMatchAnims] = useState({})
   const saveBtnRef            = useRef(null)
-  const celebratedRef         = useRef(getCelebrated())
+  const celebratedRef         = useRef(getCelebrated(user.id))
 
   useEffect(() => {
     getCurrentRound().then(r => { setRound(r); setCurrentRound(r) }).catch(() => { setRound(1); setCurrentRound(1) })
@@ -285,7 +285,7 @@ export default function PredictPage() {
       const pts = g.pts ?? null
       if (pts === null) return
       celebratedRef.current.add(m.id)
-      markCelebrated(m.id)
+      markCelebrated(m.id, user.id)
       const mid = m.id
       if (pts >= 10) {
         setTimeout(() => {

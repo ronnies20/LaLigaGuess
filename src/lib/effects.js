@@ -128,12 +128,16 @@ export function playReversedSound() {
   } catch {}
 }
 
-const CELEBRATED_KEY = 'casino_celebrated'
-export function getCelebrated() {
-  try { return new Set(JSON.parse(localStorage.getItem(CELEBRATED_KEY) || '[]')) }
+function celebratedKey(userId) { return `casino_celebrated_${userId || 'anon'}` }
+export function getCelebrated(userId) {
+  try { return new Set(JSON.parse(localStorage.getItem(celebratedKey(userId)) || '[]')) }
   catch { return new Set() }
 }
-export function markCelebrated(id) {
-  const s = getCelebrated(); s.add(id)
-  localStorage.setItem(CELEBRATED_KEY, JSON.stringify([...s]))
+export function markCelebrated(id, userId) {
+  const key = celebratedKey(userId)
+  try {
+    const s = new Set(JSON.parse(localStorage.getItem(key) || '[]'))
+    s.add(id)
+    localStorage.setItem(key, JSON.stringify([...s]))
+  } catch {}
 }
