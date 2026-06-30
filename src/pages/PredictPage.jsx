@@ -915,7 +915,7 @@ export default function PredictPage() {
           >
             <span className="save-emoji">{saving ? '🎲' : '🎰'}</span>
             <span>
-              {saving ? <span style={{direction:'ltr',display:'inline-block'}}>שומר...</span> : 'שמור ניחושים'}
+              {saving ? <span dir="ltr">שומר...</span> : 'שמור ניחושים'}
             </span>
             {unsavedCount > 0 && !saving && (
               <span className="unsaved-badge">{unsavedCount}</span>
