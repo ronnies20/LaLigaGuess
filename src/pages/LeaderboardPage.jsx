@@ -233,7 +233,7 @@ export default function LeaderboardPage() {
             {hasLive && <div style={{textAlign:'center', fontSize:10}}>🔴 ניחוש</div>}
             <div style={{textAlign:'center'}}>מדויק</div>
             <div style={{textAlign:'center'}}>כיוון</div>
-            <div style={{textAlign:'center'}}>🎯</div>
+            <div style={{textAlign:'center', fontSize:9, lineHeight:1.2}}>פנדל<br/>לריאל</div>
             <div style={{textAlign:'center'}}>נק׳</div>
           </div>
 
