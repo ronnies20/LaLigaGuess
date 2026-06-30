@@ -1021,3 +1021,258 @@ body {
   transition: background .15s;
 }
 .beta-box-link:hover { background: rgba(253,185,39,0.1); }
+
+/* ================================================================
+   ENGAGEMENT SYSTEM — round progress, countdown, social proof
+   ================================================================ */
+
+/* Round progress bar */
+.round-progress-wrap {
+  position: relative;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  height: 28px;
+  margin: 8px 0 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.round-progress-bar {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: linear-gradient(90deg, rgba(253,185,39,0.25), rgba(253,185,39,0.45));
+  border-radius: 6px;
+  transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.round-progress-bar.complete {
+  background: linear-gradient(90deg, rgba(0,230,118,0.3), rgba(0,230,118,0.5));
+}
+.round-progress-label {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  padding: 0 12px;
+  white-space: nowrap;
+}
+.round-social-count {
+  color: rgba(255,255,255,0.45);
+  font-weight: 500;
+}
+
+/* Countdown timer */
+.lock-countdown {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(253,185,39,0.7);
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(253,185,39,0.06);
+  border: 1px solid rgba(253,185,39,0.15);
+  margin: 6px 0;
+  transition: background 0.5s, border-color 0.5s, color 0.5s;
+}
+.lock-countdown.urgent {
+  color: #F59E0B;
+  background: rgba(245,158,11,0.08);
+  border-color: rgba(245,158,11,0.25);
+}
+.lock-countdown.critical {
+  color: #FF5252;
+  background: rgba(255,82,82,0.10);
+  border-color: rgba(255,82,82,0.35);
+  animation: countdown-pulse 0.9s ease-in-out infinite;
+}
+@keyframes countdown-pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* Round pts chip */
+.round-pts-chip {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  padding: 5px 0;
+  letter-spacing: 0.3px;
+}
+
+/* Streak at risk banner */
+.streak-risk-banner {
+  background: rgba(245,158,11,0.10);
+  border: 1.5px solid rgba(245,158,11,0.35);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #F59E0B;
+  text-align: center;
+  margin: 6px 0;
+  animation: risk-pulse 2s ease-in-out infinite;
+}
+@keyframes risk-pulse {
+  0%,100% { border-color: rgba(245,158,11,0.35); }
+  50% { border-color: rgba(245,158,11,0.7); }
+}
+
+/* Save button with unsaved state */
+.save-btn.has-unsaved {
+  background: linear-gradient(135deg, #FDB927, #ff8800) !important;
+  animation: save-shimmer 2s ease infinite;
+}
+@keyframes save-shimmer {
+  0%,100% { box-shadow: 0 0 12px rgba(253,185,39,0.4); }
+  50% { box-shadow: 0 0 24px rgba(253,185,39,0.7); }
+}
+.unsaved-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  border-radius: 50%;
+  width: 20px; height: 20px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   LEADERBOARD — rival banner, gap display, leader banner
+   ================================================================ */
+
+.rival-banner {
+  background: rgba(255,82,82,0.07);
+  border: 1px solid rgba(255,82,82,0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 10px;
+  text-align: center;
+}
+.rival-banner strong { color: #FF6B6B; }
+
+.leader-banner {
+  background: rgba(253,185,39,0.07);
+  border: 1px solid rgba(253,185,39,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FDB927;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.lb-gap {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.3);
+  margin-top: 2px;
+  letter-spacing: 0.2px;
+}
+
+/* ================================================================
+   PROFILE — persona, trophies, season investment
+   ================================================================ */
+
+.persona-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(168,85,247,0.08);
+  border: 1px solid rgba(168,85,247,0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 16px;
+}
+.persona-icon { font-size: 26px; line-height: 1; flex-shrink: 0; }
+.persona-label { font-size: 15px; font-weight: 800; color: #C084FC; }
+.persona-desc  { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+.season-invest {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 10px;
+}
+.invest-title {
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.invest-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+}
+
+.trophies-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.trophy-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px 10px 10px;
+  text-align: center;
+  transition: border-color 0.3s, background 0.3s;
+}
+.trophy-card.done {
+  background: rgba(253,185,39,0.06);
+  border-color: rgba(253,185,39,0.35);
+}
+.trophy-icon { font-size: 22px; line-height: 1; margin-bottom: 4px; }
+.trophy-label {
+  font-size: 12px; font-weight: 800;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 2px;
+}
+.trophy-desc { font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 6px; }
+.trophy-bar-wrap {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.trophy-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #7B37BB, #FDB927);
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+.trophy-card.done .trophy-bar { background: linear-gradient(90deg, #FDB927, #00E676); }
+.trophy-progress { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); }
+
+/* ================================================================
+   PARTICLE SYSTEM — gold burst on exact score
+   ================================================================ */
+@keyframes particle-burst {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+.particle {
+  position: fixed;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color, #FDB927);
+  animation: particle-burst 0.8s ease-out forwards;
+  pointer-events: none;
+  z-index: 9999;
+}

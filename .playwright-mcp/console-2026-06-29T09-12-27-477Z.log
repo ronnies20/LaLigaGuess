@@ -235,3 +235,31 @@ Visit https://reactjs.org/link/error-boundaries to learn more about error bounda
     at recoverFromConcurrentError (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18736:28)
     at performSyncWorkOnRoot (http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:18879:28)
 [17236473ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[18823411ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[20153703ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[20154258ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[20154284ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[20154388ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[20532210ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:1 (2.108.2) 2026-06-29T14:54:39.686Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[20532334ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[23758679ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[23758682ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[24664270ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[24664409ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[24665948ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[26371229ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:1 (2.108.2) 2026-06-29T16:31:58.705Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[26371367ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[27390514ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[27390516ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[31783654ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[31783799ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[31786057ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[32077433ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:1 (2.108.2) 2026-06-29T18:07:04.909Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[32077562ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[32387124ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:4000/@vite/client:559
+[38196862ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://localhost:4000/:0
+[38198764ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:4000/node_modules/.vite/deps/chunk-NGODP64W.js?v=7edd572c:21550
+[38199781ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0
+[38199809ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:4000/:0
+[38533554ms] [WARNING] GoTrueClient@sb-jgzscpqnqvymnrpktikf-auth-token:1 (2.108.2) 2026-06-29T19:54:41.030Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:4000/node_modules/.vite/deps/@supabase_supabase-js.js?v=7edd572c:15484
+[38533696ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:4000/:0

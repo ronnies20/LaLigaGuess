@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage } from '../lib/supabase'
+import { supabase, upsertPrediction, getCurrentRound, getRoundMessages, upsertRoundMessage, countRoundParticipants } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, getTeamLogoUrl, isMatchLocked, isMatchLive, isMatchFinished, getStatusLabel, formatKickoff, TOTAL_ROUNDS, LIVE_STATUSES, calcPoints } from '../lib/teams'
 import { playCoinSound, playJackpotSound, fireConfetti, getCelebrated, markCelebrated, playNearMissSound, playReversedSound } from '../lib/effects'
+import { playSubmit, playExactScore, playNearMiss as playNearMissNew, playJokerWin, playJokerLoss, playStreakMilestone } from '../lib/audio'
 
 function generateShareCanvas({ matches, guesses, round, userStreak, displayName }) {
   const W = 420, PAD = 22, ROW_H = 52, HEADER_H = 96, FOOTER_H = 76
@@ -189,6 +190,9 @@ export default function PredictPage() {
   const [saveMsg, setSaveMsg] = useState('')
   const [matchAnims, setMatchAnims] = useState({})
   const [penPickerMatchId, setPenPickerMatchId] = useState(null)
+  const [dirty, setDirty]             = useState(new Set())
+  const [socialCount, setSocialCount] = useState(0)
+  const [lockCountdown, setLockCountdown] = useState(null)
   const saveBtnRef            = useRef(null)
   const celebratedRef         = useRef(getCelebrated(user.id))
 
@@ -244,11 +248,29 @@ export default function PredictPage() {
         .from('current_streak_view').select('current_streak')
         .eq('user_id', user.id).maybeSingle()
       setUserStreak(streakData?.current_streak ?? 0)
+
+      // Social proof: count participants in this round
+      try {
+        const cnt = await countRoundParticipants(round)
+        setSocialCount(cnt)
+      } catch {}
     } catch (err) { console.error(err) }
     setLoading(false)
   }, [round, user.id])
 
   useEffect(() => { loadRound() }, [loadRound])
+
+  // Countdown timer to first lock
+  useEffect(() => {
+    if (!matches.length) { setLockCountdown(null); return }
+    const openM = matches.filter(m => !isMatchLocked(m.kickoff) && m.home_score === null)
+    if (!openM.length) { setLockCountdown(null); return }
+    const firstLock = Math.min(...openM.map(m => new Date(m.kickoff).getTime() - 60 * 60 * 1000))
+    const tick = () => setLockCountdown(Math.max(0, Math.floor((firstLock - Date.now()) / 1000)))
+    tick()
+    const timer = setInterval(tick, 1000)
+    return () => clearInterval(timer)
+  }, [matches])
 
   // Realtime: live match score updates + own points updates
   useEffect(() => {
@@ -358,6 +380,7 @@ export default function PredictPage() {
   function handleInput(matchId, side, val) {
     const clean = val.replace(/\D/g, '').slice(0, 2)
     setGuesses(g => ({ ...g, [matchId]: { ...g[matchId], [side]: clean } }))
+    setDirty(d => { const n = new Set(d); n.add(matchId); return n })
   }
 
   function handlePenRange(matchId, min, max) {
@@ -372,6 +395,7 @@ export default function PredictPage() {
 
   async function saveAll() {
     setSaving(true)
+    playSubmit()
     let count = 0
     for (const m of matches) {
       if (isMatchLocked(m.kickoff) || m.home_score !== null) continue
@@ -388,6 +412,7 @@ export default function PredictPage() {
         setTimeout(playCoinSound, count * 90)
       } catch (err) { console.error(err) }
     }
+    setDirty(new Set())
     setSaving(false)
     if (count > 0) {
       setSaveMsg(`🎰 ${count} ניחושים נשמרו!`)
@@ -429,6 +454,37 @@ export default function PredictPage() {
 
   const openMatches = matches.filter(m => !isMatchLocked(m.kickoff) && m.home_score === null)
 
+  // Unsaved count: matches with a valid guess not yet saved (or modified after save)
+  const unsavedCount = openMatches.filter(m => {
+    const g = guesses[m.id]
+    return g && g.h !== '' && g.a !== '' && dirty.has(m.id)
+  }).length
+
+  // Progress: how many open matches have a guess
+  const predictedCount = openMatches.filter(m => {
+    const g = guesses[m.id]; return g && g.h !== '' && g.a !== ''
+  }).length
+
+  // Current round points from finished matches
+  const roundPts = matches
+    .filter(m => m.home_score !== null && !isMatchLive(m.status))
+    .reduce((sum, m) => sum + (guesses[m.id]?.pts ?? 0), 0)
+  const hasRoundResults = matches.some(m => m.home_score !== null)
+
+  // Format countdown
+  function formatCountdown(secs) {
+    if (secs === null || secs === undefined) return null
+    if (secs <= 0) return null
+    const h = Math.floor(secs / 3600)
+    const m = Math.floor((secs % 3600) / 60)
+    const s = secs % 60
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    return `${m}:${String(s).padStart(2,'0')}`
+  }
+  const countdownStr = formatCountdown(lockCountdown)
+  const isUrgent = lockCountdown !== null && lockCountdown < 3600
+  const isCritical = lockCountdown !== null && lockCountdown < 600
+
   return (
     <div className="page">
       <div className="content">
@@ -438,6 +494,35 @@ export default function PredictPage() {
           <div className="round-label">מחזור {round}</div>
           <button className="round-nav-btn" onClick={() => setRound(r => r >= TOTAL_ROUNDS ? 1 : r + 1)}>›</button>
         </div>
+
+        {/* Round completion progress bar */}
+        {openMatches.length > 0 && (
+          <div className="round-progress-wrap">
+            <div
+              className={`round-progress-bar${predictedCount === openMatches.length ? ' complete' : ''}`}
+              style={{ width: `${(predictedCount / openMatches.length) * 100}%` }}
+            />
+            <span className="round-progress-label">
+              {predictedCount}/{openMatches.length} ניחושים
+              {socialCount > 0 && <span className="round-social-count"> · 👥 {socialCount} שחקנים ניחשו</span>}
+            </span>
+          </div>
+        )}
+
+        {/* Countdown timer */}
+        {countdownStr && openMatches.length > 0 && (
+          <div className={`lock-countdown${isUrgent ? ' urgent' : ''}${isCritical ? ' critical' : ''}`}>
+            🔒 ננעל בעוד <strong>{countdownStr}</strong>
+            {isCritical && ' — מהר!'}
+          </div>
+        )}
+
+        {/* Round points from finished matches */}
+        {hasRoundResults && (
+          <div className="round-pts-chip">
+            📊 {roundPts > 0 ? '+' : ''}{roundPts} נק׳ במחזור {round}
+          </div>
+        )}
 
         {round === currentRound && openMatches.length > 0 && (
           <div className="card trash-card">
@@ -462,7 +547,14 @@ export default function PredictPage() {
           </div>
         )}
 
-        {userStreak >= 1 && userStreak <= 2 && (
+        {/* Streak at risk warning */}
+        {userStreak >= 1 && openMatches.length > 0 && predictedCount === 0 && (
+          <div className="streak-risk-banner">
+            ⚠️ יש לך סטרייק של {userStreak} {'🔥'.repeat(Math.min(userStreak,5))} — נחש לפני הנעילה כדי לשמור עליו!
+          </div>
+        )}
+
+        {userStreak >= 1 && userStreak <= 2 && !(openMatches.length > 0 && predictedCount === 0) && (
           <div className="streak-mini">
             {'🔥'.repeat(userStreak)} {userStreak} ברצף — עוד {3 - userStreak} לבונוס
           </div>
@@ -694,9 +786,23 @@ export default function PredictPage() {
 
       {openMatches.length > 0 && (
         <div className="save-bar">
-          <button ref={saveBtnRef} className="btn btn-primary btn-full save-btn" onClick={saveAll} disabled={saving}>
+          <button
+            ref={saveBtnRef}
+            className={`btn btn-primary btn-full save-btn${unsavedCount > 0 ? ' has-unsaved' : ''}`}
+            onClick={saveAll}
+            disabled={saving}
+          >
             <span className="save-emoji">{saving ? '🎲' : '🎰'}</span>
-            <span>{saving ? 'שומר...' : 'שמור ניחושים'}</span>
+            <span>
+              {saving
+                ? 'שומר...'
+                : unsavedCount > 0
+                  ? `שמור ${unsavedCount} ניחושים`
+                  : 'שמור ניחושים'}
+            </span>
+            {unsavedCount > 0 && !saving && (
+              <span className="unsaved-badge">{unsavedCount}</span>
+            )}
           </button>
           <div className="save-msg">{saveMsg}</div>
         </div>

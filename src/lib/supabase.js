@@ -198,6 +198,37 @@ export async function markFeedbackRead(id) {
   if (error) throw error
 }
 
+// ---- Engagement helpers ----
+
+// Count distinct users who have predicted at least one match in a round (social proof)
+export async function countRoundParticipants(round) {
+  const { data, error } = await supabase.rpc('count_round_predictions', { p_round: round })
+  if (error) return 0
+  return data ?? 0
+}
+
+// Full history for trophy / persona computation
+export async function getMyHistory(userId) {
+  const { data, error } = await supabase
+    .from('predictions')
+    .select('home_guess, away_guess, points, is_joker, penalty_bonus, matches!inner(round, home_score, away_score, kickoff, is_special)')
+    .eq('user_id', userId)
+    .not('matches.home_score', 'is', null)
+  if (error) return []
+  return data || []
+}
+
+// Get season leaderboard with ranks for rival computation (already have getLeaderboard)
+export async function getLeaderboardRanked() {
+  const { data, error } = await supabase
+    .from('leaderboard_view')
+    .select('user_id, display_name, avatar_url, total_points, exact_count, direction_count')
+    .order('total_points', { ascending: false })
+    .limit(100)
+  if (error) throw error
+  return (data || []).map((r, i) => ({ ...r, rank: i + 1 }))
+}
+
 export async function getMyStats(userId) {
   const [{ data: lb }, { data: maxStreakData }, { data: penPreds }] = await Promise.all([
     supabase.from('leaderboard_view').select('*').eq('user_id', userId).maybeSingle(),

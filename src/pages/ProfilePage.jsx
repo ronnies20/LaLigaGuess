@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase, signOut, getMyStats, uploadAvatar, updateProfile, submitFeedback, getAdminFeedback, markFeedbackRead } from '../lib/supabase'
+import { supabase, signOut, getMyStats, uploadAvatar, updateProfile, submitFeedback, getAdminFeedback, markFeedbackRead, getMyHistory } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
 const ADMIN_EMAIL = 'mikaswiftt@gmail.com'
@@ -170,9 +170,38 @@ function CameraOverlay() {
   )
 }
 
+// Compute trophies from stats + history
+function computeTrophies(stats, history) {
+  if (!stats) return []
+  const uniqueRounds = new Set(history.map(p => p.matches?.round).filter(Boolean)).size
+  const jokerWins = history.filter(p => p.is_joker && (p.points ?? 0) >= 6).length
+  const trophies = [
+    { id: 'sniper',  icon: '🎯', label: 'סנייפר',       desc: '10 תוצאות מדויקות', val: stats.exact,       target: 10 },
+    { id: 'joker',   icon: '🃏', label: 'ג׳וקר מאסטר', desc: '3 ג׳וקרים מוצלחים',  val: jokerWins,         target: 3  },
+    { id: 'iron',    icon: '🔩', label: 'הברזל',         desc: '10 מחזורים ברצף',   val: uniqueRounds,      target: 10 },
+    { id: 'penalty', icon: '⚽', label: 'הימוריאל',      desc: '5 פנדלים נכונים',   val: stats.penaltyHits, target: 5  },
+    { id: 'hundred', icon: '💯', label: 'מאה ניחושים',   desc: '100 ניחושים כולל',  val: stats.played,      target: 100 },
+    { id: 'streak',  icon: '🔥', label: 'רצף להבה',      desc: 'סטרייק של 5',       val: stats.maxStreak,   target: 5  },
+  ]
+  return trophies
+}
+
+// Compute persona from history
+function computePersona(stats, history) {
+  if (!stats || history.length < 5) return null
+  const jokerUses = history.filter(p => p.is_joker).length
+  const exactRate = stats.played > 0 ? stats.exact / stats.played : 0
+  if (exactRate > 0.28) return { icon: '🎯', label: 'הסנייפר',    desc: 'מדיוק גבוה מהממוצע' }
+  if (jokerUses >= 3)   return { icon: '🃏', label: 'הגמבלר',     desc: 'לא מפחד לקחת סיכון' }
+  if (stats.played > 30) return { icon: '🔩', label: 'הברזל',     desc: 'מחויבות מלאה לעונה' }
+  if (stats.penaltyHits >= 2) return { icon: '⚽', label: 'מנחש הפנדלים', desc: 'חוש לריאל מדריד' }
+  return { icon: '🎲', label: 'המהמר',      desc: 'סגנון חופשי' }
+}
+
 export default function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth()
   const [stats, setStats]         = useState(null)
+  const [history, setHistory]     = useState([])
   const [rank, setRank]           = useState(null)
   const [copied, setCopied]       = useState(false)
   const [loading, setLoading]     = useState(true)
@@ -185,8 +214,12 @@ export default function ProfilePage() {
     async function load() {
       if (!user) return
       try {
-        const s = await getMyStats(user.id)
+        const [s, hist] = await Promise.all([
+          getMyStats(user.id),
+          getMyHistory(user.id),
+        ])
         setStats(s)
+        setHistory(hist)
         const { data: lb } = await supabase
           .from('leaderboard_view')
           .select('user_id')
@@ -277,6 +310,57 @@ export default function ProfilePage() {
             </div>
           </>
         ) : null}
+
+        {stats && history.length > 0 && (() => {
+          const persona = computePersona(stats, history)
+          const trophies = computeTrophies(stats, history)
+          const investHours = Math.round(stats.played * 3 / 60 * 10) / 10
+          const uniqueRounds = new Set(history.map(p => p.matches?.round).filter(Boolean)).size
+          return (
+            <>
+              {/* Persona */}
+              {persona && (
+                <div className="persona-card">
+                  <span className="persona-icon">{persona.icon}</span>
+                  <div>
+                    <div className="persona-label">{persona.label}</div>
+                    <div className="persona-desc">{persona.desc}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Season investment */}
+              <div className="season-invest">
+                <div className="invest-title">השקעה בעונה</div>
+                <div className="invest-row">
+                  <span>🏆 {stats.played} ניחושים</span>
+                  <span>⏱️ ~{investHours} שעות</span>
+                  <span>📅 {uniqueRounds} מחזורים</span>
+                </div>
+              </div>
+
+              {/* Trophies */}
+              <div className="section-title">הישגים</div>
+              <div className="trophies-grid">
+                {trophies.map(t => {
+                  const done = t.val >= t.target
+                  const pct = Math.min(100, Math.round((t.val / t.target) * 100))
+                  return (
+                    <div key={t.id} className={`trophy-card${done ? ' done' : ''}`}>
+                      <div className="trophy-icon">{t.icon}</div>
+                      <div className="trophy-label">{t.label}</div>
+                      <div className="trophy-desc">{t.desc}</div>
+                      <div className="trophy-bar-wrap">
+                        <div className="trophy-bar" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="trophy-progress">{t.val}/{t.target}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )
+        })()}
 
         <div className="section-title" style={{ marginTop:8 }}>הזמן חברים</div>
         <div className="invite-box">

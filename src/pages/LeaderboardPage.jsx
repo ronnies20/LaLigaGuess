@@ -301,6 +301,12 @@ export default function LeaderboardPage() {
   const ex  = r => view === 'season' ? r.exact_count     : r.round_exact
   const dir = r => view === 'season' ? r.direction_count : r.round_direction
 
+  const leaderPts = rows.length > 0 ? pts(rows[0]) : 0
+  const myIdx     = rows.findIndex(r => r.user_id === user?.id)
+  const myRival   = myIdx > 0 ? rows[myIdx - 1] : null
+  const myPts     = myIdx >= 0 ? pts(rows[myIdx]) : 0
+  const rivalGap  = myRival ? pts(myRival) - myPts : 0
+
   return (
     <div className="page">
       <div className="content">
@@ -314,6 +320,18 @@ export default function LeaderboardPage() {
             <button className="round-nav-btn" onClick={() => setRound(r => r <= 1 ? 38 : r - 1)}>‹</button>
             <div className="round-label">מחזור {round}</div>
             <button className="round-nav-btn" onClick={() => setRound(r => r >= 38 ? 1 : r + 1)}>›</button>
+          </div>
+        )}
+
+        {/* Rival banner */}
+        {view === 'season' && myRival && rivalGap > 0 && (
+          <div className="rival-banner">
+            🎯 היריב שלך: <strong>{myRival.display_name}</strong> — {rivalGap} נקודות קדימה
+          </div>
+        )}
+        {view === 'season' && myIdx === 0 && rows.length > 1 && (
+          <div className="leader-banner">
+            👑 אתה מוביל! שמור על הליד — {pts(rows[1]) > 0 ? pts(rows[0]) - pts(rows[1]) : pts(rows[0])} נקודות מפרד בינך לבין {rows[1].display_name}
           </div>
         )}
 
@@ -367,7 +385,12 @@ export default function LeaderboardPage() {
                 <div className="lb-num" style={{ color: penHits > 0 ? '#00BCD4' : undefined }}>
                   {penHits}
                 </div>
-                <div className="lb-pts">{pts(r) ?? 0}</div>
+                <div className="lb-pts">
+                  {pts(r) ?? 0}
+                  {view === 'season' && i > 0 && leaderPts > 0 && (
+                    <div className="lb-gap">−{leaderPts - (pts(r) ?? 0)}</div>
+                  )}
+                </div>
               </div>
             )
           })}

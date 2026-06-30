@@ -593,6 +593,22 @@ alter table predictions add constraint valid_penalty_range
   );
 
 -- =====================================================
+-- 20. ENGAGEMENT — count_round_predictions RPC
+-- =====================================================
+-- Returns count of distinct users who have at least one prediction in the round
+-- Used for social proof ("X players already predicted")
+-- SECURITY DEFINER: readable without exposing actual prediction values
+create or replace function count_round_predictions(p_round int)
+returns int language sql security definer set search_path = public as $$
+  select count(distinct p.user_id)::int
+  from predictions p
+  join matches m on m.id = p.match_id
+  where m.round = p_round;
+$$;
+
+grant execute on function count_round_predictions(int) to authenticated, anon;
+
+-- =====================================================
 -- נתוני דוגמה — מחזור 36 (לבדיקה)
 -- שנה את התאריכים לתאריכים עתידיים
 -- =====================================================
