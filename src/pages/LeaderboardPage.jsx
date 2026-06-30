@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase, getCurrentRound, getRoundMessages, getPlayerHistory, getLiveMatchGuesses } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, LIVE_STATUSES } from '../lib/teams'
@@ -7,6 +7,15 @@ const COLORS = ['#004D9E','#00883A','#CE1021','#534AB7','#C9A84C','#EF7D00','#00
 const BGS    = ['#e8f0ff','#e8f8ee','#ffe8ea','#EEEDFE','#fff8e8','#fff3e0','#e8f0ff','#ffe8ea','#f0e8ff','#e1f5ee']
 
 function initial(name) { return name ? name[0].toUpperCase() : '?' }
+
+function getLiveColor(guess, matchInfo) {
+  if (!matchInfo || matchInfo.home_score === null || matchInfo.away_score === null) return '#7060A0'
+  if (guess.h === matchInfo.home_score && guess.a === matchInfo.away_score) return '#00E676'
+  const gDir = Math.sign(guess.h - guess.a)
+  const lDir = Math.sign(matchInfo.home_score - matchInfo.away_score)
+  if (gDir === lDir) return '#FDB927'
+  return '#FF4444'
+}
 
 function PtsBadge({ pts, isJoker }) {
   if (pts === null || pts === undefined) return <span className="hst-pts-none">?</span>
@@ -96,6 +105,7 @@ export default function LeaderboardPage() {
   const [rows, setRows]         = useState([])
   const [streaks, setStreaks]   = useState({})
   const [messages, setMessages] = useState({})
+  const [penCounts, setPenCounts] = useState({})
   const [loading, setLoading]   = useState(true)
   const [round, setRound]       = useState(null)
   const [currentRound, setCurrentRound] = useState(null)
@@ -118,7 +128,6 @@ export default function LeaderboardPage() {
         setRefreshKey(k => k + 1)
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, payload => {
-        // If a match goes live or finishes, refresh live guesses
         const status = payload.new?.status
         if (status && (LIVE_STATUSES.includes(status) || status === 'FT' || status === 'AET' || status === 'PEN')) {
           setRefreshKey(k => k + 1)
@@ -132,7 +141,7 @@ export default function LeaderboardPage() {
     setLoading(true)
     setStreaks({})
     try {
-      // Check for live matches
+      // Live matches
       const { data: liveMData } = await supabase
         .from('matches')
         .select('id, home_team, away_team, home_score, away_score, status')
@@ -150,6 +159,15 @@ export default function LeaderboardPage() {
       } else {
         setLiveGuesses({})
       }
+
+      // Penalty hits per user
+      const { data: penData } = await supabase
+        .from('predictions')
+        .select('user_id')
+        .gt('penalty_bonus', 0)
+      const pc = {}
+      penData?.forEach(p => { pc[p.user_id] = (pc[p.user_id] || 0) + 1 })
+      setPenCounts(pc)
 
       if (view === 'season') {
         const [{ data }, { data: streakData }, msgs] = await Promise.all([
@@ -177,9 +195,10 @@ export default function LeaderboardPage() {
     setLoading(false)
   }
 
-  const pts = r => view === 'season' ? r.total_points    : r.round_points
-  const ex  = r => view === 'season' ? r.exact_count     : r.round_exact
-  const dir = r => view === 'season' ? r.direction_count : r.round_direction
+  const pts  = r => view === 'season' ? r.total_points    : r.round_points
+  const ex   = r => view === 'season' ? r.exact_count     : r.round_exact
+  const dir  = r => view === 'season' ? r.direction_count : r.round_direction
+  const hasLive = liveMatches.length > 0
 
   return (
     <div className="page">
@@ -197,7 +216,7 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {liveMatches.length > 0 && (
+        {hasLive && (
           <div className="live-banner">
             {liveMatches.map(m => (
               <span key={m.id} className="live-banner-match">
@@ -208,13 +227,16 @@ export default function LeaderboardPage() {
         )}
 
         <div className="card">
-          <div className="lb-header">
+          <div className={`lb-header${hasLive ? ' has-live' : ''}`}>
             <div style={{textAlign:'center'}}>מיקום</div>
             <div>שחקן</div>
+            {hasLive && <div style={{textAlign:'center', fontSize:10}}>🔴 ניחוש</div>}
             <div style={{textAlign:'center'}}>מדויק</div>
             <div style={{textAlign:'center'}}>כיוון</div>
+            <div style={{textAlign:'center'}}>🎯</div>
             <div style={{textAlign:'center'}}>נק׳</div>
           </div>
+
           {loading ? (
             <div className="spinner" />
           ) : rows.length === 0 ? (
@@ -225,13 +247,16 @@ export default function LeaderboardPage() {
             const medal    = i===0?'🥇':i===1?'🥈':i===2?'🥉':null
             const streak   = view === 'season' ? (streaks[r.user_id] ?? 0) : 0
             const userLive = liveGuesses[r.user_id] || []
+            const penHits  = penCounts[r.user_id] || 0
+
             return (
               <div
                 key={r.user_id}
-                className={`lb-row${isMe?' me':''} lb-row-clickable`}
+                className={`lb-row${isMe?' me':''} lb-row-clickable${hasLive?' has-live':''}`}
                 onClick={() => setSelectedPlayer(r)}
               >
                 <div className={`lb-rank${i<3?' g'+(i+1):''}`}>{medal || (i+1)}</div>
+
                 <div className="lb-user">
                   <div className="lb-avatar" style={{ background:BGS[colorIdx], color:COLORS[colorIdx], overflow:'hidden', padding:0 }}>
                     {r.avatar_url
@@ -245,25 +270,30 @@ export default function LeaderboardPage() {
                       <div className="lb-trash">💬 {messages[r.user_id]}</div>
                     )}
                     {streak >= 3 && <div className="lb-streak-badge">🔥 {streak}</div>}
-                    {userLive.map((g, gi) => {
-                      const m = g.matchInfo
-                      if (!m) return null
-                      const homeInfo = getTeamInfo(m.home_team)
-                      const awayInfo = getTeamInfo(m.away_team)
-                      return (
-                        <div key={gi} className="lb-live-guess">
-                          <span className="lb-lg-dot">🔴</span>
-                          <span className="lb-lg-team" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
-                          <span className="lb-lg-score">{g.h}:{g.a}</span>
-                          <span className="lb-lg-team" style={{ color: awayInfo.color }}>{awayInfo.short}</span>
-                          {g.joker && <span className="lb-lg-joker">🃏</span>}
-                        </div>
-                      )
-                    })}
                   </div>
                 </div>
+
+                {hasLive && (
+                  <div className="lb-live-col">
+                    {userLive.length > 0 ? userLive.map((g, gi) => {
+                      const color = getLiveColor(g, g.matchInfo)
+                      return (
+                        <div key={gi} className="lb-live-cell" style={{ color, borderColor: color }}>
+                          {g.h}:{g.a}
+                          {g.joker && <span style={{ fontSize:9, marginRight:2 }}>🃏</span>}
+                        </div>
+                      )
+                    }) : (
+                      <div className="lb-live-cell lb-live-empty">—</div>
+                    )}
+                  </div>
+                )}
+
                 <div className="lb-num">{ex(r) ?? 0}</div>
                 <div className="lb-num">{dir(r) ?? 0}</div>
+                <div className="lb-num" style={{ color: penHits > 0 ? '#00BCD4' : undefined }}>
+                  {penHits}
+                </div>
                 <div className="lb-pts">{pts(r) ?? 0}</div>
               </div>
             )
