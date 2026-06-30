@@ -85,7 +85,10 @@ function App() {
         />
         <div style={{ textAlign:'center' }}>
           <div style={{ fontSize:14, fontWeight:800, color:'#FDB927', letterSpacing:0.3 }}>תחרות הניחושים של הלה ליגה</div>
-          <div style={{ fontSize:12, fontWeight:700, color:'#A07FCC', marginTop:3, letterSpacing:0.5 }}>Barca Mania x FRIEREN · עונת 26/27</div>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:7, marginTop:3 }}>
+            <span style={{ fontSize:12, fontWeight:700, color:'#A07FCC', letterSpacing:0.5 }}>Barca Mania x FRIEREN · עונת 26/27</span>
+            <span style={{ fontSize:9, fontWeight:800, color:'#050210', background:'linear-gradient(135deg,#FDB927,#ff8800)', borderRadius:4, padding:'1px 5px', letterSpacing:1, textTransform:'uppercase', boxShadow:'0 0 8px rgba(253,185,39,0.5)' }}>BETA</span>
+          </div>
         </div>
       </div>
 

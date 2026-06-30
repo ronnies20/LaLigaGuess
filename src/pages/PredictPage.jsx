@@ -125,7 +125,7 @@ function PtsBadge({ pts, isJoker, isSpecial }) {
 
 function TeamDisplay({ name }) {
   const t = getTeamInfo(name)
-  const logoUrl = getTeamLogoUrl(t.logoId)
+  const logoUrl = getTeamLogoUrl(t.logoId, t.logoUrl)
   return (
     <div className="team">
       <div className="team-logo-wrap">

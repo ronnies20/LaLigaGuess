@@ -163,7 +163,17 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <button className="btn btn-outline btn-full" style={{ marginTop:16, color:'#FF4444', borderColor:'rgba(255,68,68,0.3)' }}
+        <div className="beta-box">
+          <div className="beta-box-title">🧪 גרסת BETA</div>
+          <div className="beta-box-text">
+            האפליקציה נמצאת בפיתוח פעיל. נתקלת בבאג או יש לך הצעה לשיפור?
+          </div>
+          <a className="beta-box-link" href="https://t.me/FRIEREN" target="_blank" rel="noopener noreferrer">
+            📲 פנה ל-FRIEREN בטלגרם
+          </a>
+        </div>
+
+        <button className="btn btn-outline btn-full" style={{ marginTop:12, color:'#FF4444', borderColor:'rgba(255,68,68,0.3)' }}
           onClick={() => signOut()}>
           התנתקות
         </button>

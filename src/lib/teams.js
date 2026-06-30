@@ -15,7 +15,7 @@ export const TEAMS = {
   'Mallorca':        { short: 'MAL', color: '#D4002A', bg: '#1a0002', initial: 'מ', logoId: 798 },
   'Las Palmas':      { short: 'LPA', color: '#FFDA00', bg: '#1a1400', initial: 'ל', logoId: 840 },
   'Girona':          { short: 'GIR', color: '#D4002A', bg: '#1a0002', initial: 'ג', logoId: 547 },
-  'Espanyol':        { short: 'ESP', color: '#4488CC', bg: '#001233', initial: 'א', logoId: 534 },
+  'Espanyol':        { short: 'ESP', color: '#4488CC', bg: '#001233', initial: 'א', logoId: 534, logoUrl: '/logos/espanyol.png' },
   'Alaves':          { short: 'ALA', color: '#5599CC', bg: '#001233', initial: 'א', logoId: 542 },
   'Leganes':         { short: 'LEG', color: '#4477BB', bg: '#001233', initial: 'ל', logoId: 723 },
   'Valladolid':      { short: 'VLL', color: '#9B6FD4', bg: '#0e0033', initial: 'ו', logoId: 720 },
@@ -25,7 +25,8 @@ export function getTeamInfo(name) {
   return TEAMS[name] || { short: name.slice(0, 3).toUpperCase(), color: '#888', bg: '#1a1a1a', initial: name[0], logoId: null }
 }
 
-export function getTeamLogoUrl(logoId) {
+export function getTeamLogoUrl(logoId, logoUrl) {
+  if (logoUrl) return logoUrl
   return logoId ? `https://media.api-sports.io/football/teams/${logoId}.png` : null
 }
 
