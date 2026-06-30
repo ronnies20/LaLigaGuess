@@ -130,16 +130,21 @@ begin
     for rec in select * from predictions where match_id = new.id loop
       is_exact_pred := (rec.home_guess = new.home_score and rec.away_guess = new.away_score);
 
-      -- סטרייק לפני המשחק הנוכחי
+      -- סטרייק לפני המשחק הנוכחי (מכבד מגן סטרייק — ראו 20. למטה)
       with ordered_preds as (
         select
           case when p.home_guess = m.home_score and p.away_guess = m.away_score then 1 else 0 end as is_exact,
           row_number() over (order by m.kickoff desc) as rn
         from predictions p
         join matches m on m.id = p.match_id
+        left join profiles pr on pr.id = p.user_id
         where p.user_id = rec.user_id
           and m.kickoff < new.kickoff
           and m.home_score is not null
+          and not (
+            pr.streak_shield_round = m.round
+            and not (p.home_guess = m.home_score and p.away_guess = m.away_score)
+          )
       ),
       first_miss as (
         select min(rn) as miss_rn from ordered_preds where is_exact = 0
@@ -267,7 +272,13 @@ with ordered as (
     row_number() over (partition by p.user_id order by m.kickoff desc) as rn
   from predictions p
   join matches m on m.id = p.match_id
+  left join profiles pr on pr.id = p.user_id
   where m.home_score is not null
+    -- מגן סטרייק: ניחוש שגוי במחזור המוגן לא שובר את הרצף (פשוט מדולג)
+    and not (
+      pr.streak_shield_round = m.round
+      and not (p.home_guess = m.home_score and p.away_guess = m.away_score)
+    )
 ),
 first_miss as (
   select user_id, min(rn) as miss_rn
@@ -608,7 +619,45 @@ alter table predictions add constraint valid_penalty_range
 
 -- =====================================================
 -- 20. Streak shield (one per season per user)
+-- =====================================================
 alter table profiles add column if not exists streak_shield boolean default true;
+alter table profiles add column if not exists streak_shield_round int;
+
+-- Column-level: מניעת כתיבה ישירה למגן/ניקוד דרך עדכון פרופיל רגיל —
+-- ההפעלה עוברת רק דרך activate_streak_shield() כדי למנוע איפוס עצמי
+revoke update on profiles from authenticated;
+grant  update (display_name, avatar_url) on profiles to authenticated;
+
+-- הפעלת מגן הסטרייק: RPC מאובטח (SECURITY DEFINER) — המשתמש לא יכול
+-- לכתוב ישירות לעמודות streak_shield / streak_shield_round
+create or replace function activate_streak_shield(p_round int)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare
+  round_locked boolean;
+  activated    boolean;
+begin
+  if auth.uid() is null then
+    return false;
+  end if;
+
+  select exists(
+    select 1 from matches where round = p_round and is_match_locked(kickoff)
+  ) into round_locked;
+
+  if round_locked then
+    return false;
+  end if;
+
+  update profiles
+  set streak_shield = false, streak_shield_round = p_round
+  where id = auth.uid() and streak_shield = true
+  returning true into activated;
+
+  return coalesce(activated, false);
+end;
+$$;
+
+grant execute on function activate_streak_shield(int) to authenticated;
 
 -- 21. ENGAGEMENT — count_round_predictions RPC
 -- =====================================================

@@ -40,18 +40,34 @@ export function getPhaseBase(round = 1) {
   return { exact: 3, dir: 1 }
 }
 
-export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = false, isSpecial = false, round = 1) {
+// streakBefore = exact-guess streak going into this match (mirrors the
+// streak_count the update_match_points() SQL trigger reads) — used only
+// to keep the live-preview preview in sync with the eventual server value.
+export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = false, isSpecial = false, round = 1, streakBefore = 0) {
   if (homeReal === null || homeReal === undefined) return null
   if (homeGuess === null || homeGuess === undefined) return isJoker ? -1 : 0
   const { exact, dir } = getPhaseBase(round)
+  const isExact = homeGuess === homeReal && awayGuess === awayReal
   if (isJoker) {
-    return (homeGuess === homeReal && awayGuess === awayReal) ? exact * 2 : -1
+    if (!isExact) return streakBefore >= 4 ? -3 : -1
+    if (streakBefore >= 5) return exact * 2 + 3
+    if (streakBefore >= 4) return exact * 2 + 1
+    return exact * 2
   }
-  if (homeGuess === homeReal && awayGuess === awayReal) return isSpecial ? exact * 2 : exact
+  if (isSpecial) {
+    if (isExact) return exact * 2
+    const realDir = Math.sign(homeReal - awayReal)
+    const guessDir = Math.sign(homeGuess - awayGuess)
+    return realDir === guessDir ? dir * 2 : 0
+  }
+  if (isExact) {
+    if (streakBefore >= 5) return exact + 3
+    if (streakBefore >= 4) return exact + 2
+    return exact
+  }
   const realDir = Math.sign(homeReal - awayReal)
   const guessDir = Math.sign(homeGuess - awayGuess)
-  const d = realDir === guessDir ? dir : 0
-  return isSpecial ? d * 2 : d
+  return realDir === guessDir ? dir : 0
 }
 
 export const LIVE_STATUSES     = ['1H','HT','2H','ET','BT','P','INT']

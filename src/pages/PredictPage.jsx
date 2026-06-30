@@ -444,11 +444,15 @@ export default function PredictPage() {
 
   async function activateStreakShield() {
     try {
-      await supabase.from('profiles').update({ streak_shield: false }).eq('id', user.id)
+      const { data, error } = await supabase.rpc('activate_streak_shield', { p_round: round })
+      if (error || !data) throw error || new Error('shield not available')
       refreshProfile()
       setSaveMsg('🛡️ המגן הופעל! הסטרייק שלך מוגן')
       setTimeout(() => setSaveMsg(''), 4000)
-    } catch {}
+    } catch {
+      setSaveMsg('לא ניתן להפעיל את המגן')
+      setTimeout(() => setSaveMsg(''), 4000)
+    }
   }
 
   function handleInput(matchId, side, val) {
@@ -723,7 +727,7 @@ export default function PredictPage() {
               // For live matches: calculate pts client-side (trigger only runs on finish)
               const dbPts      = hasScore && hasGuess ? (g.pts ?? null) : null
               const livePts    = live && hasGuess && hasScore
-                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker, m.is_special, round)
+                ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker, m.is_special, round, userStreak)
                 : null
               const pts        = livePts ?? dbPts
               const { exact: exactBase } = getPhaseBase(round)
