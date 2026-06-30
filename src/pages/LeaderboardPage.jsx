@@ -301,11 +301,14 @@ export default function LeaderboardPage() {
   const ex  = r => view === 'season' ? r.exact_count     : r.round_exact
   const dir = r => view === 'season' ? r.direction_count : r.round_direction
 
-  const leaderPts = rows.length > 0 ? pts(rows[0]) : 0
-  const myIdx     = rows.findIndex(r => r.user_id === user?.id)
-  const myRival   = myIdx > 0 ? rows[myIdx - 1] : null
-  const myPts     = myIdx >= 0 ? pts(rows[myIdx]) : 0
-  const rivalGap  = myRival ? pts(myRival) - myPts : 0
+  const leaderPts   = rows.length > 0 ? pts(rows[0]) : 0
+  const myIdx       = rows.findIndex(r => r.user_id === user?.id)
+  const myRival     = myIdx > 0 ? rows[myIdx - 1] : null
+  const myPts       = myIdx >= 0 ? pts(rows[myIdx]) : 0
+  const rivalGap    = myRival ? pts(myRival) - myPts : 0
+  const playerBelow = myIdx >= 0 && myIdx < rows.length - 1 ? rows[myIdx + 1] : null
+  const gapBelow    = playerBelow !== null ? myPts - pts(playerBelow) : null
+  const isClosingIn = gapBelow !== null && gapBelow >= 0 && gapBelow <= 10
 
   return (
     <div className="page">
@@ -332,6 +335,20 @@ export default function LeaderboardPage() {
         {view === 'season' && myIdx === 0 && rows.length > 1 && (
           <div className="leader-banner">
             👑 אתה מוביל! שמור על הליד — {pts(rows[1]) > 0 ? pts(rows[0]) - pts(rows[1]) : pts(rows[0])} נקודות מפרד בינך לבין {rows[1].display_name}
+          </div>
+        )}
+
+        {/* Closing-in threat alert */}
+        {view === 'season' && isClosingIn && myIdx > 0 && (
+          <div className="closing-in-banner">
+            ⚠️ <strong>{playerBelow.display_name}</strong> רק {gapBelow} נקודות מאחוריך — אל תרפה!
+          </div>
+        )}
+
+        {/* Round champion */}
+        {view === 'round' && !loading && rows.length > 0 && (
+          <div className="round-champion-banner">
+            🏆 אלוף מחזור {round}: <strong>{rows[0].display_name}</strong> — {pts(rows[0])} נקודות
           </div>
         )}
 

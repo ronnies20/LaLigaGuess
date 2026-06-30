@@ -51,10 +51,30 @@ function NavIcon({ name }) {
 function App() {
   const { user, loading } = useAuth()
   const [tab, setTab] = useState('predict')
+  const [hasPending, setHasPending] = useState(false)
 
   useEffect(() => {
     if (user) setTimeout(() => registerPush(user.id, supabase), 3000)
   }, [user?.id])
+
+  useEffect(() => {
+    if (!user) return
+    async function checkPending() {
+      try {
+        const { data: openM } = await supabase
+          .from('matches').select('id, kickoff').is('home_score', null)
+        const unlocked = (openM || []).filter(m => new Date(m.kickoff).getTime() - 3600000 > Date.now())
+        if (!unlocked.length) { setHasPending(false); return }
+        const { data: preds } = await supabase
+          .from('predictions').select('match_id')
+          .eq('user_id', user.id)
+          .in('match_id', unlocked.map(m => m.id))
+        const predIds = new Set((preds || []).map(p => p.match_id))
+        setHasPending(unlocked.some(m => !predIds.has(m.id)))
+      } catch {}
+    }
+    checkPending()
+  }, [user?.id, tab])
 
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100dvh', background:'#050210' }}>
@@ -100,7 +120,10 @@ function App() {
       <nav className="bottom-nav">
         {tabs.map(t => (
           <button key={t.id} className={`nav-item${tab === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
-            <NavIcon name={t.id} />
+            <div className="nav-icon-wrap">
+              <NavIcon name={t.id} />
+              {t.id === 'predict' && hasPending && tab !== 'predict' && <span className="nav-badge" />}
+            </div>
             {t.label}
           </button>
         ))}

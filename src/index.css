@@ -1276,3 +1276,187 @@ body {
   pointer-events: none;
   z-index: 9999;
 }
+
+/* ================================================================
+   FEATURE 1 — Live pulse + goal flash
+   ================================================================ */
+@keyframes live-card-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5), 0 2px 16px rgba(0,0,0,0.4); }
+  50%      { box-shadow: 0 0 0 6px rgba(16,185,129,0), 0 2px 16px rgba(0,0,0,0.4); }
+}
+.live-match-card {
+  animation: live-card-pulse 1.8s ease-in-out infinite;
+  border-color: rgba(16,185,129,0.35) !important;
+}
+
+@keyframes goal-flash-anim {
+  0%,100% { background: rgba(255,215,0,0); }
+  20%     { background: rgba(255,215,0,0.18); }
+  60%     { background: rgba(255,215,0,0.07); }
+  80%     { background: rgba(255,215,0,0.18); }
+}
+.goal-flash {
+  animation: goal-flash-anim 0.85s ease 1 !important;
+}
+
+/* ================================================================
+   FEATURE 2 — Staged result reveal (scratch-card sweep)
+   ================================================================ */
+.result-area.revealing {
+  position: relative;
+  overflow: hidden;
+}
+.result-area.revealing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, #0C0625 35%, #0C0625 100%);
+  border-radius: inherit;
+  animation: scratch-reveal 2.5s cubic-bezier(0.25,0.1,0.25,1) forwards;
+  pointer-events: none;
+  z-index: 5;
+}
+@keyframes scratch-reveal {
+  0%   { transform: translateX(0); opacity: 1; }
+  55%  { transform: translateX(-45%); }
+  60%  { transform: translateX(-43%); }
+  100% { transform: translateX(-110%); opacity: 0; }
+}
+
+/* ================================================================
+   FEATURE 5 — Nav badge
+   ================================================================ */
+.nav-icon-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.nav-badge {
+  position: absolute;
+  top: -3px;
+  right: -5px;
+  width: 9px; height: 9px;
+  background: #FF5252;
+  border-radius: 50%;
+  border: 1.5px solid #050210;
+  animation: badge-pulse 1.5s ease-in-out infinite;
+}
+@keyframes badge-pulse {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.25); }
+}
+
+/* ================================================================
+   FEATURE 6 — Missed round card
+   ================================================================ */
+.missed-round-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,82,82,0.07);
+  border: 1px solid rgba(255,82,82,0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+.missed-round-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.missed-round-icon { font-size: 22px; flex-shrink: 0; }
+.missed-round-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #FF6B6B;
+}
+.missed-round-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 2px;
+}
+.missed-round-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.missed-round-close:hover { color: rgba(255,255,255,0.6); }
+
+/* ================================================================
+   FEATURE 7 — Trash talk FOMO
+   ================================================================ */
+.trash-fomo-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  text-align: center;
+  margin-bottom: 8px;
+  cursor: default;
+  animation: fomo-breathe 3s ease-in-out infinite;
+}
+@keyframes fomo-breathe {
+  0%,100% { border-color: rgba(255,255,255,0.12); }
+  50%     { border-color: rgba(253,185,39,0.3); color: rgba(255,255,255,0.5); }
+}
+.trash-reveal-card {
+  background: rgba(253,185,39,0.05);
+  border: 1px solid rgba(253,185,39,0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.trash-reveal-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(253,185,39,0.6);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.trash-reveal-msg {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.trash-reveal-msg:last-child { border-bottom: none; }
+
+/* ================================================================
+   FEATURES 3 + 4 — Closing-in alert + round champion
+   ================================================================ */
+.closing-in-banner {
+  background: rgba(255,82,82,0.06);
+  border: 1px solid rgba(255,82,82,0.22);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 10px;
+  text-align: center;
+}
+.closing-in-banner strong { color: #FF6B6B; }
+
+.round-champion-banner {
+  background: rgba(253,185,39,0.07);
+  border: 1px solid rgba(253,185,39,0.28);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #FDB927;
+  text-align: center;
+  margin-bottom: 10px;
+}

@@ -193,6 +193,11 @@ export default function PredictPage() {
   const [dirty, setDirty]             = useState(new Set())
   const [socialCount, setSocialCount] = useState(0)
   const [lockCountdown, setLockCountdown] = useState(null)
+  const [revealingMatches, setRevealingMatches] = useState(new Set())
+  const [goalFlash, setGoalFlash]               = useState(new Set())
+  const [missedRound, setMissedRound]           = useState(null)
+  const [trashUnlocked, setTrashUnlocked]       = useState(false)
+  const [trashMessages, setTrashMessages]       = useState([])
   const saveBtnRef            = useRef(null)
   const celebratedRef         = useRef(getCelebrated(user.id))
 
@@ -254,6 +259,21 @@ export default function PredictPage() {
         const cnt = await countRoundParticipants(round)
         setSocialCount(cnt)
       } catch {}
+      // Loss framing: was the previous round played but user had no predictions?
+      if (round > 1) {
+        try {
+          const { data: prevM } = await supabase
+            .from('matches').select('id').eq('round', round - 1).not('home_score', 'is', null)
+          if (prevM?.length > 0) {
+            const { data: myPrev } = await supabase
+              .from('predictions').select('id').eq('user_id', user.id)
+              .in('match_id', prevM.map(m => m.id))
+            setMissedRound(!myPrev?.length ? { round: round - 1, possible: prevM.length * 3 } : null)
+          }
+        } catch {}
+      }
+      setTrashUnlocked(false)
+      setTrashMessages([])
     } catch (err) { console.error(err) }
     setLoading(false)
   }, [round, user.id])
@@ -293,6 +313,19 @@ export default function PredictPage() {
                 [payload.new.id]: data.map(p => ({ h: p.home_guess, a: p.away_guess }))
               }))
             })
+        }
+        // Goal flash when live match score changes
+        const isLive = LIVE_STATUSES.includes(payload.new.status)
+        const scoreChanged = payload.old?.home_score !== payload.new.home_score || payload.old?.away_score !== payload.new.away_score
+        if (isLive && scoreChanged) {
+          setGoalFlash(prev => { const n = new Set(prev); n.add(payload.new.id); return n })
+          setTimeout(() => setGoalFlash(prev => { const n = new Set(prev); n.delete(payload.new.id); return n }), 900)
+        }
+        // Staged reveal when score first appears (null → value)
+        const justRevealed = payload.old?.home_score === null && payload.new.home_score !== null
+        if (justRevealed) {
+          setRevealingMatches(prev => { const n = new Set(prev); n.add(payload.new.id); return n })
+          setTimeout(() => setRevealingMatches(prev => { const n = new Set(prev); n.delete(payload.new.id); return n }), 2800)
         }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'predictions' }, payload => {
@@ -413,6 +446,13 @@ export default function PredictPage() {
       } catch (err) { console.error(err) }
     }
     setDirty(new Set())
+    if (count > 0 && !trashUnlocked) {
+      setTrashUnlocked(true)
+      try {
+        const msgs = await getRoundMessages(round)
+        setTrashMessages(msgs.filter(msg => msg.user_id !== user.id))
+      } catch {}
+    }
     setSaving(false)
     if (count > 0) {
       setSaveMsg(`🎰 ${count} ניחושים נשמרו!`)
@@ -495,6 +535,20 @@ export default function PredictPage() {
           <button className="round-nav-btn" onClick={() => setRound(r => r >= TOTAL_ROUNDS ? 1 : r + 1)}>›</button>
         </div>
 
+        {/* Missed round loss framing */}
+        {missedRound && round === currentRound && (
+          <div className="missed-round-card">
+            <div className="missed-round-main">
+              <span className="missed-round-icon">😤</span>
+              <div>
+                <div className="missed-round-title">פספסת מחזור {missedRound.round}</div>
+                <div className="missed-round-sub">היו אפשריים עד {missedRound.possible} נק׳ — אל תפספס שוב!</div>
+              </div>
+            </div>
+            <button className="missed-round-close" onClick={() => setMissedRound(null)}>✕</button>
+          </div>
+        )}
+
         {/* Round completion progress bar */}
         {openMatches.length > 0 && (
           <div className="round-progress-wrap">
@@ -545,6 +599,20 @@ export default function PredictPage() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Trash FOMO reveal */}
+        {round === currentRound && openMatches.length > 0 && (
+          trashUnlocked
+            ? trashMessages.length > 0 && (
+                <div className="trash-reveal-card">
+                  <div className="trash-reveal-label">💬 מה אחרים כתבו</div>
+                  {trashMessages.slice(0, 3).map((msg, i) => (
+                    <div key={i} className="trash-reveal-msg">"{msg.message}"</div>
+                  ))}
+                </div>
+              )
+            : <div className="trash-fomo-card">👀 שמור ניחושים כדי לגלות מה אחרים כתבו...</div>
         )}
 
         {/* Streak at risk warning */}
@@ -609,7 +677,7 @@ export default function PredictPage() {
               const others          = othersGuesses[m.id] || []
 
               return (
-                <div className={`card${isThisJoker ? ' joker-card' : ''}${m.is_special ? ' special-card' : ''}`} key={m.id}>
+                <div className={`card${isThisJoker ? ' joker-card' : ''}${m.is_special ? ' special-card' : ''}${live ? ' live-match-card' : ''}${goalFlash.has(m.id) ? ' goal-flash' : ''}`} key={m.id}>
                   {m.is_special && <div className="special-strip">⭐ משחק מיוחד — ניחוש שווה כפל נקודות</div>}
                   <div className="match-header">
                     <span className="match-date">
@@ -622,7 +690,7 @@ export default function PredictPage() {
                     <TeamDisplay name={m.away_team} />
                     <div className="score-wrap">
                       {hasScore ? (
-                        <div className={`result-area${live ? ' result-live' : ''}`}>
+                        <div className={`result-area${live ? ' result-live' : ''}${revealingMatches.has(m.id) ? ' revealing' : ''}`}>
                           <div className="result-col">
                             <span className="result-col-label">ניחוש</span>
                             <div style={{ position: 'relative' }}>
