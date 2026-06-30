@@ -66,6 +66,7 @@ create table if not exists predictions (
   away_guess    int not null,
   points        int,
   is_joker      boolean default false,
+  round         int,
   penalty_min   int,
   penalty_max   int,
   penalty_bonus int default 0,
@@ -429,6 +430,30 @@ create trigger enforce_joker_uniqueness
   for each row execute function check_joker_uniqueness();
 
 -- =====================================================
+-- 15. SECURITY: סינכרון round + unique index לג'וקר
+-- =====================================================
+-- שומר את round בשורת predictions (נחוץ לindex)
+-- שם הטריגר מתחיל ב-'aa_' כדי לרוץ לפני enforce_joker_uniqueness
+create or replace function sync_prediction_round()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.round := (select round from matches where id = new.match_id);
+  return new;
+end;
+$$;
+
+drop trigger if exists aa_sync_prediction_round on predictions;
+create trigger aa_sync_prediction_round
+  before insert or update on predictions
+  for each row execute function sync_prediction_round();
+
+-- partial unique index — אטומי, חוסם race condition של 2 כרטיסיות בו-זמנית
+drop index if exists predictions_one_joker_per_round;
+create unique index predictions_one_joker_per_round
+  on predictions (user_id, round)
+  where is_joker = true;
+
+-- =====================================================
 -- 10. ROUND MESSAGES (טראש טוק)
 -- =====================================================
 create table if not exists round_messages (
@@ -463,8 +488,8 @@ alter table push_subscriptions enable row level security;
 create policy "users manage own subscription"
   on push_subscriptions for all using (auth.uid() = user_id);
 
-create policy "service role reads all subscriptions"
-  on push_subscriptions for select using (true);
+create policy "service_role_reads_all_subscriptions"
+  on push_subscriptions for select to service_role using (true);
 
 -- =====================================================
 -- 12. NOTIFICATION LOG
@@ -481,8 +506,8 @@ create table if not exists notification_log (
 
 alter table notification_log enable row level security;
 
-create policy "service role manages notification log"
-  on notification_log for all using (true);
+create policy "service_role_only_notification_log"
+  on notification_log for all to service_role using (true) with check (true);
 
 -- =====================================================
 -- נתוני דוגמה — מחזור 36 (לבדיקה)
