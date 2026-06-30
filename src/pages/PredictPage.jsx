@@ -109,15 +109,15 @@ function generateShareCanvas({ matches, guesses, round, userStreak, displayName 
   return canvas
 }
 
-function PtsBadge({ pts, isJoker, isSpecial, round = 1 }) {
+function PtsBadge({ pts, isJoker, isSpecial, round = 1, isExact = false }) {
   if (pts === null || pts === undefined) return <div className="pts-badge pts-none">?</div>
   if (isJoker && pts > 0)  return <div className="pts-badge pts-exact pts-joker">🃏{pts}</div>
   if (pts < 0)             return <div className="pts-badge pts-miss pts-joker">🃏{pts}</div>
   if (pts === 0)           return <div className="pts-badge pts-miss">0</div>
   const exactBase = getPhaseBase(round).exact
-  if (pts >= exactBase) {
-    if (pts > exactBase) return <div className="pts-badge pts-exact pts-streak">🔥{pts}</div>
-    return <div className="pts-badge pts-exact">{pts}</div>
+  if (isExact || pts >= exactBase) {
+    const hasStreakBonus = pts > exactBase
+    return <div className={`pts-badge pts-exact${hasStreakBonus ? ' pts-streak' : ''}`}>{hasStreakBonus ? `🔥${pts}` : pts}</div>
   }
   if (isSpecial && pts > 0) return <div className="pts-badge pts-dir pts-special">⭐{pts}</div>
   return <div className="pts-badge pts-dir">{pts}</div>
@@ -720,8 +720,9 @@ export default function PredictPage() {
                 ? calcPoints(parseInt(g.h), parseInt(g.a), m.home_score, m.away_score, g.joker, m.is_special, round, userStreak)
                 : null
               const pts        = livePts ?? dbPts
-              const { exact: exactBase } = getPhaseBase(round)
-              const guessClass = pts >= exactBase ? 'guess-exact'
+              const isExact    = hasScore && hasGuess &&
+                parseInt(g.h) === m.home_score && parseInt(g.a) === m.away_score
+              const guessClass = isExact ? 'guess-exact'
                 : (pts !== null && pts > 0) ? 'guess-dir'
                 : (pts !== null && pts <= 0) ? 'guess-miss' : 'guess-none'
               const nearMissLabel = (() => {
@@ -770,7 +771,7 @@ export default function PredictPage() {
                           <div className="result-sep" />
                           <div className="result-col">
                             <span className="result-col-label">נק׳</span>
-                            <PtsBadge pts={pts} isJoker={!!g.joker} isSpecial={!!m.is_special} round={round} />
+                            <PtsBadge pts={pts} isJoker={!!g.joker} isSpecial={!!m.is_special} round={round} isExact={isExact} />
                             {(g.penBonus ?? 0) > 0 && <div className="pen-bonus-badge">+{g.penBonus}🎯</div>}
                           </div>
                         </div>
