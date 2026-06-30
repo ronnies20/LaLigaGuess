@@ -710,9 +710,8 @@ body {
 
 /* Penalty picker modal */
 .pen-picker-modal { padding: 28px 20px 32px; text-align: center; }
-.pen-picker-title { font-size: 17px; font-weight: 800; color: var(--gold); margin-bottom: 6px; }
-.pen-picker-sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 22px; }
-.pen-picker-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pen-picker-sub { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 22px; line-height: 1.4; }
+.pen-picker-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; direction: ltr; }
 .pen-picker-opt {
   padding: 18px 8px; border-radius: 12px; text-align: center;
   background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.1);

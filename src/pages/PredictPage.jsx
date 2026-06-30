@@ -150,12 +150,12 @@ function TeamDisplay({ name }) {
 }
 
 const PEN_RANGES = [
-  { label: '1-17',          min: 1,  max: 17 },
-  { label: '18-32',         min: 18, max: 32 },
-  { label: '33-סוף מחצית', min: 33, max: 45 },
-  { label: '46-62',         min: 46, max: 62 },
-  { label: '63-77',         min: 63, max: 77 },
-  { label: '78-סוף המשחק', min: 78, max: 90 },
+  { label: '1-17',            min: 1,  max: 17 },
+  { label: '46-62',           min: 46, max: 62 },
+  { label: '18-32',           min: 18, max: 32 },
+  { label: '63-77',           min: 63, max: 77 },
+  { label: '33-סוף המחצית',  min: 33, max: 45 },
+  { label: '78-סוף המשחק',   min: 78, max: 90 },
 ]
 
 export default function PredictPage() {
@@ -675,8 +675,7 @@ export default function PredictPage() {
           <div className="modal-overlay" onClick={() => setPenPickerMatchId(null)}>
             <div className="pen-picker-modal modal-card" onClick={e => e.stopPropagation()}>
               <button className="modal-close-btn" onClick={() => setPenPickerMatchId(null)}>✕</button>
-              <div className="pen-picker-title">🎯 ניחוש פנדל לריאל מדריד</div>
-              <div className="pen-picker-sub">באיזה טווח דקות תהיה הפנדל?</div>
+              <div className="pen-picker-sub">באיזה טווח דקות יהיה הפנדל לריאל מדריד?</div>
               <div className="pen-picker-options">
                 {PEN_RANGES.map(r => (
                   <button
