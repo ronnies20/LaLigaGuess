@@ -216,21 +216,17 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {hasLive && (
-          <div className="live-banner">
-            {liveMatches.map(m => (
-              <span key={m.id} className="live-banner-match">
-                🔴 {getTeamInfo(m.home_team).short} {m.home_score}:{m.away_score} {getTeamInfo(m.away_team).short}
-              </span>
-            ))}
-          </div>
-        )}
-
         <div className="card">
           <div className={`lb-header${hasLive ? ' has-live' : ''}`}>
             <div style={{textAlign:'center'}}>מיקום</div>
             <div>שחקן</div>
-            {hasLive && <div style={{textAlign:'center', fontSize:10}}>🔴 ניחוש</div>}
+            {hasLive && (
+              <div style={{textAlign:'center', fontSize:9, lineHeight:1.4, color:'#FF4444', fontWeight:800}}>
+                {liveMatches.map(m => (
+                  <div key={m.id}>{getTeamInfo(m.home_team).short}-{getTeamInfo(m.away_team).short}</div>
+                ))}
+              </div>
+            )}
             <div style={{textAlign:'center'}}>מדויק</div>
             <div style={{textAlign:'center'}}>כיוון</div>
             <div style={{textAlign:'center', fontSize:9, lineHeight:1.2}}>פנדל<br/>לריאל</div>
@@ -275,17 +271,23 @@ export default function LeaderboardPage() {
 
                 {hasLive && (
                   <div className="lb-live-col">
-                    {userLive.length > 0 ? userLive.map((g, gi) => {
-                      const color = getLiveColor(g, g.matchInfo)
-                      return (
-                        <div key={gi} className="lb-live-cell" style={{ color, borderColor: color }}>
-                          {g.h}:{g.a}
-                          {g.joker && <span style={{ fontSize:9, marginRight:2 }}>🃏</span>}
+                    {liveMatches.map(m => {
+                      const g = userLive.find(x => x.matchId === m.id)
+                      const color = g ? getLiveColor(g, m) : null
+                      const homeShort = getTeamInfo(m.home_team).short
+                      const awayShort = getTeamInfo(m.away_team).short
+                      return g ? (
+                        <div key={m.id} className="lb-live-cell" style={{ color, borderColor: color, background: `${color}18` }}>
+                          <span className="lb-live-team">{homeShort}-{awayShort}</span>
+                          <span className="lb-live-score">{g.h}:{g.a}{g.joker ? '🃏' : ''}</span>
+                        </div>
+                      ) : (
+                        <div key={m.id} className="lb-live-cell lb-live-empty">
+                          <span className="lb-live-team">{homeShort}-{awayShort}</span>
+                          <span className="lb-live-score">—</span>
                         </div>
                       )
-                    }) : (
-                      <div className="lb-live-cell lb-live-empty">—</div>
-                    )}
+                    })}
                   </div>
                 )}
 
