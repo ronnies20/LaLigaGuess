@@ -161,6 +161,28 @@ export async function getLiveMatchGuesses(liveMatchIds) {
   return data || []
 }
 
+// ---- Feedback ----
+export async function submitFeedback(userId, displayName, message) {
+  const { error } = await supabase
+    .from('feedback')
+    .insert({ user_id: userId, display_name: displayName, message })
+  if (error) throw error
+}
+
+export async function getAdminFeedback() {
+  const { data, error } = await supabase
+    .from('feedback')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function markFeedbackRead(id) {
+  const { error } = await supabase.from('feedback').update({ read: true }).eq('id', id)
+  if (error) throw error
+}
+
 export async function getMyStats(userId) {
   const [{ data: lb }, { data: maxStreakData }, { data: penPreds }] = await Promise.all([
     supabase.from('leaderboard_view').select('*').eq('user_id', userId).maybeSingle(),

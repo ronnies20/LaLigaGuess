@@ -1,6 +1,128 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase, signOut, getMyStats, uploadAvatar, updateProfile } from '../lib/supabase'
+import { supabase, signOut, getMyStats, uploadAvatar, updateProfile, submitFeedback, getAdminFeedback, markFeedbackRead } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+
+const ADMIN_EMAIL = '2008ronel@gmail.com'
+
+function FeedbackModal({ user, profile, onClose }) {
+  const [msg, setMsg]       = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent]     = useState(false)
+  const [err, setErr]       = useState(null)
+
+  async function send() {
+    if (!msg.trim()) return
+    setSending(true)
+    setErr(null)
+    try {
+      const name = profile?.display_name || user?.email?.split('@')[0] || 'אנונימי'
+      await submitFeedback(user.id, name, msg.trim())
+      setSent(true)
+    } catch (e) { setErr('שגיאה בשליחה, נסה שוב') }
+    setSending(false)
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" style={{ padding:'24px 20px', maxWidth:360 }} onClick={e => e.stopPropagation()}>
+        <button className="modal-close-btn" onClick={onClose}>✕</button>
+        {sent ? (
+          <div style={{ textAlign:'center', padding:'20px 0' }}>
+            <div style={{ fontSize:36 }}>✅</div>
+            <div style={{ fontSize:15, fontWeight:700, color:'#00E676', marginTop:10 }}>תודה על הפידבק!</div>
+            <div style={{ fontSize:12, color:'#7060A0', marginTop:6 }}>ההודעה נשלחה ל-FRIEREN</div>
+            <button className="btn btn-gold" style={{ marginTop:18 }} onClick={onClose}>סגור</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize:15, fontWeight:800, color:'#FDB927', marginBottom:4 }}>📨 שלח פידבק</div>
+            <div style={{ fontSize:12, color:'#7060A0', marginBottom:14 }}>באג? הצעה? כתוב כאן — FRIEREN יקרא</div>
+            <textarea
+              value={msg}
+              onChange={e => setMsg(e.target.value)}
+              placeholder="תאר את הבעיה או ההצעה..."
+              rows={5}
+              style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(253,185,39,0.2)', borderRadius:10, padding:'10px 12px', color:'#F0EDFF', fontSize:13, resize:'vertical', fontFamily:'inherit', direction:'rtl', boxSizing:'border-box' }}
+            />
+            {err && <div style={{ fontSize:11, color:'#FF4444', marginTop:4 }}>{err}</div>}
+            <button
+              className="btn btn-gold btn-full"
+              style={{ marginTop:14 }}
+              disabled={sending || !msg.trim()}
+              onClick={send}
+            >
+              {sending ? 'שולח...' : 'שלח'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AdminFeedbackPanel() {
+  const [items, setItems]     = useState([])
+  const [loading, setLoading] = useState(true)
+  const [open, setOpen]       = useState(false)
+
+  async function load() {
+    setLoading(true)
+    try { setItems(await getAdminFeedback()) } catch {}
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function handleRead(id) {
+    await markFeedbackRead(id)
+    setItems(prev => prev.map(x => x.id === id ? { ...x, read: true } : x))
+  }
+
+  const unread = items.filter(x => !x.read).length
+
+  return (
+    <div className="card" style={{ marginTop:16, border:'1px solid rgba(253,185,39,0.3)' }}>
+      <div
+        style={{ padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer' }}
+        onClick={() => { setOpen(o => !o); if (!open) load() }}
+      >
+        <span style={{ fontWeight:800, color:'#FDB927', fontSize:14 }}>📬 פידבק ממשתמשים</span>
+        <span style={{ display:'flex', gap:8, alignItems:'center' }}>
+          {unread > 0 && <span style={{ background:'#FF4444', color:'#fff', borderRadius:20, fontSize:10, fontWeight:800, padding:'2px 7px' }}>{unread}</span>}
+          <span style={{ color:'#7060A0', fontSize:13 }}>{open ? '▲' : '▼'}</span>
+        </span>
+      </div>
+      {open && (
+        <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', maxHeight:400, overflowY:'auto' }}>
+          {loading ? <div className="spinner" style={{ margin:'16px auto' }} /> :
+           items.length === 0 ? <div style={{ padding:16, textAlign:'center', color:'#7060A0', fontSize:12 }}>אין פידבק עדיין</div> :
+           items.map(item => {
+             const d = new Date(item.created_at)
+             const dateStr = d.toLocaleDateString('he-IL', { day:'numeric', month:'numeric' }) + ' ' + d.toLocaleTimeString('he-IL', { hour:'2-digit', minute:'2-digit' })
+             return (
+               <div key={item.id} style={{ padding:'12px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', background: item.read ? 'transparent' : 'rgba(253,185,39,0.04)' }}>
+                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                   <span style={{ fontWeight:700, fontSize:13, color: item.read ? '#7060A0' : '#FDB927' }}>{item.display_name}</span>
+                   <span style={{ fontSize:10, color:'#7060A0' }}>{dateStr}</span>
+                 </div>
+                 <div style={{ fontSize:13, color:'#F0EDFF', lineHeight:1.5, whiteSpace:'pre-wrap' }}>{item.message}</div>
+                 {!item.read && (
+                   <button
+                     onClick={() => handleRead(item.id)}
+                     style={{ marginTop:8, fontSize:10, color:'#7060A0', background:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, padding:'2px 10px', cursor:'pointer' }}
+                   >
+                     ✓ סמן כנקרא
+                   </button>
+                 )}
+               </div>
+             )
+           })
+          }
+        </div>
+      )}
+    </div>
+  )
+}
 
 const BARCA_AVATARS = [
   { name: 'Pedri',       num: 8,  bg: 'linear-gradient(135deg, #004D98 50%, #A50044 50%)' },
@@ -50,12 +172,14 @@ function CameraOverlay() {
 
 export default function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth()
-  const [stats, setStats]       = useState(null)
-  const [rank, setRank]         = useState(null)
-  const [copied, setCopied]     = useState(false)
-  const [loading, setLoading]   = useState(true)
+  const [stats, setStats]         = useState(null)
+  const [rank, setRank]           = useState(null)
+  const [copied, setCopied]       = useState(false)
+  const [loading, setLoading]     = useState(true)
   const [uploading, setUploading] = useState(false)
-  const fileInputRef            = useRef()
+  const [showFeedback, setShowFeedback] = useState(false)
+  const fileInputRef              = useRef()
+  const isAdmin                   = user?.email === ADMIN_EMAIL
 
   useEffect(() => {
     async function load() {
@@ -168,16 +292,20 @@ export default function ProfilePage() {
           <div className="beta-box-text">
             האפליקציה נמצאת בפיתוח פעיל. נתקלת בבאג או יש לך הצעה לשיפור?
           </div>
-          <a className="beta-box-link" href="https://t.me/FRIEREN" target="_blank" rel="noopener noreferrer">
-            📲 פנה ל-FRIEREN בטלגרם
-          </a>
+          <button className="beta-box-link" style={{ cursor:'pointer', background:'none' }} onClick={() => setShowFeedback(true)}>
+            📨 שלח פידבק
+          </button>
         </div>
+
+        {isAdmin && <AdminFeedbackPanel />}
 
         <button className="btn btn-outline btn-full" style={{ marginTop:12, color:'#FF4444', borderColor:'rgba(255,68,68,0.3)' }}
           onClick={() => signOut()}>
           התנתקות
         </button>
       </div>
+
+      {showFeedback && <FeedbackModal user={user} profile={profile} onClose={() => setShowFeedback(false)} />}
     </div>
   )
 }
