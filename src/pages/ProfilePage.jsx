@@ -24,30 +24,30 @@ function FeedbackModal({ user, profile, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" style={{ padding:'24px 20px', maxWidth:360 }} onClick={e => e.stopPropagation()}>
+      <div className="modal-card" style={{ padding:'28px 24px', maxWidth:380, textAlign:'center' }} onClick={e => e.stopPropagation()}>
         <button className="modal-close-btn" onClick={onClose}>✕</button>
         {sent ? (
-          <div style={{ textAlign:'center', padding:'20px 0' }}>
-            <div style={{ fontSize:36 }}>✅</div>
-            <div style={{ fontSize:15, fontWeight:700, color:'#00E676', marginTop:10 }}>תודה על הפידבק!</div>
-            <div style={{ fontSize:12, color:'#7060A0', marginTop:6 }}>ההודעה נשלחה ל-FRIEREN</div>
-            <button className="btn btn-gold" style={{ marginTop:18 }} onClick={onClose}>סגור</button>
+          <div style={{ padding:'20px 0' }}>
+            <div style={{ fontSize:40 }}>✅</div>
+            <div style={{ fontSize:17, fontWeight:700, color:'#00E676', marginTop:12 }}>תודה על הפידבק!</div>
+            <div style={{ fontSize:14, color:'#7060A0', marginTop:8 }}>ההודעה נשלחה ל-FRIEREN</div>
+            <button className="btn btn-gold" style={{ marginTop:20 }} onClick={onClose}>סגור</button>
           </div>
         ) : (
           <>
-            <div style={{ fontSize:15, fontWeight:800, color:'#FDB927', marginBottom:4 }}>📨 שלח פידבק</div>
-            <div style={{ fontSize:12, color:'#7060A0', marginBottom:14 }}>באג? הצעה? כתוב כאן — FRIEREN יקרא</div>
+            <div style={{ fontSize:18, fontWeight:800, color:'#FDB927', marginBottom:6 }}>📨 שלח פידבק</div>
+            <div style={{ fontSize:14, color:'#7060A0', marginBottom:16 }}>באג? הצעה? כתוב כאן, FRIEREN תקרא</div>
             <textarea
               value={msg}
               onChange={e => setMsg(e.target.value)}
               placeholder="תאר את הבעיה או ההצעה..."
               rows={5}
-              style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(253,185,39,0.2)', borderRadius:10, padding:'10px 12px', color:'#F0EDFF', fontSize:13, resize:'vertical', fontFamily:'inherit', direction:'rtl', boxSizing:'border-box' }}
+              style={{ width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(253,185,39,0.2)', borderRadius:10, padding:'10px 12px', color:'#F0EDFF', fontSize:14, resize:'vertical', fontFamily:'inherit', direction:'rtl', boxSizing:'border-box', textAlign:'right' }}
             />
-            {err && <div style={{ fontSize:11, color:'#FF4444', marginTop:4 }}>{err}</div>}
+            {err && <div style={{ fontSize:12, color:'#FF4444', marginTop:6 }}>{err}</div>}
             <button
               className="btn btn-gold btn-full"
-              style={{ marginTop:14 }}
+              style={{ marginTop:16 }}
               disabled={sending || !msg.trim()}
               onClick={send}
             >
