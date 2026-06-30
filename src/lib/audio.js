@@ -156,19 +156,26 @@ export function playTick() {
   } catch {}
 }
 
-// Joker activated
+// Joker activated — arcade power-up: coin click + rising square sweep + staccato arp
 export function playJokerActivate() {
   try {
     const c = getCtx(); const t = c.currentTime
-    noise(c, t, 0.06, 250, 0.30)
-    const osc = c.createOscillator(); const g = c.createGain()
-    osc.type = 'sawtooth'
-    osc.frequency.setValueAtTime(80, t)
-    osc.frequency.exponentialRampToValueAtTime(520, t + 0.35)
-    g.gain.setValueAtTime(0.18, t)
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.45)
-    osc.connect(g).connect(c.destination)
-    osc.start(t); osc.stop(t + 0.5)
-    ;[523, 659, 784].forEach((f, i) => note(c, f, t + 0.38 + i * 0.06, 0.3, 0.18))
+    // Crisp coin-click attack
+    noise(c, t, 0.04, 600, 0.35)
+    // Square-wave pitch sweep (more arcade than sawtooth)
+    const sw = c.createOscillator(); const sg = c.createGain()
+    sw.type = 'square'
+    sw.frequency.setValueAtTime(120, t)
+    sw.frequency.exponentialRampToValueAtTime(880, t + 0.22)
+    sg.gain.setValueAtTime(0.14, t)
+    sg.gain.exponentialRampToValueAtTime(0.001, t + 0.28)
+    sw.connect(sg).connect(c.destination)
+    sw.start(t); sw.stop(t + 0.30)
+    // Staccato ascending arp — classic 8-bit power-up feel
+    ;[523, 659, 784, 1047, 1319].forEach((f, i) =>
+      note(c, f, t + 0.25 + i * 0.055, 0.05, 0.22, 'square')
+    )
+    // Punchy final chord
+    ;[784, 988, 1319].forEach(f => note(c, f, t + 0.58, 0.18, 0.14, 'square'))
   } catch {}
 }

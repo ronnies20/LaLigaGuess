@@ -514,16 +514,13 @@ export default function PredictPage() {
 
   const openMatches = matches.filter(m => !isMatchLocked(m.kickoff) && m.home_score === null)
 
-  // Unsaved count: matches with a valid guess not yet saved (or modified after save)
-  const unsavedCount = openMatches.filter(m => {
-    const g = guesses[m.id]
-    return g && g.h !== '' && g.a !== '' && dirty.has(m.id)
-  }).length
+  const hasFullGuess = (g) => g && g.h != null && g.h !== '' && g.a != null && g.a !== ''
 
-  // Progress: how many open matches have a guess
-  const predictedCount = openMatches.filter(m => {
-    const g = guesses[m.id]; return g && g.h !== '' && g.a !== ''
-  }).length
+  // Unsaved count: matches with a valid guess not yet saved (or modified after save)
+  const unsavedCount = openMatches.filter(m => hasFullGuess(guesses[m.id]) && dirty.has(m.id)).length
+
+  // Progress: how many open matches have a complete guess (both scores filled)
+  const predictedCount = openMatches.filter(m => hasFullGuess(guesses[m.id])).length
 
   // Current round points from finished matches
   const roundPts = matches
@@ -544,6 +541,10 @@ export default function PredictPage() {
   const countdownStr = formatCountdown(lockCountdown)
   const isUrgent = lockCountdown !== null && lockCountdown < 3600
   const isCritical = lockCountdown !== null && lockCountdown < 600
+  // The exact lock timestamp of the next-to-lock match(es) — used to show countdown only above those
+  const nextLockMs = openMatches.length
+    ? Math.min(...openMatches.map(m => new Date(m.kickoff).getTime() - 3600000))
+    : null
 
   // Single headline status banner — only the most relevant message is shown
   // at a time, picked in priority order, instead of stacking every banner.
@@ -598,14 +599,6 @@ export default function PredictPage() {
               {predictedCount}/{openMatches.length} ניחושים
               {socialCount > 0 && <span className="round-social-count"> · 👥 {socialCount} שחקנים ניחשו</span>}
             </span>
-          </div>
-        )}
-
-        {/* Countdown timer */}
-        {countdownStr && openMatches.length > 0 && (
-          <div className={`lock-countdown${isUrgent ? ' urgent' : ''}${isCritical ? ' critical' : ''}`}>
-            🔒 ננעל בעוד <strong>{countdownStr}</strong>
-            {isCritical && ' — מהר!'}
           </div>
         )}
 
@@ -729,8 +722,18 @@ export default function PredictPage() {
               const isRMMatch       = m.home_team === 'Real Madrid' || m.away_team === 'Real Madrid'
               const others          = othersGuesses[m.id] || []
 
+              const matchLockMs = new Date(m.kickoff).getTime() - 3600000
+              const isNextToLock = !locked && m.home_score === null && matchLockMs === nextLockMs && countdownStr
+
               return (
-                <div className={`card${isThisJoker ? ' joker-card' : ''}${m.is_special ? ' special-card' : ''}${live ? ' live-match-card' : ''}${goalFlash.has(m.id) ? ' goal-flash' : ''}`} key={m.id}>
+                <React.Fragment key={m.id}>
+                {isNextToLock && (
+                  <div className={`lock-countdown${isUrgent ? ' urgent' : ''}${isCritical ? ' critical' : ''}`}>
+                    🔒 ננעל בעוד <strong>{countdownStr}</strong>
+                    {isCritical && ' — מהר!'}
+                  </div>
+                )}
+                <div className={`card${isThisJoker ? ' joker-card' : ''}${m.is_special ? ' special-card' : ''}${live ? ' live-match-card' : ''}${goalFlash.has(m.id) ? ' goal-flash' : ''}`}>
                   {m.is_special && <div className="special-strip">⭐ משחק מיוחד — ניחוש שווה כפל נקודות</div>}
                   <div className="match-header">
                     <span className="match-date">
@@ -899,6 +902,7 @@ export default function PredictPage() {
                     )
                   })()}
                 </div>
+                </React.Fragment>
               )
             })}
           </>
@@ -915,7 +919,7 @@ export default function PredictPage() {
           >
             <span className="save-emoji">{saving ? '🎲' : '🎰'}</span>
             <span>
-              {saving ? <span dir="ltr">שומר...</span> : 'שמור ניחושים'}
+              {saving ? 'שומר' : 'שמור ניחושים'}
             </span>
             {unsavedCount > 0 && !saving && (
               <span className="unsaved-badge">{unsavedCount}</span>
