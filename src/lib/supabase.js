@@ -161,6 +161,16 @@ export async function getLiveMatchGuesses(liveMatchIds) {
   return data || []
 }
 
+export async function getPlayerRoundPredictions(userId, round) {
+  const { data, error } = await supabase
+    .from('predictions')
+    .select('home_guess, away_guess, is_joker, points, penalty_bonus, matches!inner(home_team, away_team, home_score, away_score, kickoff, status, is_special)')
+    .eq('user_id', userId)
+    .eq('matches.round', round)
+  if (error) throw error
+  return (data || []).filter(p => p.matches).sort((a, b) => new Date(a.matches.kickoff) - new Date(b.matches.kickoff))
+}
+
 // ---- Feedback ----
 export async function submitFeedback(userId, displayName, userEmail, message) {
   const { error } = await supabase

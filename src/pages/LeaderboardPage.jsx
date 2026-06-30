@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, getCurrentRound, getRoundMessages, getPlayerHistory, getLiveMatchGuesses } from '../lib/supabase'
+import { supabase, getCurrentRound, getRoundMessages, getPlayerHistory, getLiveMatchGuesses, getPlayerRoundPredictions } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, LIVE_STATUSES } from '../lib/teams'
 
@@ -26,6 +26,107 @@ function PtsBadge({ pts, isJoker }) {
   if (pts === 2)            return <span className="hst-pts-dir">⭐{pts}</span>
   if (pts === 1)            return <span className="hst-pts-dir">{pts}</span>
   return <span className="hst-pts-miss">{pts}</span>
+}
+
+function PlayerRoundModal({ player, round, liveMatches, liveGuesses, onClose }) {
+  const [predictions, setPredictions] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getPlayerRoundPredictions(player.user_id, round)
+      .then(d => { setPredictions(d); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [player.user_id, round])
+
+  const userLive = liveGuesses[player.user_id] || []
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card round-pred-modal" onClick={e => e.stopPropagation()}>
+        <button className="modal-close-btn" onClick={onClose}>✕</button>
+
+        <div className="round-modal-header">
+          <div className="history-avatar">
+            {player.avatar_url
+              ? <img src={player.avatar_url} alt={player.display_name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }} />
+              : initial(player.display_name)}
+          </div>
+          <div>
+            <div className="history-name">{player.display_name}</div>
+            <div className="history-summary">
+              מחזור {round} · {player.round_points ?? 0} נק׳ · {player.round_exact ?? 0} מדויקים
+            </div>
+          </div>
+        </div>
+
+        <div className="round-section-label">
+          {liveMatches.length > 0 ? '🔴 משחקים בלייב' : '⚽ לייב'}
+        </div>
+
+        {liveMatches.length > 0 ? (
+          <div className="round-live-section">
+            {liveMatches.map(m => {
+              const g = userLive.find(x => x.matchId === m.id)
+              const color = g ? getLiveColor(g, m) : 'rgba(255,255,255,0.15)'
+              const homeInfo = getTeamInfo(m.home_team)
+              const awayInfo = getTeamInfo(m.away_team)
+              return (
+                <div key={m.id} className="round-live-row" style={{ borderColor: color, background: `${color}15` }}>
+                  <span className="round-live-team" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
+                  <div className="round-live-center">
+                    <span className="round-live-real">{m.home_score}:{m.away_score}</span>
+                    <span className="round-live-sep">⟵</span>
+                    {g
+                      ? <span className="round-live-guess" style={{ color }}>{g.h}:{g.a}{g.joker ? ' 🃏' : ''}</span>
+                      : <span className="round-live-guess" style={{ color:'rgba(255,255,255,0.2)' }}>—</span>}
+                  </div>
+                  <span className="round-live-team" style={{ color: awayInfo.color, textAlign:'left' }}>{awayInfo.short}</span>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="round-no-live">כרגע לא מתקיימים משחקים בלייב</div>
+        )}
+
+        <div className="round-section-label">ניחושים מחזור {round}</div>
+
+        {loading ? (
+          <div className="spinner" style={{ margin:'16px auto' }} />
+        ) : predictions.length === 0 ? (
+          <div className="round-no-live">אין ניחושים למחזור זה</div>
+        ) : (
+          <div>
+            {predictions.map((p, i) => {
+              const m = p.matches
+              const homeInfo = getTeamInfo(m.home_team)
+              const awayInfo = getTeamInfo(m.away_team)
+              const hasResult = m.home_score !== null
+              const isExact = hasResult && p.home_guess === m.home_score && p.away_guess === m.away_score
+              const gDir = Math.sign(p.home_guess - p.away_guess)
+              const rDir = hasResult ? Math.sign(m.home_score - m.away_score) : null
+              const isDir = hasResult && !isExact && gDir === rDir
+              const cls = !hasResult ? '' : isExact ? 'exact' : isDir ? 'dir' : 'miss'
+              const color = isExact ? '#00E676' : isDir ? '#FDB927' : hasResult ? '#FF5252' : 'rgba(255,255,255,0.2)'
+              return (
+                <div key={i} className={`round-pred-row ${cls}`}>
+                  <span className="round-pred-team" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
+                  <div className="round-pred-scores">
+                    {hasResult
+                      ? <span className="round-pred-result" style={{ color }}>{m.home_score}:{m.away_score}</span>
+                      : <span className="round-pred-pending">ממתין</span>}
+                    <span className="round-pred-guess">{p.home_guess}:{p.away_guess}{p.is_joker ? ' 🃏' : ''}</span>
+                  </div>
+                  <span className="round-pred-team" style={{ color: awayInfo.color, textAlign:'left' }}>{awayInfo.short}</span>
+                  {hasResult && <PtsBadge pts={p.points} isJoker={p.is_joker} />}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function PlayerHistoryModal({ player, onClose }) {
@@ -112,7 +213,8 @@ export default function LeaderboardPage() {
   const [refreshKey, setRefreshKey]     = useState(0)
   const [liveMatches, setLiveMatches]   = useState([])
   const [liveGuesses, setLiveGuesses]   = useState({})
-  const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const [selectedPlayer, setSelectedPlayer]           = useState(null)
+  const [selectedRoundPlayer, setSelectedRoundPlayer] = useState(null)
 
   useEffect(() => {
     getCurrentRound()
@@ -141,7 +243,6 @@ export default function LeaderboardPage() {
     setLoading(true)
     setStreaks({})
     try {
-      // Live matches
       const { data: liveMData } = await supabase
         .from('matches')
         .select('id, home_team, away_team, home_score, away_score, status')
@@ -160,7 +261,6 @@ export default function LeaderboardPage() {
         setLiveGuesses({})
       }
 
-      // Penalty hits per user
       const { data: penData } = await supabase
         .from('predictions')
         .select('user_id')
@@ -178,7 +278,6 @@ export default function LeaderboardPage() {
         const mm = {}
         msgs?.forEach(m => { mm[m.user_id] = m.message })
         setMessages(mm)
-        // streak view may not exist in all environments
         try {
           const { data: streakData } = await supabase.from('current_streak_view').select('user_id, current_streak')
           const sm = {}
@@ -198,10 +297,9 @@ export default function LeaderboardPage() {
     setLoading(false)
   }
 
-  const pts  = r => view === 'season' ? r.total_points    : r.round_points
-  const ex   = r => view === 'season' ? r.exact_count     : r.round_exact
-  const dir  = r => view === 'season' ? r.direction_count : r.round_direction
-  const hasLive = liveMatches.length > 0
+  const pts = r => view === 'season' ? r.total_points    : r.round_points
+  const ex  = r => view === 'season' ? r.exact_count     : r.round_exact
+  const dir = r => view === 'season' ? r.direction_count : r.round_direction
 
   return (
     <div className="page">
@@ -220,12 +318,9 @@ export default function LeaderboardPage() {
         )}
 
         <div className="card">
-          <div className={`lb-header${hasLive ? ' has-live' : ''}`}>
+          <div className="lb-header">
             <div style={{textAlign:'center'}}>מיקום</div>
             <div>שחקן</div>
-            {hasLive && (
-              <div style={{textAlign:'center', fontSize:13, color:'#FF4444'}}>🔴</div>
-            )}
             <div style={{textAlign:'center'}}>מדויק</div>
             <div style={{textAlign:'center'}}>כיוון</div>
             <div style={{textAlign:'center', fontSize:9, lineHeight:1.2}}>פנדל<br/>לריאל</div>
@@ -241,14 +336,13 @@ export default function LeaderboardPage() {
             const colorIdx = i % COLORS.length
             const medal    = i===0?'🥇':i===1?'🥈':i===2?'🥉':null
             const streak   = view === 'season' ? (streaks[r.user_id] ?? 0) : 0
-            const userLive = liveGuesses[r.user_id] || []
             const penHits  = penCounts[r.user_id] || 0
 
             return (
               <div
                 key={r.user_id}
-                className={`lb-row${isMe?' me':''} lb-row-clickable${hasLive?' has-live':''}`}
-                onClick={() => setSelectedPlayer(r)}
+                className={`lb-row${isMe?' me':''} lb-row-clickable`}
+                onClick={() => view === 'round' ? setSelectedRoundPlayer(r) : setSelectedPlayer(r)}
               >
                 <div className={`lb-rank${i<3?' g'+(i+1):''}`}>{medal || (i+1)}</div>
 
@@ -268,28 +362,6 @@ export default function LeaderboardPage() {
                   </div>
                 </div>
 
-                {hasLive && (
-                  <div className="lb-live-col">
-                    {liveMatches.map(m => {
-                      const g = userLive.find(x => x.matchId === m.id)
-                      const color = g ? getLiveColor(g, m) : null
-                      const homeShort = getTeamInfo(m.home_team).short
-                      const awayShort = getTeamInfo(m.away_team).short
-                      return g ? (
-                        <div key={m.id} className="lb-live-cell" style={{ color, borderColor: color, background: `${color}18` }}>
-                          <span className="lb-live-team">{homeShort}-{awayShort}</span>
-                          <span className="lb-live-score">{g.h}:{g.a}{g.joker ? '🃏' : ''}</span>
-                        </div>
-                      ) : (
-                        <div key={m.id} className="lb-live-cell lb-live-empty">
-                          <span className="lb-live-team">{homeShort}-{awayShort}</span>
-                          <span className="lb-live-score">—</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-
                 <div className="lb-num">{ex(r) ?? 0}</div>
                 <div className="lb-num">{dir(r) ?? 0}</div>
                 <div className="lb-num" style={{ color: penHits > 0 ? '#00BCD4' : undefined }}>
@@ -306,6 +378,16 @@ export default function LeaderboardPage() {
         <PlayerHistoryModal
           player={selectedPlayer}
           onClose={() => setSelectedPlayer(null)}
+        />
+      )}
+
+      {selectedRoundPlayer && (
+        <PlayerRoundModal
+          player={selectedRoundPlayer}
+          round={round}
+          liveMatches={liveMatches}
+          liveGuesses={liveGuesses}
+          onClose={() => setSelectedRoundPlayer(null)}
         />
       )}
     </div>

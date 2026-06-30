@@ -809,15 +809,58 @@ body {
   50%      { box-shadow: 0 0 0 4px rgba(255,82,82,0); }
 }
 
-/* ---- Live guess chip in leaderboard ---- */
-.lb-live-guess {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 11px; margin-top: 2px;
+/* ---- Round predictions modal ---- */
+.round-pred-modal {
+  padding: 0; overflow-y: auto;
+  max-height: 82vh;
 }
-.lb-lg-dot   { font-size: 9px; animation: blink 1s step-start infinite; }
-.lb-lg-team  { font-size: 10px; font-weight: 600; }
-.lb-lg-score { font-family: monospace; font-weight: 700; color: #fff; font-size: 12px; padding: 0 2px; }
-.lb-lg-joker { font-size: 10px; }
+.round-modal-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+.round-section-label {
+  padding: 12px 16px 6px;
+  font-size: 10px; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  flex-shrink: 0;
+}
+.round-no-live {
+  padding: 14px 16px; text-align: center;
+  color: rgba(255,255,255,0.3); font-size: 13px; font-weight: 600;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.round-live-section { padding: 6px 12px 10px; flex-shrink: 0; }
+.round-live-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: 10px; margin-bottom: 6px;
+  border: 1.5px solid;
+}
+.round-live-team { font-size: 12px; font-weight: 800; flex: 1; }
+.round-live-center {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.round-live-real  { font-size: 16px; font-weight: 800; color: #fff; }
+.round-live-sep   { color: rgba(255,255,255,0.25); font-size: 12px; }
+.round-live-guess { font-size: 14px; font-weight: 700; }
+.round-pred-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 16px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-right: 3px solid transparent;
+}
+.round-pred-row.exact { border-right-color: #00E676; }
+.round-pred-row.dir   { border-right-color: #FDB927; }
+.round-pred-row.miss  { border-right-color: #FF5252; }
+.round-pred-team { font-size: 12px; font-weight: 800; flex: 1; }
+.round-pred-scores {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1px; flex-shrink: 0;
+}
+.round-pred-result  { font-size: 15px; font-weight: 800; line-height: 1.1; }
+.round-pred-pending { font-size: 10px; color: rgba(255,255,255,0.25); }
+.round-pred-guess   { font-size: 11px; color: rgba(255,255,255,0.45); font-weight: 600; line-height: 1.1; }
 
 /* ---- Modal overlay (shared) ---- */
 .modal-overlay {
