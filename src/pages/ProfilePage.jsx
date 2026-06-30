@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase, signOut, getMyStats, uploadAvatar, updateProfile, submitFeedback, getAdminFeedback, markFeedbackRead } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-const ADMIN_EMAIL = '2008ronel@gmail.com'
+const ADMIN_EMAIL = 'mikaswiftt@gmail.com'
 
 function FeedbackModal({ user, profile, onClose }) {
   const [msg, setMsg]       = useState('')
