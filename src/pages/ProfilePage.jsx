@@ -15,8 +15,7 @@ function FeedbackModal({ user, profile, onClose }) {
     setSending(true)
     setErr(null)
     try {
-      const name = profile?.display_name || user?.email?.split('@')[0] || 'אנונימי'
-      await submitFeedback(user.id, name, user.email, msg.trim())
+      await submitFeedback(msg.trim())
       setSent(true)
     } catch (e) { setErr('שגיאה בשליחה, נסה שוב') }
     setSending(false)

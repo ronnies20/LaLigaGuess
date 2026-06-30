@@ -176,10 +176,11 @@ export async function getPlayerRoundPredictions(userId, round) {
 }
 
 // ---- Feedback ----
-export async function submitFeedback(userId, displayName, userEmail, message) {
+export async function submitFeedback(message) {
+  // user_id, display_name, user_email are filled server-side by trigger
   const { error } = await supabase
     .from('feedback')
-    .insert({ user_id: userId, display_name: displayName, user_email: userEmail, message })
+    .insert({ message })
   if (error) throw error
 }
 

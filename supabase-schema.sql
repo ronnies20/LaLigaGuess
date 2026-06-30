@@ -526,11 +526,27 @@ create table if not exists feedback (
 
 alter table feedback enable row level security;
 
--- משתמש יכול רק להכניס פידבק משלו
-create policy "feedback_insert" on feedback
-  for insert with check (auth.uid() = user_id);
+-- trigger ממלא user_id/user_email/display_name מהשרת — המשתמש לא יכול לזייף
+create or replace function fill_feedback_user_info()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.user_id      := auth.uid();
+  new.user_email   := auth.jwt() ->> 'email';
+  new.display_name := (select display_name from profiles where id = auth.uid());
+  return new;
+end;
+$$;
 
--- רק אדמין יכול לקרוא (server-side enforcement)
+drop trigger if exists fill_feedback_info on feedback;
+create trigger fill_feedback_info
+  before insert on feedback
+  for each row execute function fill_feedback_user_info();
+
+-- משתמש יכול רק להכניס — user_id/email/display_name ממולאים ע"י trigger
+create policy "feedback_insert" on feedback
+  for insert with check (true);
+
+-- רק אדמין יכול לקרוא (server-side enforcement ע"י JWT claim)
 create policy "feedback_admin_select" on feedback
   for select using (auth.jwt() ->> 'email' = 'mikaswiftt@gmail.com');
 
@@ -541,14 +557,14 @@ create policy "feedback_admin_update" on feedback
 -- =====================================================
 -- 17. STORAGE — avatar file type restriction (MED-5)
 -- =====================================================
--- הרץ בנפרד ב-Supabase SQL Editor (storage policies):
--- create policy "avatars_insert_validated" on storage.objects
---   for insert with check (
---     bucket_id = 'avatars'
---     and auth.role() = 'authenticated'
---     and (storage.foldername(name))[1] = auth.uid()::text
---     and lower(storage.extension(name)) in ('jpg', 'jpeg', 'png', 'gif', 'webp')
---   );
+drop policy if exists "avatars_insert" on storage.objects;
+create policy "avatars_insert_validated" on storage.objects
+  for insert with check (
+    bucket_id = 'avatars'
+    and auth.role() = 'authenticated'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and lower(storage.extension(name)) in ('jpg', 'jpeg', 'png', 'gif', 'webp')
+  );
 
 -- =====================================================
 -- 18. display_name constraint (LOW-4)
