@@ -101,15 +101,19 @@ export async function updateProfile(userId, updates) {
   if (error) throw error
 }
 
+const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024 // 5 MB
+
 export async function uploadAvatar(file, userId) {
-  // Delete any existing avatar files to avoid CDN caching stale images
+  if (!AVATAR_ALLOWED_TYPES.includes(file.type)) throw new Error('סוג קובץ לא נתמך — יש להעלות jpg, png, gif או webp')
+  if (file.size > AVATAR_MAX_BYTES) throw new Error('הקובץ גדול מדי — מקסימום 5MB')
+  const ext = file.type.split('/')[1].replace('jpeg', 'jpg')
   const { data: existing } = await supabase.storage.from('avatars').list(userId)
   if (existing?.length) {
     await supabase.storage.from('avatars').remove(existing.map(f => `${userId}/${f.name}`))
   }
-  const ext = file.name.split('.').pop()
   const path = `${userId}/avatar-${Date.now()}.${ext}`
-  const { error } = await supabase.storage.from('avatars').upload(path, file)
+  const { error } = await supabase.storage.from('avatars').upload(path, file, { contentType: file.type })
   if (error) throw error
   const { data } = supabase.storage.from('avatars').getPublicUrl(path)
   return data.publicUrl

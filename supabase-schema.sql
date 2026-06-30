@@ -6,11 +6,13 @@
 -- 1. PROFILES (משתמשים)
 create table if not exists profiles (
   id            uuid primary key references auth.users(id) on delete cascade,
-  display_name  text not null,
+  display_name  text not null check (char_length(display_name) >= 1 and char_length(display_name) <= 50),
   avatar_url    text,
   created_at    timestamptz default now()
 );
 alter table profiles add column if not exists avatar_url text;
+alter table profiles add constraint if not exists display_name_length
+  check (char_length(display_name) >= 1 and char_length(display_name) <= 50);
 
 -- יצירה אוטומטית של פרופיל בעת הרשמה
 create or replace function handle_new_user()
@@ -508,6 +510,51 @@ alter table notification_log enable row level security;
 
 create policy "service_role_only_notification_log"
   on notification_log for all to service_role using (true) with check (true);
+
+-- =====================================================
+-- 16. FEEDBACK (HIGH-1 + MED-4 fix)
+-- =====================================================
+create table if not exists feedback (
+  id           uuid default gen_random_uuid() primary key,
+  user_id      uuid references profiles(id) on delete cascade,
+  display_name text,
+  user_email   text,
+  message      text not null check (char_length(message) <= 1000),
+  read         boolean default false,
+  created_at   timestamptz default now()
+);
+
+alter table feedback enable row level security;
+
+-- משתמש יכול רק להכניס פידבק משלו
+create policy "feedback_insert" on feedback
+  for insert with check (auth.uid() = user_id);
+
+-- רק אדמין יכול לקרוא (server-side enforcement)
+create policy "feedback_admin_select" on feedback
+  for select using (auth.jwt() ->> 'email' = 'mikaswiftt@gmail.com');
+
+-- רק אדמין יכול לעדכן (markFeedbackRead)
+create policy "feedback_admin_update" on feedback
+  for update using (auth.jwt() ->> 'email' = 'mikaswiftt@gmail.com');
+
+-- =====================================================
+-- 17. STORAGE — avatar file type restriction (MED-5)
+-- =====================================================
+-- הרץ בנפרד ב-Supabase SQL Editor (storage policies):
+-- create policy "avatars_insert_validated" on storage.objects
+--   for insert with check (
+--     bucket_id = 'avatars'
+--     and auth.role() = 'authenticated'
+--     and (storage.foldername(name))[1] = auth.uid()::text
+--     and lower(storage.extension(name)) in ('jpg', 'jpeg', 'png', 'gif', 'webp')
+--   );
+
+-- =====================================================
+-- 18. display_name constraint (LOW-4)
+-- =====================================================
+alter table profiles add constraint if not exists display_name_length
+  check (char_length(display_name) >= 1 and char_length(display_name) <= 50);
 
 -- =====================================================
 -- נתוני דוגמה — מחזור 36 (לבדיקה)
