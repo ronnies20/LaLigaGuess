@@ -502,17 +502,9 @@ export default function PredictPage() {
                       {getStatusLabel(m.status) || formatKickoff(m.kickoff)}
                     </span>
                     {locked && !hasScore && <span className="badge badge-lock" style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}>🔒 נעול</span>}
-                    {!effectiveLocked && (
-                      <button
-                        className={`joker-btn${isThisJoker ? ' joker-active' : ''}${jokerTaken ? ' joker-taken' : ''}`}
-                        onClick={() => setJokerMatchId(isThisJoker ? null : m.id)}
-                        style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)'}}
-                        title="ג׳וקר — מדויק = 6 נקודות, טעות = -1"
-                      >🃏</button>
-                    )}
-                    {hasScore && g.joker && <span style={{position:'absolute',left:'12px',top:'50%',transform:'translateY(-50%)',fontSize:'16px'}}>🃏</span>}
                   </div>
                   <div className="match-body">
+                    <div className="match-body-inner">
                     <TeamDisplay name={m.away_team} />
                     <div className="score-wrap">
                       {hasScore ? (
@@ -528,7 +520,10 @@ export default function PredictPage() {
                           <div className="result-sep" />
                           <div className="result-col">
                             <span className="result-col-label">{live ? 'לייב' : 'סופי'}</span>
-                            <div className={`final-score-chip${live ? ' live-score' : ''}`}>{m.home_score}:{m.away_score}</div>
+                            <div className="final-score-chip" style={live && hasGuess ? {
+                              color: guessClass === 'guess-exact' ? '#00E676' : guessClass === 'guess-dir' ? '#FDB927' : '#ff5252',
+                              borderColor: guessClass === 'guess-exact' ? 'rgba(0,230,118,0.4)' : guessClass === 'guess-dir' ? 'rgba(253,185,39,0.4)' : 'rgba(255,82,82,0.4)',
+                            } : {}}>{m.home_score}:{m.away_score}</div>
                           </div>
                           <div className="result-sep" />
                           <div className="result-col">
@@ -559,6 +554,22 @@ export default function PredictPage() {
                       )}
                     </div>
                     <TeamDisplay name={m.home_team} />
+                    </div>
+                    {!effectiveLocked ? (
+                      <button
+                        className={`joker-side-btn${isThisJoker ? ' joker-active' : ''}${jokerTaken ? ' joker-taken' : ''}`}
+                        onClick={() => setJokerMatchId(isThisJoker ? null : m.id)}
+                        title="ג׳וקר — מדויק = 6 נקודות, טעות = -1"
+                      >
+                        <span>🃏</span>
+                        <span className="joker-side-label">ג׳וקר</span>
+                      </button>
+                    ) : g.joker ? (
+                      <div className="joker-side-btn joker-active" style={{ cursor: 'default' }}>
+                        <span>🃏</span>
+                        <span className="joker-side-label">ג׳וקר</span>
+                      </div>
+                    ) : null}
                   </div>
                   {/* Penalty prediction — Real Madrid matches only */}
                   {isRMMatch && (
