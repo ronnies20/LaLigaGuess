@@ -568,14 +568,14 @@ body {
   box-shadow: 0 0 22px rgba(253,185,39,0.35) !important;
 }
 .joker-side-btn {
-  width: 52px; flex-shrink: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  width: 56px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
   border: none; border-right: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.02);
   cursor: pointer; color: rgba(255,255,255,0.3);
-  transition: all 0.2s; font-size: 22px; padding: 0;
+  transition: all 0.2s; font-size: 30px; padding: 0;
 }
-.joker-side-label { font-size: 8px; font-weight: 800; letter-spacing: 0.5px; color: inherit; }
+.joker-side-label { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: inherit; }
 .joker-side-btn:hover:not(.joker-taken) {
   background: rgba(253,185,39,0.08);
   border-color: rgba(253,185,39,0.3);
@@ -688,26 +688,39 @@ body {
 /* ---- Penalty prediction ---- */
 .penalty-section {
   border-top: 1px solid rgba(255,255,255,0.07);
-  padding: 10px 12px 8px;
-  font-size: 12px;
+  padding: 14px 16px 16px;
+  text-align: center;
 }
-.penalty-label { color: rgba(255,255,255,0.55); display: block; margin-bottom: 6px; }
-.penalty-inputs { display: flex; align-items: center; gap: 6px; direction: ltr; }
-.penalty-input {
-  width: 44px; text-align: center; padding: 5px 4px;
-  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 7px; color: #fff; font-size: 13px;
+.penalty-label { color: rgba(255,255,255,0.85); display: block; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
+.penalty-range-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: rgba(253,185,39,0.1); border: 1.5px solid rgba(253,185,39,0.3);
+  border-radius: 12px; padding: 11px 20px; width: 100%;
+  color: var(--gold); font-size: 17px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
 }
-.penalty-unit { color: rgba(255,255,255,0.45); font-size: 12px; }
-.penalty-result { color: rgba(255,255,255,0.6); }
+.penalty-range-btn:hover { background: rgba(253,185,39,0.17); border-color: var(--gold); }
+.penalty-range-arrow { font-size: 11px; opacity: 0.65; }
+.penalty-result { color: rgba(255,255,255,0.6); font-size: 13px; }
 .pen-hit  { color: #66bb6a; font-weight: 600; }
 .pen-miss { color: #ef5350; }
 .pen-no   { color: rgba(255,255,255,0.35); }
 .pen-pending { color: #FDB927; }
-.pen-bonus-badge {
-  font-size: 10px; color: #66bb6a; font-weight: 700;
-  margin-top: 2px; text-align: center;
+.pen-bonus-badge { font-size: 10px; color: #66bb6a; font-weight: 700; margin-top: 2px; text-align: center; }
+
+/* Penalty picker modal */
+.pen-picker-modal { padding: 28px 20px 32px; text-align: center; }
+.pen-picker-title { font-size: 17px; font-weight: 800; color: var(--gold); margin-bottom: 6px; }
+.pen-picker-sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 22px; }
+.pen-picker-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pen-picker-opt {
+  padding: 18px 8px; border-radius: 12px; text-align: center;
+  background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
 }
+.pen-picker-opt:hover { background: rgba(253,185,39,0.1); border-color: rgba(253,185,39,0.3); color: var(--gold); }
+.pen-picker-opt.selected { background: rgba(253,185,39,0.18); border-color: var(--gold); color: var(--gold); box-shadow: 0 0 14px rgba(253,185,39,0.25); }
 
 /* ---- Others' predictions ---- */
 .others-toggle-btn {

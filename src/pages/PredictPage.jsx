@@ -149,6 +149,15 @@ function TeamDisplay({ name }) {
   )
 }
 
+const PEN_RANGES = [
+  { label: '1-17',          min: 1,  max: 17 },
+  { label: '18-32',         min: 18, max: 32 },
+  { label: '33-סוף מחצית', min: 33, max: 45 },
+  { label: '46-62',         min: 46, max: 62 },
+  { label: '63-77',         min: 63, max: 77 },
+  { label: '78-סוף המשחק', min: 78, max: 90 },
+]
+
 export default function PredictPage() {
   const { user, profile } = useAuth()
   const [round, setRound]               = useState(null)
@@ -171,6 +180,7 @@ export default function PredictPage() {
   const [saving, setSaving]   = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [matchAnims, setMatchAnims] = useState({})
+  const [penPickerMatchId, setPenPickerMatchId] = useState(null)
   const saveBtnRef            = useRef(null)
   const celebratedRef         = useRef(getCelebrated(user.id))
 
@@ -342,10 +352,14 @@ export default function PredictPage() {
     setGuesses(g => ({ ...g, [matchId]: { ...g[matchId], [side]: clean } }))
   }
 
-  function handlePenaltyInput(matchId, side, val) {
-    const clean = val.replace(/\D/g, '').slice(0, 2)
-    const clamped = clean && parseInt(clean) > 90 ? '90' : clean
-    setGuesses(g => ({ ...g, [matchId]: { ...g[matchId], [side]: clamped } }))
+  function handlePenRange(matchId, min, max) {
+    setGuesses(prev => ({ ...prev, [matchId]: { ...(prev[matchId] || {}), penMin: String(min), penMax: String(max) } }))
+    setPenPickerMatchId(null)
+    const g = guesses[matchId] || {}
+    if (g.h !== '' && g.a !== '') {
+      upsertPrediction(user.id, matchId, parseInt(g.h), parseInt(g.a), jokerMatchId === matchId, min, max)
+        .catch(console.error)
+    }
   }
 
   async function saveAll() {
@@ -576,17 +590,13 @@ export default function PredictPage() {
                     <div className="penalty-section">
                       {!effectiveLocked ? (
                         <>
-                          <span className="penalty-label">🎯 ניחוש פנדל לריאל מדריד (אופציונלי)</span>
-                          <div className="penalty-inputs">
-                            <span className="penalty-unit">מדקה</span>
-                            <input type="number" min="1" max="90" inputMode="numeric" placeholder="1"
-                              className="penalty-input" value={g.penMin}
-                              onChange={e => handlePenaltyInput(m.id, 'penMin', e.target.value)} />
-                            <span>–</span>
-                            <input type="number" min="1" max="90" inputMode="numeric" placeholder="90"
-                              className="penalty-input" value={g.penMax}
-                              onChange={e => handlePenaltyInput(m.id, 'penMax', e.target.value)} />
-                          </div>
+                          <span className="penalty-label">🎯 ניחוש פנדל לריאל מדריד</span>
+                          <button className="penalty-range-btn" onClick={() => setPenPickerMatchId(m.id)}>
+                            <span>{g.penMin && g.penMax
+                              ? (PEN_RANGES.find(r => r.min === parseInt(g.penMin) && r.max === parseInt(g.penMax))?.label ?? `${g.penMin}-${g.penMax}`)
+                              : '1-17'}</span>
+                            <span className="penalty-range-arrow">▼</span>
+                          </button>
                         </>
                       ) : m.penalty_minute != null ? (
                         <div className="penalty-result">
@@ -594,13 +604,13 @@ export default function PredictPage() {
                           {g.penMin && g.penMax && m.penalty_minute >= parseInt(g.penMin) && m.penalty_minute <= parseInt(g.penMax)
                             ? <span className="pen-hit">✅ ניחוש מדויק! +3נק׳</span>
                             : g.penMin && g.penMax
-                              ? <span className="pen-miss">❌ ניחשת {g.penMin}–{g.penMax}</span>
+                              ? <span className="pen-miss">❌ ניחשת {PEN_RANGES.find(r => r.min === parseInt(g.penMin) && r.max === parseInt(g.penMax))?.label ?? `${g.penMin}–${g.penMax}`}</span>
                               : <span className="pen-no">לא ניחשת</span>}
                         </div>
                       ) : hasScore && finished ? (
                         <div className="penalty-result pen-no">לא היה פנדל לריאל במשחק זה</div>
-                      ) : (g.penMin && g.penMax) ? (
-                        <div className="penalty-result pen-pending">🎯 ניחשת: {g.penMin}–{g.penMax} דקה</div>
+                      ) : g.penMin && g.penMax ? (
+                        <div className="penalty-result pen-pending">🎯 ניחשת: {PEN_RANGES.find(r => r.min === parseInt(g.penMin) && r.max === parseInt(g.penMax))?.label ?? `${g.penMin}–${g.penMax}`}</div>
                       ) : null}
                     </div>
                   )}
@@ -656,6 +666,30 @@ export default function PredictPage() {
         </div>
       )}
       {/* share card disabled — kept for future use */}
+
+      {penPickerMatchId && (() => {
+        const pg = guesses[penPickerMatchId] || {}
+        const curMin = pg.penMin ? parseInt(pg.penMin) : 1
+        const curMax = pg.penMax ? parseInt(pg.penMax) : 17
+        return (
+          <div className="modal-overlay" onClick={() => setPenPickerMatchId(null)}>
+            <div className="pen-picker-modal modal-card" onClick={e => e.stopPropagation()}>
+              <button className="modal-close-btn" onClick={() => setPenPickerMatchId(null)}>✕</button>
+              <div className="pen-picker-title">🎯 ניחוש פנדל לריאל מדריד</div>
+              <div className="pen-picker-sub">באיזה טווח דקות תהיה הפנדל?</div>
+              <div className="pen-picker-options">
+                {PEN_RANGES.map(r => (
+                  <button
+                    key={r.label}
+                    className={`pen-picker-opt${curMin === r.min && curMax === r.max ? ' selected' : ''}`}
+                    onClick={() => handlePenRange(penPickerMatchId, r.min, r.max)}
+                  >{r.label}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
