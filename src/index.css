@@ -713,11 +713,14 @@ body {
 .pen-picker-sub { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 22px; line-height: 1.4; }
 .pen-picker-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; direction: ltr; }
 .pen-picker-opt {
-  padding: 18px 8px; border-radius: 12px; text-align: center;
+  padding: 16px 12px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 6px; direction: ltr;
   background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.1);
   color: rgba(255,255,255,0.85); font-size: 15px; font-weight: 700;
   cursor: pointer; transition: all 0.15s;
 }
+.pen-opt-desc { flex: 1; text-align: left; direction: rtl; }
+.pen-opt-num  { text-align: right; color: inherit; white-space: nowrap; }
 .pen-picker-opt:hover { background: rgba(253,185,39,0.1); border-color: rgba(253,185,39,0.3); color: var(--gold); }
 .pen-picker-opt.selected { background: rgba(253,185,39,0.18); border-color: var(--gold); color: var(--gold); box-shadow: 0 0 14px rgba(253,185,39,0.25); }
 

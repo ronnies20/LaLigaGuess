@@ -150,12 +150,12 @@ function TeamDisplay({ name }) {
 }
 
 const PEN_RANGES = [
-  { label: '1-17',            min: 1,  max: 17 },
-  { label: '46-62',           min: 46, max: 62 },
-  { label: '18-32',           min: 18, max: 32 },
-  { label: '63-77',           min: 63, max: 77 },
-  { label: '33-סוף המחצית',  min: 33, max: 45 },
-  { label: '78-סוף המשחק',   min: 78, max: 90 },
+  { label: '1-17',           num: '1-17',  desc: null,          min: 1,  max: 17 },
+  { label: '46-62',          num: '46-62', desc: null,          min: 46, max: 62 },
+  { label: '18-32',          num: '18-32', desc: null,          min: 18, max: 32 },
+  { label: '63-77',          num: '63-77', desc: null,          min: 63, max: 77 },
+  { label: '33-סוף המחצית', num: '33',    desc: 'סוף המחצית', min: 33, max: 45 },
+  { label: '78-סוף המשחק',  num: '78',    desc: 'סוף המשחק',  min: 78, max: 90 },
 ]
 
 export default function PredictPage() {
@@ -682,7 +682,14 @@ export default function PredictPage() {
                     key={r.label}
                     className={`pen-picker-opt${curMin === r.min && curMax === r.max ? ' selected' : ''}`}
                     onClick={() => handlePenRange(penPickerMatchId, r.min, r.max)}
-                  >{r.label}</button>
+                  >
+                    {r.desc ? (
+                      <>
+                        <span className="pen-opt-desc">{r.desc}</span>
+                        <span className="pen-opt-num">{r.num}</span>
+                      </>
+                    ) : r.num}
+                  </button>
                 ))}
               </div>
             </div>
