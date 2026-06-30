@@ -149,6 +149,14 @@ function TeamDisplay({ name }) {
   )
 }
 
+// Mirror of the SQL penalty_in_range() function
+function checkPenaltyInRange(elapsed, extra, rangeMin, rangeMax) {
+  const min = parseInt(rangeMin), max = parseInt(rangeMax)
+  if (max === 45) return elapsed >= min && elapsed <= 45  // "33-45+": first half only
+  if (max === 90) return elapsed >= min                    // "78-90+": end of match incl. ET
+  return elapsed >= min && elapsed <= max
+}
+
 const PEN_RANGES = [
   { label: '1-17',   min: 1,  max: 17 },
   { label: '46-62',  min: 46, max: 62 },
@@ -598,19 +606,45 @@ export default function PredictPage() {
                             <span className="penalty-range-arrow">▼</span>
                           </button>
                         </>
-                      ) : m.penalty_minute != null ? (
-                        <div className="penalty-result">
-                          <span>פנדל בדקה {m.penalty_minute} — </span>
-                          {g.penMin && g.penMax && m.penalty_minute >= parseInt(g.penMin) && m.penalty_minute <= parseInt(g.penMax)
-                            ? <span className="pen-hit">✅ ניחוש מדויק! +3נק׳</span>
-                            : g.penMin && g.penMax
-                              ? <span className="pen-miss">❌ ניחשת {PEN_RANGES.find(r => r.min === parseInt(g.penMin) && r.max === parseInt(g.penMax))?.label ?? `${g.penMin}–${g.penMax}`}</span>
-                              : <span className="pen-no">לא ניחשת</span>}
-                        </div>
+                      ) : (() => {
+                        // Parse penalty events (new multi-penalty format)
+                        const penEvents = (() => {
+                          try { return JSON.parse(m.penalty_events || '[]') } catch { return [] }
+                        })()
+                        // Fallback to legacy penalty_minute
+                        const allPens = penEvents.length > 0
+                          ? penEvents
+                          : m.penalty_minute != null ? [{ e: m.penalty_minute, x: null }] : []
+
+                        if (allPens.length === 0) return null
+
+                        const hasPred = g.penMin && g.penMax
+                        const hits = hasPred
+                          ? allPens.filter(p => checkPenaltyInRange(p.e, p.x, g.penMin, g.penMax)).length
+                          : 0
+                        const bonus = hits * 3
+                        const minutesStr = allPens.map(p => `${p.e}${p.x ? `+${p.x}` : ''}`).join(', ')
+                        const rangeLabel = hasPred
+                          ? (PEN_RANGES.find(r => r.min === parseInt(g.penMin) && r.max === parseInt(g.penMax))?.label ?? `${g.penMin}-${g.penMax}`)
+                          : null
+
+                        return (
+                          <div className="penalty-result">
+                            <span>{allPens.length > 1 ? 'פנדלים בדקות' : 'פנדל בדקה'} {minutesStr} — </span>
+                            {!hasPred
+                              ? <span className="pen-no">לא ניחשת</span>
+                              : bonus > 0
+                                ? <span className="pen-hit">✅ +{bonus}נק׳ ({hits > 1 ? `${hits} פנדלים בטווח` : 'ניחוש מדויק'})</span>
+                                : <span className="pen-miss">❌ ניחשת {rangeLabel}</span>}
+                          </div>
+                        )
+                      })()
                       ) : hasScore && finished ? (
                         <div className="penalty-result pen-no">לא היה פנדל לריאל במשחק זה</div>
                       ) : g.penMin && g.penMax ? (
-                        <div className="penalty-result pen-pending">🎯 ניחשת: {PEN_RANGES.find(r => r.min === parseInt(g.penMin) && r.max === parseInt(g.penMax))?.label ?? `${g.penMin}–${g.penMax}`}</div>
+                        <div className="penalty-result pen-pending">
+                          🎯 ניחשת: {PEN_RANGES.find(r => r.min === parseInt(g.penMin) && r.max === parseInt(g.penMax))?.label ?? `${g.penMin}-${g.penMax}`}
+                        </div>
                       ) : null}
                     </div>
                   )}

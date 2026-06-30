@@ -67,14 +67,29 @@ async function main() {
     if (isRMMatch && isActive) {
       try {
         const events = await api(`/fixtures/events?fixture=${extId}`)
-        const penalty = events.find(e =>
+
+        // All SCORED Real Madrid penalties
+        const scored = events.filter(e =>
           e.type === 'Goal' &&
           e.detail === 'Penalty' &&
           e.team?.id === REAL_MADRID_ID
         )
-        if (penalty) {
-          update.penalty_minute = penalty.time?.elapsed
+
+        // De-duplicate by elapsed+extra (guards against API duplicate events;
+        // retaken penalties appear as Missed then Scored — Scored fires only once)
+        const seen = new Set()
+        const penalties = []
+        for (const pen of scored) {
+          const key = `${pen.time?.elapsed}-${pen.time?.extra ?? ''}`
+          if (!seen.has(key)) {
+            seen.add(key)
+            penalties.push({ e: pen.time?.elapsed, x: pen.time?.extra ?? null })
+          }
         }
+
+        update.penalty_events = JSON.stringify(penalties)
+        // Keep penalty_minute (first scored) for backward compat
+        if (penalties.length > 0) update.penalty_minute = penalties[0].e
       } catch (e) {
         console.warn(`Could not fetch events for ${extId}:`, e.message)
       }

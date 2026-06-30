@@ -47,6 +47,7 @@ alter table matches add column if not exists external_id    bigint unique;
 alter table matches add column if not exists status         text default 'NS';
 alter table matches add column if not exists is_special     boolean default false;
 alter table matches add column if not exists penalty_minute int;
+alter table matches add column if not exists penalty_events jsonb default '[]'::jsonb;
 
 -- פונקציה לבדיקה אם משחק נעול (שעה לפני קיקאוף)
 create or replace function is_match_locked(kickoff timestamptz)
@@ -313,31 +314,77 @@ create policy "avatars_update" on storage.objects
   );
 
 -- =====================================================
--- 13. PENALTY BONUS — כשמוגדר penalty_minute על משחק ריאל מדריד
+-- 13. PENALTY BONUS — כשמוגדר penalty_events על משחק ריאל מדריד
 -- =====================================================
 alter table predictions add column if not exists penalty_min   int;
 alter table predictions add column if not exists penalty_max   int;
 alter table predictions add column if not exists penalty_bonus int default 0;
 
+-- Helper: האם פנדל בדקה p_elapsed (עם תוספת p_extra) נמצא בטווח שבחר המשתמש?
+-- max=45  → "33-45+" = כולל תוספת זמן מחצית ראשונה (elapsed≤45 בכל extra)
+-- max=90  → "78-90+" = כולל תוספת זמן + מאריכים (elapsed≥78 ללא הגבלה)
+-- שאר הטווחים: בדיקה רגילה של elapsed
+create or replace function penalty_in_range(
+  p_elapsed int, p_extra int, range_min int, range_max int
+) returns boolean language plpgsql immutable as $$
+begin
+  if range_max = 45 then
+    return p_elapsed >= range_min and p_elapsed <= 45;
+  end if;
+  if range_max = 90 then
+    return p_elapsed >= range_min;
+  end if;
+  return p_elapsed >= range_min and p_elapsed <= range_max;
+end;
+$$;
+
+-- טריגר: מחשב penalty_bonus לכל ניחוש כשמתעדכן penalty_events (או penalty_minute לאחורה)
 create or replace function update_penalty_bonus()
 returns trigger language plpgsql security definer as $$
+declare
+  pred       record;
+  ev         jsonb;
+  p_elapsed  int;
+  p_extra    int;
+  hits       int;
+  eff_events jsonb;
 begin
-  if new.penalty_minute is not null then
-    update predictions
-    set penalty_bonus = case
-      when penalty_min is not null and penalty_max is not null
-        and new.penalty_minute between penalty_min and penalty_max then 3
-      else 0
-    end
-    where match_id = new.id;
+  -- eff_events: מועדף penalty_events; fallback ל-penalty_minute (אחורה תאימות)
+  if jsonb_array_length(coalesce(new.penalty_events, '[]'::jsonb)) > 0 then
+    eff_events := new.penalty_events;
+  elsif new.penalty_minute is not null then
+    eff_events := jsonb_build_array(jsonb_build_object('e', new.penalty_minute, 'x', null::int));
+  else
+    eff_events := '[]'::jsonb;
   end if;
+
+  for pred in
+    select id, penalty_min, penalty_max from predictions where match_id = new.id
+  loop
+    if pred.penalty_min is null or pred.penalty_max is null then
+      update predictions set penalty_bonus = 0 where id = pred.id;
+      continue;
+    end if;
+
+    hits := 0;
+    for ev in select * from jsonb_array_elements(eff_events) loop
+      p_elapsed := (ev->>'e')::int;
+      p_extra   := nullif(ev->>'x', 'null')::int;
+      if penalty_in_range(p_elapsed, p_extra, pred.penalty_min, pred.penalty_max) then
+        hits := hits + 1;
+      end if;
+    end loop;
+
+    update predictions set penalty_bonus = hits * 3 where id = pred.id;
+  end loop;
+
   return new;
 end;
 $$;
 
 drop trigger if exists on_penalty_scored on matches;
 create trigger on_penalty_scored
-  after update of penalty_minute on matches
+  after update of penalty_minute, penalty_events on matches
   for each row execute function update_penalty_bonus();
 
 -- =====================================================
