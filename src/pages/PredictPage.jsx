@@ -606,17 +606,22 @@ export default function PredictPage() {
                             <span className="penalty-range-arrow">▼</span>
                           </button>
                         </>
-                      ) : (() => {
-                        // Parse penalty events (new multi-penalty format)
+                      ) : hasScore ? (() => {
                         const penEvents = (() => {
-                          try { return JSON.parse(m.penalty_events || '[]') } catch { return [] }
+                          try {
+                            const raw = m.penalty_events
+                            return Array.isArray(raw) ? raw : JSON.parse(raw || '[]')
+                          } catch { return [] }
                         })()
-                        // Fallback to legacy penalty_minute
                         const allPens = penEvents.length > 0
                           ? penEvents
                           : m.penalty_minute != null ? [{ e: m.penalty_minute, x: null }] : []
 
-                        if (allPens.length === 0) return null
+                        if (allPens.length === 0) {
+                          return finished
+                            ? <div className="penalty-result pen-no">לא היה פנדל לריאל במשחק זה</div>
+                            : null
+                        }
 
                         const hasPred = g.penMin && g.penMax
                         const hits = hasPred
@@ -638,10 +643,7 @@ export default function PredictPage() {
                                 : <span className="pen-miss">❌ ניחשת {rangeLabel}</span>}
                           </div>
                         )
-                      })()
-                      ) : hasScore && finished ? (
-                        <div className="penalty-result pen-no">לא היה פנדל לריאל במשחק זה</div>
-                      ) : g.penMin && g.penMax ? (
+                      })() : g.penMin && g.penMax ? (
                         <div className="penalty-result pen-pending">
                           🎯 ניחשת: {PEN_RANGES.find(r => r.min === parseInt(g.penMin) && r.max === parseInt(g.penMax))?.label ?? `${g.penMin}-${g.penMax}`}
                         </div>
