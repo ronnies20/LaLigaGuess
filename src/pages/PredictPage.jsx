@@ -197,9 +197,6 @@ export default function PredictPage() {
   const [missedRound, setMissedRound]           = useState(null)
   const [trashUnlocked, setTrashUnlocked]       = useState(false)
   const [trashMessages, setTrashMessages]       = useState([])
-  const [jokerHolding, setJokerHolding]         = useState(null)
-  const [jokerHoldPct, setJokerHoldPct]         = useState(0)
-  const jokerHoldRef          = useRef(null)
   const saveBtnRef            = useRef(null)
   const celebratedRef         = useRef(getCelebrated(user.id))
 
@@ -415,31 +412,9 @@ export default function PredictPage() {
     })
   }, [matches, guesses])
 
-  function startJokerHold(matchId) {
-    if (jokerHoldRef.current) return
-    let tickCount = 0
-    const startTime = Date.now()
-    const HOLD_MS = 2200
-    setJokerHolding(matchId)
-    setJokerHoldPct(0)
-    jokerHoldRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime
-      const pct = Math.min(100, (elapsed / HOLD_MS) * 100)
-      setJokerHoldPct(pct)
-      const newTick = Math.floor(elapsed / 550)
-      if (newTick > tickCount) { tickCount = newTick; playJokerRitual(newTick - 1) }
-      if (elapsed >= HOLD_MS) {
-        clearInterval(jokerHoldRef.current); jokerHoldRef.current = null
-        setJokerHolding(null); setJokerHoldPct(0)
-        setJokerMatchId(matchId)
-        playJokerActivate()
-      }
-    }, 30)
-  }
-
-  function cancelJokerHold() {
-    if (jokerHoldRef.current) { clearInterval(jokerHoldRef.current); jokerHoldRef.current = null }
-    setJokerHolding(null); setJokerHoldPct(0)
+  function activateJoker(matchId) {
+    setJokerMatchId(matchId)
+    playJokerActivate()
   }
 
   async function activateStreakShield() {
@@ -570,6 +545,21 @@ export default function PredictPage() {
   const isUrgent = lockCountdown !== null && lockCountdown < 3600
   const isCritical = lockCountdown !== null && lockCountdown < 600
 
+  // Single headline status banner — only the most relevant message is shown
+  // at a time, picked in priority order, instead of stacking every banner.
+  const streakAtRisk = userStreak >= 1 && openMatches.length > 0 && predictedCount === 0
+  const headline =
+    streakAtRisk                                  ? 'streak-risk' :
+    missedRound && round === currentRound         ? 'missed-round' :
+    round >= 34                                   ? 'phase-sprint' :
+    (round >= 20 && round < 34)                   ? 'phase-two' :
+    userStreak >= 5                               ? 'streak5' :
+    userStreak === 4                              ? 'streak4' :
+    userStreak === 3                              ? 'streak3' :
+    hasRoundResults                               ? 'round-pts' :
+    (userStreak >= 1 && userStreak <= 2)          ? 'streak-mini' :
+    null
+
   return (
     <div className="page">
       <div className="content">
@@ -580,16 +570,16 @@ export default function PredictPage() {
           <button className="round-nav-btn" onClick={() => setRound(r => r >= TOTAL_ROUNDS ? 1 : r + 1)}>›</button>
         </div>
 
-        {/* Phase banner — appears from round 20 */}
-        {round >= 34 && (
+        {/* Headline status banner — phase */}
+        {headline === 'phase-sprint' && (
           <div className="phase-banner phase-sprint">⚡ ספרינט! {38 - round + 1} מחזורים אחרונים — מדויק = 7 נק׳, כיוון = 3 נק׳</div>
         )}
-        {round >= 20 && round < 34 && (
+        {headline === 'phase-two' && (
           <div className="phase-banner phase-two">🔥 פאזה 2 — מדויק = 5 נק׳, כיוון = 2 נק׳</div>
         )}
 
-        {/* Missed round loss framing */}
-        {missedRound && round === currentRound && (
+        {/* Headline status banner — missed round loss framing */}
+        {headline === 'missed-round' && (
           <div className="missed-round-card">
             <div className="missed-round-main">
               <span className="missed-round-icon">😤</span>
@@ -624,8 +614,8 @@ export default function PredictPage() {
           </div>
         )}
 
-        {/* Round points from finished matches */}
-        {hasRoundResults && (
+        {/* Headline status banner — round points from finished matches */}
+        {headline === 'round-pts' && (
           <div className="round-pts-chip">
             📊 {roundPts > 0 ? '+' : ''}{roundPts} נק׳ במחזור {round}
           </div>
@@ -668,34 +658,34 @@ export default function PredictPage() {
             : <div className="trash-fomo-card">👀 שמור ניחושים כדי לגלות מה אחרים כתבו...</div>
         )}
 
-        {/* Streak at risk warning */}
-        {userStreak >= 1 && openMatches.length > 0 && predictedCount === 0 && (
+        {/* Headline status banner — streak at risk warning */}
+        {headline === 'streak-risk' && (
           <div className="streak-risk-banner">
             <div>⚠️ יש לך סטרייק של {userStreak} {'🔥'.repeat(Math.min(userStreak,5))} — נחש לפני הנעילה כדי לשמור עליו!</div>
             {profile?.streak_shield !== false ? (
-              <button className="shield-btn" onPointerDown={e => { e.preventDefault(); activateStreakShield() }}>🛡️ הפעל מגן</button>
+              <button className="shield-btn" onClick={() => activateStreakShield()}>🛡️ הפעל מגן</button>
             ) : (
               <span className="shield-used-tag">🛡️ מגן נוצל</span>
             )}
           </div>
         )}
 
-        {userStreak >= 1 && userStreak <= 2 && !(openMatches.length > 0 && predictedCount === 0) && (
+        {headline === 'streak-mini' && (
           <div className="streak-mini">
             {'🔥'.repeat(userStreak)} {userStreak} ברצף — עוד {3 - userStreak} לבונוס
           </div>
         )}
-        {userStreak === 3 && (
+        {headline === 'streak3' && (
           <div className="streak-banner streak-warning">
             🔥🔥🔥 3 ניחושים ברצף! הניחוש המדויק הבא יהיה שווה <strong>5 נקודות</strong>
           </div>
         )}
-        {userStreak === 4 && (
+        {headline === 'streak4' && (
           <div className="streak-banner streak-bonus">
             🔥🔥🔥🔥 4 ברצף! ניחוש מדויק הבא = <strong>6 נקודות</strong>
           </div>
         )}
-        {userStreak >= 5 && (
+        {headline === 'streak5' && (
           <div className="streak-banner streak-bonus">
             {'🔥'.repeat(Math.min(userStreak, 6))} {userStreak} ברצף! ניחוש מדויק = <strong>6 נקודות</strong> 🎯
           </div>
@@ -809,17 +799,10 @@ export default function PredictPage() {
                     </div>
                     {!effectiveLocked ? (
                       <button
-                        className={`joker-side-btn${isThisJoker ? ' joker-active' : ''}${jokerTaken ? ' joker-taken' : ''}${jokerHolding === m.id ? ' joker-holding' : ''}`}
-                        style={{ touchAction: 'none', userSelect: 'none', position: 'relative', overflow: 'hidden' }}
-                        onPointerDown={e => { e.preventDefault(); isThisJoker ? setJokerMatchId(null) : (!jokerTaken && startJokerHold(m.id)) }}
-                        onPointerUp={cancelJokerHold}
-                        onPointerLeave={cancelJokerHold}
-                        onPointerCancel={cancelJokerHold}
-                        title={isThisJoker ? 'לחץ להסרת ג׳וקר' : 'לחץ ממושך להפעלת ג׳וקר'}
+                        className={`joker-side-btn${isThisJoker ? ' joker-active' : ''}${jokerTaken ? ' joker-taken' : ''}`}
+                        onClick={() => { isThisJoker ? setJokerMatchId(null) : (!jokerTaken && activateJoker(m.id)) }}
+                        title={isThisJoker ? 'לחץ להסרת ג׳וקר' : 'לחץ להפעלת ג׳וקר'}
                       >
-                        {jokerHolding === m.id && (
-                          <div className="joker-hold-bar" style={{ width: `${jokerHoldPct}%` }} />
-                        )}
                         <span>🃏</span>
                         <span className="joker-side-label">{isThisJoker ? 'ג׳וקר' : 'לחץ'}</span>
                       </button>

@@ -156,18 +156,7 @@ export function playTick() {
   } catch {}
 }
 
-// Joker hold ritual — rising tension tick during hold
-export function playJokerRitual(tickNum = 0) {
-  try {
-    const c = getCtx(); const t = c.currentTime
-    const freqs = [110, 147, 196, 262]
-    const f = freqs[Math.min(tickNum, freqs.length - 1)]
-    note(c, f, t, 0.12, 0.12, 'sawtooth')
-    noise(c, t, 0.05, 150, 0.06)
-  } catch {}
-}
-
-// Joker successfully activated after hold
+// Joker activated
 export function playJokerActivate() {
   try {
     const c = getCtx(); const t = c.currentTime
