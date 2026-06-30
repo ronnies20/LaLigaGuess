@@ -216,8 +216,11 @@ create policy "profiles_update" on profiles for update using (auth.uid() = id);
 -- Matches: כולם יכולים לקרוא
 create policy "matches_select" on matches for select using (true);
 
--- Predictions: כל אחד רואה הכל, שומר רק את שלו + לא יכול לשנות אחרי נעילה
-create policy "predictions_select" on predictions for select using (true);
+-- Predictions: גלוי לבעלים בלבד לפני נעילה, לכולם אחרי נעילה
+create policy "predictions_select" on predictions for select using (
+  auth.uid() = user_id
+  or (select is_match_locked(kickoff) from matches where id = match_id)
+);
 create policy "predictions_insert" on predictions for insert
   with check (
     auth.uid() = user_id
@@ -228,6 +231,14 @@ create policy "predictions_update" on predictions for update
   with check (
     not (select is_match_locked(kickoff) from matches where id = match_id)
   );
+
+-- Column-level: מניעת כתיבה ישירה לנקודות (מחושב ע"י trigger בלבד)
+revoke update on predictions from authenticated;
+grant  update (home_guess, away_guess, is_joker, penalty_min, penalty_max)
+  on predictions to authenticated;
+revoke insert on predictions from authenticated;
+grant  insert (user_id, match_id, home_guess, away_guess, is_joker, penalty_min, penalty_max)
+  on predictions to authenticated;
 
 -- 8. VIEW: רצף נוכחי — לפי דיוק אמיתי (לא לפי נקודות, כי ניחוש בסטרייק שווה 5/6)
 create or replace view current_streak_view as
@@ -387,6 +398,35 @@ drop trigger if exists on_penalty_scored on matches;
 create trigger on_penalty_scored
   after update of penalty_minute, penalty_events on matches
   for each row execute function update_penalty_bonus();
+
+-- =====================================================
+-- 14. SECURITY: ג'וקר אחד בלבד למחזור
+-- =====================================================
+create or replace function check_joker_uniqueness()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  existing_count int;
+begin
+  if new.is_joker then
+    select count(*) into existing_count
+    from predictions p
+    join matches m on m.id = p.match_id
+    where p.user_id = new.user_id
+      and p.is_joker = true
+      and p.id != new.id
+      and m.round = (select round from matches where id = new.match_id);
+    if existing_count > 0 then
+      raise exception 'ג''וקר כבר נוצל במחזור זה';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists enforce_joker_uniqueness on predictions;
+create trigger enforce_joker_uniqueness
+  before insert or update on predictions
+  for each row execute function check_joker_uniqueness();
 
 -- =====================================================
 -- 10. ROUND MESSAGES (טראש טוק)
