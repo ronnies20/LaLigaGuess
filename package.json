@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test:db": "node scripts/tests/run-tests.js",
     "seed:test": "node scripts/tests/seed-db.js",
-    "seed:test:clean": "node scripts/tests/seed-db.js --cleanup"
+    "seed:test:clean": "node scripts/tests/seed-db.js --cleanup",
+    "live:simulate": "node scripts/tests/simulate-live.js",
+    "live:reset": "node scripts/tests/simulate-live.js --reset"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
