@@ -1,12 +1,11 @@
-const { FOOTBALL_DATA_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env
+const { API_FOOTBALL_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env
 
-const BASE_URL = 'https://api.football-data.org/v4'
-const COMP     = 'PD'
-const SEASON   = 2026
+const LEAGUE = 140  // La Liga
+const SEASON = 2026
 
 function shouldRun() {
-  const now  = new Date()
-  const day  = now.getUTCDay()
+  const now = new Date()
+  const day  = now.getUTCDay()   // 0=Sun 1=Mon 5=Fri 6=Sat
   const hour = now.getUTCHours()
   const min  = now.getUTCMinutes()
 
@@ -23,44 +22,41 @@ function shouldRun() {
 
 async function main() {
   if (!shouldRun()) return console.log('Outside match window — skipping')
-
   const from = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const to   = new Date().toISOString().split('T')[0]
+  const to = new Date().toISOString().split('T')[0]
 
   const res = await fetch(
-    `${BASE_URL}/competitions/${COMP}/matches?season=${SEASON}&status=FINISHED&dateFrom=${from}&dateTo=${to}`,
-    { headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY } }
+    `https://v3.football.api-sports.io/fixtures?league=${LEAGUE}&season=${SEASON}&from=${from}&to=${to}&status=FT`,
+    { headers: { 'x-apisports-key': API_FOOTBALL_KEY } }
   )
+  const { response } = await res.json()
 
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`)
+  if (!response?.length) return console.log('No finished matches')
 
-  const json = await res.json()
-  const matches = json.matches || []
+  console.log(`Updating ${response.length} results`)
 
-  if (!matches.length) return console.log('No finished matches')
-
-  console.log(`Updating ${matches.length} results`)
-
-  for (const m of matches) {
+  for (const f of response) {
     const update = await fetch(
-      `${SUPABASE_URL}/rest/v1/matches?external_id=eq.${m.id}`,
+      `${SUPABASE_URL}/rest/v1/matches?external_id=eq.${f.fixture.id}`,
       {
         method: 'PATCH',
         headers: {
-          'apikey':        SUPABASE_SERVICE_KEY,
+          'apikey': SUPABASE_SERVICE_KEY,
           'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-          'Content-Type':  'application/json',
-          'Prefer':        'return=minimal',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
         },
         body: JSON.stringify({
-          home_score: m.score.fullTime.home,
-          away_score: m.score.fullTime.away,
-          status:     'FT',
+          home_score: f.goals.home,
+          away_score: f.goals.away,
         }),
       }
     )
-    if (!update.ok) console.error(`Failed ${m.id}: ${await update.text()}`)
-    else console.log(`${m.homeTeam.name} ${m.score.fullTime.home}-${m.score.fullTime.away} ${m.awayTeam.name}`)
+    if (!update.ok) {
+      console.error(`Failed ${f.fixture.id}: ${await update.text()}`)
+    } else {
+      console.log(`${f.teams.home.name} ${f.goals.home}-${f.goals.away} ${f.teams.away.name}`)
+    }
   }
 }
 

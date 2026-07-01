@@ -1,61 +1,46 @@
-const { FOOTBALL_DATA_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env
+const { API_FOOTBALL_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env
 
-const BASE_URL  = 'https://api.football-data.org/v4'
-const COMP      = 'PD'   // La Liga
-const SEASON    = 2026   // 2026/27
+const LEAGUE = 140  // La Liga
+const SEASON = 2026
 
 const TEAM_MAP = {
-  'Athletic Club':                  'Athletic Club',
-  'Club Atlético de Madrid':        'Atletico Madrid',
-  'FC Barcelona':                   'Barcelona',
-  'Real Madrid CF':                 'Real Madrid',
-  'Sevilla FC':                     'Sevilla',
-  'Valencia CF':                    'Valencia',
-  'Villarreal CF':                  'Villarreal',
-  'Real Betis Balompié':            'Real Betis',
-  'Real Sociedad de Fútbol':        'Real Sociedad',
-  'CA Osasuna':                     'Osasuna',
-  'Getafe CF':                      'Getafe',
-  'Rayo Vallecano de Madrid':       'Rayo Vallecano',
-  'RC Celta de Vigo':               'Celta Vigo',
-  'Celta de Vigo':                  'Celta Vigo',
-  'RCD Mallorca':                   'Mallorca',
-  'UD Las Palmas':                  'Las Palmas',
-  'Girona FC':                      'Girona',
-  'RCD Espanyol de Barcelona':      'Espanyol',
-  'Deportivo Alavés':               'Alaves',
-  'CD Leganés':                     'Leganes',
-  'Real Valladolid CF':             'Valladolid',
-  'Real Valladolid':                'Valladolid',
+  'Deportivo Alaves': 'Alaves',
+  'Real Valladolid': 'Valladolid',
+  'Celta de Vigo': 'Celta Vigo',
 }
 
 function normalize(name) {
   return TEAM_MAP[name] || name
 }
 
+function parseRound(str) {
+  const m = str.match(/(\d+)$/)
+  return m ? parseInt(m[1]) : null
+}
+
 async function main() {
   const res = await fetch(
-    `${BASE_URL}/competitions/${COMP}/matches?season=${SEASON}`,
-    { headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY } }
+    `https://v3.football.api-sports.io/fixtures?league=${LEAGUE}&season=${SEASON}`,
+    { headers: { 'x-apisports-key': API_FOOTBALL_KEY } }
   )
-
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`)
-
   const json = await res.json()
-  const matches = json.matches || []
 
-  if (!matches.length) return console.log('No fixtures found')
+  if (json.errors && Object.keys(json.errors).length) {
+    console.error('API errors:', JSON.stringify(json.errors))
+    process.exit(1)
+  }
 
-  console.log(`Found ${matches.length} total fixtures`)
+  const response = json.response || []
+  if (!response.length) return console.log('No fixtures found')
 
-  const rows = matches
-    .filter(m => ['SCHEDULED', 'TIMED'].includes(m.status))
-    .map(m => ({
-      external_id: m.id,
-      round:       m.matchday,
-      home_team:   normalize(m.homeTeam.name),
-      away_team:   normalize(m.awayTeam.name),
-      kickoff:     m.utcDate,
+  const rows = response
+    .filter(f => f.fixture.status.short === 'NS')
+    .map(f => ({
+      external_id: f.fixture.id,
+      round: parseRound(f.league.round),
+      home_team: normalize(f.teams.home.name),
+      away_team: normalize(f.teams.away.name),
+      kickoff: new Date(f.fixture.timestamp * 1000).toISOString(),
     }))
     .filter(r => r.round)
 
@@ -64,10 +49,10 @@ async function main() {
   const upsert = await fetch(`${SUPABASE_URL}/rest/v1/matches?on_conflict=external_id`, {
     method: 'POST',
     headers: {
-      'apikey':        SUPABASE_SERVICE_KEY,
+      'apikey': SUPABASE_SERVICE_KEY,
       'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-      'Content-Type':  'application/json',
-      'Prefer':        'resolution=merge-duplicates',
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates',
     },
     body: JSON.stringify(rows),
   })
