@@ -519,18 +519,21 @@ body {
 }
 .float-label {
   position: absolute;
-  top: -28px;
+  top: -32px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
   white-space: nowrap;
+  direction: rtl;
+  unicode-bidi: isolate;
   animation: floatUp 1.3s ease forwards;
   pointer-events: none;
   z-index: 10;
+  letter-spacing: 0.3px;
 }
-.near-miss-label { color: #ff9800; }
-.reversed-label  { color: #f44336; }
+.near-miss-label { color: #ff9800; text-shadow: 0 0 10px rgba(255,152,0,0.5); }
+.reversed-label  { color: #f44336; text-shadow: 0 0 10px rgba(244,67,54,0.5); }
 
 /* ---- Trash Talk ---- */
 .trash-card { padding: 12px 14px; }

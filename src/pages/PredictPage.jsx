@@ -752,8 +752,8 @@ export default function PredictPage() {
                           <div className="result-col">
                             <span className="result-col-label">ניחוש</span>
                             <div style={{ position: 'relative' }}>
-                              {matchAnims[m.id] === 'near-miss' && <span className="float-label near-miss-label">{nearMissLabel}</span>}
-                              {matchAnims[m.id] === 'reversed' && <span className="float-label reversed-label">הפוך! 💀</span>}
+                              {matchAnims[m.id] === 'near-miss' && <span dir="rtl" className="float-label near-miss-label">{nearMissLabel}</span>}
+                              {matchAnims[m.id] === 'reversed' && <span dir="rtl" className="float-label reversed-label">הפוך! 💀</span>}
                               <div className={`guess-chip ${guessClass}${matchAnims[m.id] ? ' ' + matchAnims[m.id] + '-anim' : ''}`}>{hasGuess ? `${g.h}:${g.a}` : '—'}</div>
                             </div>
                           </div>
