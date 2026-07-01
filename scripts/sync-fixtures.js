@@ -1,7 +1,7 @@
 const { API_FOOTBALL_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env
 
 const LEAGUE = 140  // La Liga
-const SEASON = 2026
+const SEASON = 2025
 
 const TEAM_MAP = {
   'Deportivo Alaves': 'Alaves',
@@ -26,6 +26,8 @@ async function main() {
   const { response } = await res.json()
 
   if (!response?.length) return console.log('No fixtures found')
+
+  console.log(`API returned ${response.length} total fixtures (season ${SEASON})`)
 
   const rows = response
     .filter(f => f.fixture.status.short === 'NS')
