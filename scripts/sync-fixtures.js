@@ -23,8 +23,12 @@ async function main() {
     `https://v3.football.api-sports.io/fixtures?league=${LEAGUE}&season=${SEASON}`,
     { headers: { 'x-apisports-key': API_FOOTBALL_KEY } }
   )
-  const { response } = await res.json()
+  const json = await res.json()
+  console.log('HTTP status:', res.status)
+  console.log('errors:', JSON.stringify(json.errors))
+  console.log('results:', json.results)
 
+  const response = json.response
   if (!response?.length) return console.log('No fixtures found')
 
   console.log(`API returned ${response.length} total fixtures (season ${SEASON})`)
