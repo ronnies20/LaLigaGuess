@@ -348,46 +348,48 @@ export default function PredictPage() {
 
   useEffect(() => {
     if (!matches.length || !Object.keys(guesses).length) return
-    let delay = 0
+    // Start 800ms after data loads so the UI has time to render before any effect fires
+    let delay = 800
     matches.forEach(m => {
       if (m.home_score === null || celebratedRef.current.has(m.id)) return
-      if (isMatchLive(m.status)) return  // don't celebrate during live
+      if (isMatchLive(m.status)) return
       const g = guesses[m.id]
       if (!g || g.h === '' || g.a === '') return
       const pts = g.pts ?? null
       if (pts === null) return
+      // Mark as celebrated synchronously so re-renders don't double-fire
       celebratedRef.current.add(m.id)
       markCelebrated(m.id, user.id)
       const mid = m.id
       if (pts >= 10) {
         setTimeout(() => {
           playJackpotSound(); fireConfetti()
-          setTimeout(() => { playJackpotSound(); fireConfetti() }, 250)
-          setTimeout(() => { playJackpotSound(); fireConfetti() }, 500)
+          setTimeout(() => { playJackpotSound(); fireConfetti() }, 280)
+          setTimeout(() => { playJackpotSound(); fireConfetti() }, 560)
         }, delay)
-        delay += 1200
+        delay += 1400
       } else if (pts >= 5) {
         setTimeout(() => {
           playJackpotSound(); fireConfetti()
-          setTimeout(() => { playJackpotSound(); fireConfetti() }, 350)
+          setTimeout(() => { playJackpotSound(); fireConfetti() }, 380)
         }, delay)
-        delay += 900
+        delay += 1100
       } else if (pts === 3) {
         setTimeout(() => {
           playJackpotSound(); fireConfetti()
           spawnParticles(window.innerWidth / 2, window.innerHeight * 0.42)
         }, delay)
-        delay += 700
+        delay += 900
       } else if (pts === 1 || pts === 2) {
         setTimeout(playCoinSound, delay)
-        delay += 250
+        delay += 500
       } else if (pts < 0) {
         setTimeout(() => {
           playReversedSound()
           setMatchAnims(a => ({ ...a, [mid]: 'reversed' }))
           setTimeout(() => setMatchAnims(a => { const n = { ...a }; delete n[mid]; return n }), 1600)
         }, delay)
-        delay += 700
+        delay += 900
       } else {
         const hg = parseInt(g.h), ag = parseInt(g.a)
         const isReversed = hg === m.away_score && ag === m.home_score
@@ -399,14 +401,14 @@ export default function PredictPage() {
             setMatchAnims(a => ({ ...a, [mid]: 'reversed' }))
             setTimeout(() => setMatchAnims(a => { const n = { ...a }; delete n[mid]; return n }), 1600)
           }, delay)
-          delay += 700
+          delay += 900
         } else if (isNearMiss) {
           setTimeout(() => {
             playNearMissSound()
             setMatchAnims(a => ({ ...a, [mid]: 'near-miss' }))
             setTimeout(() => setMatchAnims(a => { const n = { ...a }; delete n[mid]; return n }), 1300)
           }, delay)
-          delay += 600
+          delay += 800
         }
       }
     })

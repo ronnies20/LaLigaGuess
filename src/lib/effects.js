@@ -1,37 +1,36 @@
+let _ctx = null
+function getCtx() {
+  if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)()
+  if (_ctx.state === 'suspended') _ctx.resume()
+  return _ctx
+}
+
 export function playCoinSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
+    const ctx = getCtx(); const t = ctx.currentTime
+    const osc = ctx.createOscillator(); const gain = ctx.createGain()
+    osc.connect(gain); gain.connect(ctx.destination)
     osc.type = 'triangle'
-    osc.frequency.setValueAtTime(1400, ctx.currentTime)
-    osc.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.08)
-    gain.gain.setValueAtTime(0.3, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22)
-    osc.start()
-    osc.stop(ctx.currentTime + 0.25)
+    osc.frequency.setValueAtTime(1400, t)
+    osc.frequency.exponentialRampToValueAtTime(700, t + 0.08)
+    gain.gain.setValueAtTime(0.3, t)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22)
+    osc.start(t); osc.stop(t + 0.25)
   } catch {}
 }
 
 export function playJackpotSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const notes = [523, 659, 784, 1047, 1318]
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.value = freq
-      const t = ctx.currentTime + i * 0.1
-      gain.gain.setValueAtTime(0, t)
-      gain.gain.linearRampToValueAtTime(0.25, t + 0.03)
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3)
-      osc.start(t)
-      osc.stop(t + 0.35)
+    const ctx = getCtx(); const t = ctx.currentTime
+    ;[523, 659, 784, 1047, 1318].forEach((freq, i) => {
+      const osc = ctx.createOscillator(); const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = 'sine'; osc.frequency.value = freq
+      const st = t + i * 0.1
+      gain.gain.setValueAtTime(0, st)
+      gain.gain.linearRampToValueAtTime(0.25, st + 0.03)
+      gain.gain.exponentialRampToValueAtTime(0.001, st + 0.3)
+      osc.start(st); osc.stop(st + 0.35)
     })
   } catch {}
 }
@@ -93,37 +92,29 @@ export function fireConfetti(originX, originY) {
 
 export function playNearMissSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
+    const ctx = getCtx(); const t = ctx.currentTime
+    const osc = ctx.createOscillator(); const gain = ctx.createGain()
+    osc.connect(gain); gain.connect(ctx.destination)
     osc.type = 'sine'
-    osc.frequency.setValueAtTime(880, ctx.currentTime)
-    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.45)
-    gain.gain.setValueAtTime(0.2, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
-    osc.start()
-    osc.stop(ctx.currentTime + 0.5)
+    osc.frequency.setValueAtTime(880, t)
+    osc.frequency.exponentialRampToValueAtTime(440, t + 0.45)
+    gain.gain.setValueAtTime(0.2, t)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5)
+    osc.start(t); osc.stop(t + 0.5)
   } catch {}
 }
 
 export function playReversedSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const notes = [400, 330, 280, 220]
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.type = 'sawtooth'
-      osc.frequency.value = freq
-      const t = ctx.currentTime + i * 0.16
-      gain.gain.setValueAtTime(0.15, t)
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15)
-      osc.start(t)
-      osc.stop(t + 0.18)
+    const ctx = getCtx(); const t = ctx.currentTime
+    ;[400, 330, 280, 220].forEach((freq, i) => {
+      const osc = ctx.createOscillator(); const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = 'sawtooth'; osc.frequency.value = freq
+      const st = t + i * 0.16
+      gain.gain.setValueAtTime(0.15, st)
+      gain.gain.exponentialRampToValueAtTime(0.001, st + 0.15)
+      osc.start(st); osc.stop(st + 0.18)
     })
   } catch {}
 }
