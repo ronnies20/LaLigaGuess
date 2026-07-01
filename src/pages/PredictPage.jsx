@@ -451,11 +451,27 @@ export default function PredictPage() {
   async function saveAll() {
     setSaving(true)
     playSubmit()
-    let count = 0
-    for (const m of matches) {
-      if (isMatchLocked(m.kickoff) || m.home_score !== null) continue
+
+    // Pre-collect saveable matches so we can schedule arcade effects upfront
+    const toSave = matches.filter(m => {
+      if (isMatchLocked(m.kickoff) || m.home_score !== null) return false
       const g = guesses[m.id]
-      if (!g || g.h === '' || g.a === '') continue
+      return g && g.h != null && g.h !== '' && g.a != null && g.a !== ''
+    })
+
+    // Schedule all arcade effects immediately — staggered 200ms apart
+    toSave.forEach((m, i) => {
+      const mid = m.id
+      setTimeout(() => {
+        playCoinSound()
+        setMatchAnims(a => ({ ...a, [mid]: 'save-pop' }))
+        setTimeout(() => setMatchAnims(a => { const n = { ...a }; delete n[mid]; return n }), 900)
+      }, i * 200)
+    })
+
+    let count = 0
+    for (const m of toSave) {
+      const g = guesses[m.id]
       try {
         const penMin = g.penMin ? parseInt(g.penMin) : null
         const penMax = g.penMax ? parseInt(g.penMax) : null
@@ -464,7 +480,6 @@ export default function PredictPage() {
         setFlash(f => ({ ...f, [m.id]: true }))
         setTimeout(() => setFlash(f => ({ ...f, [m.id]: false })), 400)
         count++
-        setTimeout(playCoinSound, count * 90)
       } catch (err) { console.error(err) }
     }
     setDirty(new Set())
@@ -735,7 +750,7 @@ export default function PredictPage() {
                     {isCritical && ' — מהר!'}
                   </div>
                 )}
-                <div className={`card${isThisJoker ? ' joker-card' : ''}${m.is_special ? ' special-card' : ''}${live ? ' live-match-card' : ''}${goalFlash.has(m.id) ? ' goal-flash' : ''}`}>
+                <div className={`card${isThisJoker ? ' joker-card' : ''}${m.is_special ? ' special-card' : ''}${live ? ' live-match-card' : ''}${goalFlash.has(m.id) ? ' goal-flash' : ''}${matchAnims[m.id] === 'save-pop' ? ' save-pop-anim' : ''}`}>
                   {m.is_special && <div className="special-strip">⭐ משחק מיוחד — ניחוש שווה כפל נקודות</div>}
                   <div className="match-header">
                     <span className="match-date">

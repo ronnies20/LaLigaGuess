@@ -517,6 +517,17 @@ body {
   animation: reversedShake 0.8s ease;
   box-shadow: 0 0 18px rgba(244,67,54,0.9) !important;
 }
+@keyframes savePop {
+  0%   { transform: scale(1) translateX(0); }
+  18%  { transform: scale(1.045) translateX(-4px); box-shadow: 0 0 22px rgba(253,185,39,0.75); }
+  36%  { transform: scale(1.04)  translateX(4px);  box-shadow: 0 0 18px rgba(253,185,39,0.6); }
+  54%  { transform: scale(1.02)  translateX(-2px); box-shadow: 0 0 10px rgba(253,185,39,0.35); }
+  72%  { transform: scale(1.01)  translateX(1px); }
+  100% { transform: scale(1)     translateX(0); }
+}
+.card.save-pop-anim {
+  animation: savePop 0.75s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
 .float-label {
   position: absolute;
   top: -32px;
