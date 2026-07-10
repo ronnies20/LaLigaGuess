@@ -15,10 +15,15 @@ export const TEAMS = {
   'Mallorca':        { short: 'MAL', color: '#D4002A', bg: '#1a0002', initial: 'מ', logoId: 798 },
   'Las Palmas':      { short: 'LPA', color: '#FFDA00', bg: '#1a1400', initial: 'ל', logoId: 840 },
   'Girona':          { short: 'GIR', color: '#D4002A', bg: '#1a0002', initial: 'ג', logoId: 547 },
-  'Espanyol':        { short: 'ESP', color: '#4488CC', bg: '#001233', initial: 'א', logoId: 534, logoUrl: '/logos/espanyol.png' },
+  'Espanyol':        { short: 'ESP', color: '#4488CC', bg: '#001233', initial: 'א', logoId: 540 },
   'Alaves':          { short: 'ALA', color: '#5599CC', bg: '#001233', initial: 'א', logoId: 542 },
-  'Leganes':         { short: 'LEG', color: '#4477BB', bg: '#001233', initial: 'ל', logoId: 723 },
-  'Valladolid':      { short: 'VLL', color: '#9B6FD4', bg: '#0e0033', initial: 'ו', logoId: 720 },
+  'Leganes':              { short: 'LEG', color: '#4477BB', bg: '#001233', initial: 'ל', logoId: 723 },
+  'Valladolid':           { short: 'VLL', color: '#9B6FD4', bg: '#0e0033', initial: 'ו', logoId: 720 },
+  'Malaga':               { short: 'MLG', color: '#1A6FBF', bg: '#001233', initial: 'מ', logoId: 535 },
+  'Levante':              { short: 'LEV', color: '#C41E3A', bg: '#1a0002', initial: 'ל', logoId: 539 },
+  'Deportivo La Coruna':  { short: 'DEP', color: '#003DA5', bg: '#001233', initial: 'ד', logoId: 544 },
+  'Elche':                { short: 'ELC', color: '#2E7D32', bg: '#001a00', initial: 'א', logoId: 797 },
+  'Racing Santander':     { short: 'RAC', color: '#1B5E20', bg: '#001a00', initial: 'ר', logoId: 4665 },
 }
 
 export function getTeamInfo(name) {
@@ -49,7 +54,11 @@ export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = f
   const { exact, dir } = getPhaseBase(round)
   const isExact = homeGuess === homeReal && awayGuess === awayReal
   if (isJoker) {
-    if (!isExact) return streakBefore >= 4 ? -3 : -1
+    if (!isExact) {
+      const isDirCorrect = Math.sign(homeGuess - awayGuess) === Math.sign(homeReal - awayReal) && homeReal !== awayReal
+      if (isDirCorrect) return 0
+      return streakBefore >= 4 ? -3 : -1
+    }
     if (streakBefore >= 5) return exact * 2 + 3
     if (streakBefore >= 4) return exact * 2 + 1
     return exact * 2
@@ -77,13 +86,13 @@ export function isMatchLive(status)     { return LIVE_STATUSES.includes(status) 
 export function isMatchFinished(status) { return FINISHED_STATUSES.includes(status) }
 
 export function getStatusLabel(status) {
-  const map = { '1H':'מח׳ ראשונה', HT:'הפסקה', '2H':'מח׳ שנייה', ET:'הארכות', P:'פנדלים' }
+  const map = { '1H':'מח׳ ראשונה', HT:'הפסקה', '2H':'מח׳ שנייה', ET:'הארכות', P:'פנדלים', FT:'הסתיים', AET:'הסתיים', PEN:'הסתיים' }
   return map[status] || null
 }
 
 export function isMatchLocked(kickoff) {
   const kickoffDate = new Date(kickoff)
-  const lockTime = new Date(kickoffDate.getTime() - 60 * 60 * 1000)
+  const lockTime = new Date(kickoffDate.getTime() - 1 * 60 * 1000)
   return new Date() >= lockTime
 }
 

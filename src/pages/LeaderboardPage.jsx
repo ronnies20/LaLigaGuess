@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase, getCurrentRound, getRoundMessages, getPlayerHistory, getLiveMatchGuesses, getPlayerRoundPredictions } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import { getTeamInfo, LIVE_STATUSES } from '../lib/teams'
@@ -19,8 +19,8 @@ function getLiveColor(guess, matchInfo) {
 
 function PtsBadge({ pts, isJoker }) {
   if (pts === null || pts === undefined) return <span className="hst-pts-none">?</span>
-  if (isJoker && pts >= 6)  return <span className="hst-pts-exact">🃏{pts}</span>
-  if (isJoker && pts < 0)   return <span className="hst-pts-miss">🃏{pts}</span>
+  if (isJoker && pts >= 6)  return <span className="hst-pts-exact">{pts}</span>
+  if (isJoker && pts < 0)   return <span style={{ color: '#FF4444', fontWeight: 800, fontSize: 13 }}>{pts}</span>
   if (pts >= 5)             return <span className="hst-pts-exact">🔥{pts}</span>
   if (pts === 3)            return <span className="hst-pts-exact">{pts}</span>
   if (pts === 2)            return <span className="hst-pts-dir">⭐{pts}</span>
@@ -28,7 +28,7 @@ function PtsBadge({ pts, isJoker }) {
   return <span className="hst-pts-miss">{pts}</span>
 }
 
-function PlayerRoundModal({ player, round, liveMatches, liveGuesses, onClose }) {
+function PlayerRoundModal({ player, round, onClose }) {
   const [predictions, setPredictions] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -38,87 +38,88 @@ function PlayerRoundModal({ player, round, liveMatches, liveGuesses, onClose }) 
       .catch(() => setLoading(false))
   }, [player.user_id, round])
 
-  const userLive = liveGuesses[player.user_id] || []
+  // Only show finished matches (have result, not live)
+  const finished = predictions.filter(p =>
+    p.matches.home_score !== null && !LIVE_STATUSES.includes(p.matches.status)
+  )
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card round-pred-modal" onClick={e => e.stopPropagation()}>
         <button className="modal-close-btn" onClick={onClose}>✕</button>
 
-        <div className="round-modal-header">
-          <div className="history-avatar">
+        {/* Centered header */}
+        <div className="rpm-header">
+          <div className="history-avatar rpm-avatar">
             {player.avatar_url
               ? <img src={player.avatar_url} alt={player.display_name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }} />
               : initial(player.display_name)}
           </div>
-          <div>
-            <div className="history-name">{player.display_name}</div>
-            <div className="history-summary">
-              מחזור {round} · {player.round_points ?? 0} נק׳ · {player.round_exact ?? 0} מדויקים
-            </div>
+          <div className="rpm-name">{player.display_name}</div>
+          <div className="rpm-pts-big">{player.round_points ?? 0} <span className="rpm-pts-label">נק׳</span></div>
+          <div className="rpm-stats">
+            מחזור {round} · {player.round_exact ?? 0} מדויקים
           </div>
         </div>
 
-        <div className="round-section-label">
-          {liveMatches.length > 0 ? '🔴 משחקים בלייב' : '⚽ לייב'}
-        </div>
-
-        {liveMatches.length > 0 ? (
-          <div className="round-live-section">
-            {liveMatches.map(m => {
-              const g = userLive.find(x => x.matchId === m.id)
-              const color = g ? getLiveColor(g, m) : 'rgba(255,255,255,0.15)'
-              const homeInfo = getTeamInfo(m.home_team)
-              const awayInfo = getTeamInfo(m.away_team)
-              return (
-                <div key={m.id} className="round-live-row" style={{ borderColor: color, background: `${color}15` }}>
-                  <span className="round-live-team" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
-                  <div className="round-live-center">
-                    <span className="round-live-real">{m.home_score}:{m.away_score}</span>
-                    <span className="round-live-sep">⟵</span>
-                    {g
-                      ? <span className="round-live-guess" style={{ color }}>{g.h}:{g.a}{g.joker ? ' 🃏' : ''}</span>
-                      : <span className="round-live-guess" style={{ color:'rgba(255,255,255,0.2)' }}>—</span>}
-                  </div>
-                  <span className="round-live-team" style={{ color: awayInfo.color, textAlign:'left' }}>{awayInfo.short}</span>
-                </div>
-              )
-            })}
+        {/* Column headers */}
+        {!loading && finished.length > 0 && (
+          <div className="rpm-finished-note">משחקים שהסתיימו בלבד</div>
+          )}
+        {!loading && finished.length > 0 && (
+          <div className="rpm-col-header">
+            <div className="rpm-ch-match">משחק</div>
+            <div className="rpm-ch-guess">ניחוש</div>
+            <div className="rpm-ch-result">תוצאה</div>
+            <div className="rpm-ch-pts">נק׳</div>
           </div>
-        ) : (
-          <div className="round-no-live">כרגע לא מתקיימים משחקים בלייב</div>
         )}
 
-        <div className="round-section-label">ניחושים מחזור {round}</div>
-
         {loading ? (
-          <div className="spinner" style={{ margin:'16px auto' }} />
-        ) : predictions.length === 0 ? (
-          <div className="round-no-live">אין ניחושים למחזור זה</div>
+          <div className="spinner" style={{ margin: '24px auto' }} />
+        ) : finished.length === 0 ? (
+          <div className="rpm-empty">אין תוצאות סופיות עדיין</div>
         ) : (
-          <div>
-            {predictions.map((p, i) => {
+          <div className="rpm-list">
+            {finished.map((p, i) => {
               const m = p.matches
               const homeInfo = getTeamInfo(m.home_team)
               const awayInfo = getTeamInfo(m.away_team)
-              const hasResult = m.home_score !== null
-              const isExact = hasResult && p.home_guess === m.home_score && p.away_guess === m.away_score
+              const isExact = p.home_guess === m.home_score && p.away_guess === m.away_score
               const gDir = Math.sign(p.home_guess - p.away_guess)
-              const rDir = hasResult ? Math.sign(m.home_score - m.away_score) : null
-              const isDir = hasResult && !isExact && gDir === rDir
-              const cls = !hasResult ? '' : isExact ? 'exact' : isDir ? 'dir' : 'miss'
-              const color = isExact ? '#00E676' : isDir ? '#FDB927' : hasResult ? '#FF5252' : 'rgba(255,255,255,0.2)'
+              const rDir = Math.sign(m.home_score - m.away_score)
+              const isDir = !isExact && gDir === rDir
+              const guessColor = isExact ? '#00E676' : isDir ? '#FDB927' : '#FF5252'
+              const hasPenalty = m.penalty_events?.length > 0 && p.penalty_min != null
+              const penHit    = hasPenalty && (p.penalty_bonus ?? 0) > 0
+              const penColor  = penHit ? '#00E676' : '#FF5252'
+              const totalPts  = (p.points ?? 0) + (p.penalty_bonus ?? 0)
               return (
-                <div key={i} className={`round-pred-row ${cls}`}>
-                  <span className="round-pred-team" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
-                  <div className="round-pred-scores">
-                    {hasResult
-                      ? <span className="round-pred-result" style={{ color }}>{m.home_score}:{m.away_score}</span>
-                      : <span className="round-pred-pending">ממתין</span>}
-                    <span className="round-pred-guess">{p.home_guess}:{p.away_guess}{p.is_joker ? ' 🃏' : ''}</span>
+                <div key={i} className="rpm-row">
+                  <div className="rpm-match">
+                    <span className="rpm-team-name" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
+                    <span className="rpm-vs">-</span>
+                    <span className="rpm-team-name" style={{ color: awayInfo.color }}>{awayInfo.short}</span>
                   </div>
-                  <span className="round-pred-team" style={{ color: awayInfo.color, textAlign:'left' }}>{awayInfo.short}</span>
-                  {hasResult && <PtsBadge pts={p.points} isJoker={p.is_joker} />}
+                  <div className="rpm-guess-wrap">
+                    {hasPenalty && (
+                      <div className="rpm-pen-box" style={{ borderColor: penColor, color: penColor }}>
+                        ⚡ {p.penalty_min}-{p.penalty_max}
+                      </div>
+                    )}
+                    <div className="rpm-guess" style={{ color: guessColor, borderColor: `${guessColor}55` }}>
+                      {p.home_guess}:{p.away_guess}{p.is_joker ? ' 🃏' : ''}
+                    </div>
+                  </div>
+                  <div className="rpm-result">
+                    {m.home_score}:{m.away_score}
+                  </div>
+                  <div className="rpm-pts-cell">
+                    <PtsBadge pts={p.points} isJoker={p.is_joker} />
+                    {hasPenalty && penHit && (
+                      <span className="rpm-pen-bonus">+{p.penalty_bonus}</span>
+                    )}
+                  </div>
                 </div>
               )
             })}
@@ -215,6 +216,10 @@ export default function LeaderboardPage() {
   const [liveGuesses, setLiveGuesses]   = useState({})
   const [selectedPlayer, setSelectedPlayer]           = useState(null)
   const [selectedRoundPlayer, setSelectedRoundPlayer] = useState(null)
+  const [roundFinished, setRoundFinished]             = useState(false)
+  const [roundStarted, setRoundStarted]               = useState(false)
+  const [roundFinishedSeason, setRoundFinishedSeason] = useState(false)
+  const [prevRanks, setPrevRanks]                     = useState({})
 
   useEffect(() => {
     getCurrentRound()
@@ -270,9 +275,27 @@ export default function LeaderboardPage() {
       setPenCounts(pc)
 
       if (view === 'season') {
+        // Determine round timing window for trash talk visibility
+        let started = false, seasonFinished = false
+        let roundMatchData = null
+        if (currentRound) {
+          const { data: roundMatches } = await supabase
+            .from('matches').select('id, kickoff, home_score, status')
+            .eq('round', currentRound)
+          roundMatchData = roundMatches
+          if (roundMatches?.length) {
+            const now = Date.now()
+            const firstKickoff = Math.min(...roundMatches.map(m => new Date(m.kickoff).getTime()))
+            started = firstKickoff <= now
+            seasonFinished = roundMatches.every(m => m.status === 'FT')
+          }
+        }
+        setRoundStarted(started)
+        setRoundFinishedSeason(seasonFinished)
+
         const [{ data }, msgs] = await Promise.all([
           supabase.from('leaderboard_view').select('*').order('total_points', { ascending: false }).limit(100),
-          currentRound ? getRoundMessages(currentRound) : Promise.resolve([]),
+          (started && !seasonFinished && currentRound) ? getRoundMessages(currentRound) : Promise.resolve([]),
         ])
         setRows(data || [])
         const mm = {}
@@ -284,14 +307,37 @@ export default function LeaderboardPage() {
           streakData?.forEach(r => { sm[r.user_id] = r.current_streak })
           setStreaks(sm)
         } catch {}
+
+        if (started && !seasonFinished && currentRound > 1 && roundMatchData?.length) {
+          const matchIds = roundMatchData.map(m => m.id)
+          const { data: crPreds } = await supabase
+            .from('predictions')
+            .select('user_id, points')
+            .in('match_id', matchIds)
+            .not('points', 'is', null)
+          const crMap = {}
+          ;(crPreds || []).forEach(p => {
+            crMap[p.user_id] = (crMap[p.user_id] || 0) + (p.points || 0)
+          })
+          const prevTotals = (data || []).map(r => ({
+            user_id: r.user_id,
+            prevTotal: (r.total_points || 0) - (crMap[r.user_id] || 0),
+          })).sort((a, b) => b.prevTotal - a.prevTotal)
+          const pm = {}
+          prevTotals.forEach((r, idx) => { pm[r.user_id] = idx + 1 })
+          setPrevRanks(pm)
+        } else {
+          setPrevRanks({})
+        }
       } else {
-        const { data } = await supabase
-          .from('round_leaderboard_view')
-          .select('*')
-          .eq('round', round)
-          .order('round_points', { ascending: false })
-          .limit(100)
+        const [{ data }, { data: roundMatches }] = await Promise.all([
+          supabase.from('round_leaderboard_view').select('*').eq('round', round).order('round_points', { ascending: false }).limit(100),
+          supabase.from('matches').select('home_score').eq('round', round),
+        ])
         setRows(data || [])
+        setRoundFinished(
+          (roundMatches?.length ?? 0) > 0 && roundMatches.every(m => m.home_score !== null)
+        )
       }
     } catch (err) { console.error(err) }
     setLoading(false)
@@ -307,8 +353,44 @@ export default function LeaderboardPage() {
   const myPts       = myIdx >= 0 ? pts(rows[myIdx]) : 0
   const rivalGap    = myRival ? pts(myRival) - myPts : 0
   const playerBelow = myIdx >= 0 && myIdx < rows.length - 1 ? rows[myIdx + 1] : null
-  const gapBelow    = playerBelow !== null ? myPts - pts(playerBelow) : null
-  const isClosingIn = gapBelow !== null && gapBelow >= 0 && gapBelow <= 10
+  const gapBelow    = playerBelow !== null ? myPts - pts(playerBelow) : Infinity
+
+  let smartBanner = null
+  if (!loading && rows.length > 0) {
+    if (leaderPts === 0) {
+      smartBanner = (
+        <div className="rival-banner" style={{ textAlign: 'center' }}>
+          🔥 חממו מנועים... מי יהיה אלוף בארסה מאניה?
+        </div>
+      )
+    } else if (myIdx === 0 && rows.length > 1) {
+      smartBanner = (
+        <div className="leader-banner">
+          👑 אתה מוביל! <span className="banner-sep">|</span> {pts(rows[0]) - pts(rows[1])} נקודות על {rows[1].display_name}
+        </div>
+      )
+    } else if (myIdx > 0) {
+      if (rivalGap === 0) {
+        smartBanner = (
+          <div className="rival-banner" style={{ textAlign: 'center' }}>
+            ✨ הטבלה צמודה - שולחת לך אבקת קסמים למזל
+          </div>
+        )
+      } else if (rivalGap <= gapBelow) {
+        smartBanner = (
+          <div className="rival-banner">
+            🎯 אתה רחוק רק <strong>{rivalGap}</strong> נקודות ממקום <strong>{myIdx}</strong>
+          </div>
+        )
+      } else {
+        smartBanner = (
+          <div className="closing-in-banner">
+            ⚠️ <strong>{playerBelow.display_name}</strong> - רק {gapBelow} נקודות מאחוריך!
+          </div>
+        )
+      }
+    }
+  }
 
   return (
     <div className="page">
@@ -326,33 +408,9 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {/* Rival banner */}
-        {view === 'season' && myRival && rivalGap > 0 && (
-          <div className="rival-banner">
-            🎯 היריב שלך: <strong>{myRival.display_name}</strong> — {rivalGap} נקודות קדימה
-          </div>
-        )}
-        {view === 'season' && myIdx === 0 && rows.length > 1 && (
-          <div className="leader-banner">
-            👑 אתה מוביל! שמור על הליד — {pts(rows[1]) > 0 ? pts(rows[0]) - pts(rows[1]) : pts(rows[0])} נקודות מפרד בינך לבין {rows[1].display_name}
-          </div>
-        )}
+        {view === 'season' && smartBanner}
 
-        {/* Closing-in threat alert */}
-        {view === 'season' && isClosingIn && myIdx > 0 && (
-          <div className="closing-in-banner">
-            ⚠️ <strong>{playerBelow.display_name}</strong> רק {gapBelow} נקודות מאחוריך — אל תרפה!
-          </div>
-        )}
-
-        {/* Round champion */}
-        {view === 'round' && !loading && rows.length > 0 && (
-          <div className="round-champion-banner">
-            🏆 אלוף מחזור {round}: <strong>{rows[0].display_name}</strong> — {pts(rows[0])} נקודות
-          </div>
-        )}
-
-        <div className="card">
+<div className="card lb-card">
           <div className="lb-header">
             <div style={{textAlign:'center'}}>מיקום</div>
             <div>שחקן</div>
@@ -375,14 +433,25 @@ export default function LeaderboardPage() {
             const gap      = i > 0 ? leaderPts - (pts(r) ?? 0) : 0
             const avgRound = (pts(r) ?? 0) > 0 && currentRound > 0 ? (pts(r) ?? 0) / currentRound : 0
             const roundsToClose = i > 0 && avgRound > 0 ? Math.ceil(gap / avgRound) : null
+            const prevRank = view === 'season' && roundStarted && !roundFinishedSeason ? (prevRanks[r.user_id] ?? null) : null
+            const rankChange = prevRank !== null ? prevRank - (i + 1) : 0
 
             return (
               <div
                 key={r.user_id}
-                className={`lb-row${isMe?' me':''} lb-row-clickable`}
-                onClick={() => view === 'round' ? setSelectedRoundPlayer(r) : setSelectedPlayer(r)}
+                className={`lb-row${isMe?' me':''}${view==='round'?' lb-row-clickable':''}`}
+                style={{ position: 'relative' }}
+                onClick={() => view === 'round' && setSelectedRoundPlayer(r)}
               >
-                <div className={`lb-rank${i<3?' g'+(i+1):''}`}>{medal || (i+1)}</div>
+                {view === 'season' && messages[r.user_id] && (
+                  <div className="lb-trash-float">💬 {messages[r.user_id]}</div>
+                )}
+
+                <div className={`lb-rank${i<3?' g'+(i+1):''}`}>
+                  <span>{medal || (i+1)}</span>
+                  {rankChange > 0 && <span className="lb-rank-change up">↑{rankChange}</span>}
+                  {rankChange < 0 && <span className="lb-rank-change down">↓{Math.abs(rankChange)}</span>}
+                </div>
 
                 <div className="lb-user">
                   <div className="lb-avatar" style={{ background:BGS[colorIdx], color:COLORS[colorIdx], overflow:'hidden', padding:0 }}>
@@ -393,9 +462,6 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="lb-user-info">
                     <div className="lb-name">{r.display_name}{r.display_name === 'CAT' && ' 🤖'}</div>
-                    {view === 'season' && messages[r.user_id] && (
-                      <div className="lb-trash">💬 {messages[r.user_id]}</div>
-                    )}
                     {streak >= 3 && <div className="lb-streak-badge">🔥 {streak}</div>}
                   </div>
                 </div>
@@ -407,12 +473,6 @@ export default function LeaderboardPage() {
                 </div>
                 <div className="lb-pts">
                   {pts(r) ?? 0}
-                  {view === 'season' && i > 0 && leaderPts > 0 && (
-                    <div className="lb-gap">−{gap}</div>
-                  )}
-                  {view === 'season' && i > 0 && roundsToClose !== null && roundsToClose <= 20 && (
-                    <div className="lb-rounds-close">~{roundsToClose} מח׳</div>
-                  )}
                 </div>
               </div>
             )
@@ -431,8 +491,6 @@ export default function LeaderboardPage() {
         <PlayerRoundModal
           player={selectedRoundPlayer}
           round={round}
-          liveMatches={liveMatches}
-          liveGuesses={liveGuesses}
           onClose={() => setSelectedRoundPlayer(null)}
         />
       )}

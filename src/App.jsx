@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './lib/AuthContext'
-import { supabase } from './lib/supabase'
+import { supabase, getCurrentRound } from './lib/supabase'
 import { registerPush } from './lib/push'
+import { getCelebrated } from './lib/effects'
 import AuthPage from './pages/AuthPage'
 import PredictPage from './pages/PredictPage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import LivePage from './pages/LivePage'
 import ProfilePage from './pages/ProfilePage'
 import RulesPage from './pages/RulesPage'
 import './index.css'
@@ -44,6 +46,13 @@ function NavIcon({ name }) {
         <line x1="9" y1="15" x2="12" y2="15"/>
       </svg>
     ),
+    live: (
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round">
+        <circle cx="12" cy="12" r="4" fill="#FF3B3B" stroke="none"/>
+        <circle cx="12" cy="12" r="7.5" stroke="#FF3B3B" strokeOpacity="0.45"/>
+        <circle cx="12" cy="12" r="11"  stroke="#FF3B3B" strokeOpacity="0.18"/>
+      </svg>
+    ),
   }
   return icons[name] || null
 }
@@ -52,25 +61,69 @@ function App() {
   const { user, loading } = useAuth()
   const [tab, setTab] = useState('predict')
   const [hasPending, setHasPending] = useState(false)
+  const [hasLive, setHasLive] = useState(false)
 
   useEffect(() => {
     if (user) setTimeout(() => registerPush(user.id, supabase), 3000)
+  }, [user?.id])
+
+  // Track live matches — show/hide Live tab
+  useEffect(() => {
+    if (!user) return
+    const LIVE = ['1H','HT','2H','ET','BT','P','INT']
+    supabase.from('matches').select('id', { count: 'exact', head: true }).in('status', LIVE)
+      .then(({ count }) => setHasLive((count ?? 0) > 0))
+    const ch = supabase.channel('app-live-watch')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, p => {
+        const wasLive = LIVE.includes(p.old?.status)
+        const isNowLive = LIVE.includes(p.new?.status)
+        if (!wasLive && isNowLive) setHasLive(true)
+        if (wasLive && !isNowLive) {
+          supabase.from('matches').select('id', { count: 'exact', head: true }).in('status', LIVE)
+            .then(({ count }) => {
+              if ((count ?? 0) === 0) { setHasLive(false); setTab(t => t === 'live' ? 'predict' : t) }
+            })
+        }
+      })
+      .subscribe()
+    return () => supabase.removeChannel(ch)
   }, [user?.id])
 
   useEffect(() => {
     if (!user) return
     async function checkPending() {
       try {
-        const { data: openM } = await supabase
-          .from('matches').select('id, kickoff').is('home_score', null)
-        const unlocked = (openM || []).filter(m => new Date(m.kickoff).getTime() - 3600000 > Date.now())
-        if (!unlocked.length) { setHasPending(false); return }
-        const { data: preds } = await supabase
-          .from('predictions').select('match_id')
-          .eq('user_id', user.id)
-          .in('match_id', unlocked.map(m => m.id))
-        const predIds = new Set((preds || []).map(p => p.match_id))
-        setHasPending(unlocked.some(m => !predIds.has(m.id)))
+        const currentRound = await getCurrentRound()
+        const { data: roundMatches } = await supabase
+          .from('matches').select('id, kickoff, home_score').eq('round', currentRound)
+        if (!roundMatches?.length) { setHasPending(false); return }
+
+        // Condition 1: open matches in current round with no prediction yet
+        const openMatches = roundMatches.filter(m =>
+          m.home_score === null &&
+          new Date(m.kickoff).getTime() - 1 * 60 * 1000 > Date.now()
+        )
+        if (openMatches.length > 0) {
+          const { data: preds } = await supabase
+            .from('predictions').select('match_id')
+            .eq('user_id', user.id).in('match_id', openMatches.map(m => m.id))
+          const predIds = new Set((preds || []).map(p => p.match_id))
+          if (openMatches.some(m => !predIds.has(m.id))) { setHasPending(true); return }
+        }
+
+        // Condition 2: finished matches whose celebration hasn't fired yet
+        const finishedIds = roundMatches.filter(m => m.home_score !== null).map(m => m.id)
+        if (finishedIds.length > 0) {
+          const { data: myPreds } = await supabase
+            .from('predictions').select('match_id')
+            .eq('user_id', user.id).in('match_id', finishedIds)
+          if (myPreds?.length) {
+            const celebrated = getCelebrated(user.id)
+            if (myPreds.some(p => !celebrated.has(p.match_id))) { setHasPending(true); return }
+          }
+        }
+
+        setHasPending(false)
       } catch {}
     }
     checkPending()
@@ -87,6 +140,7 @@ function App() {
   const tabs = [
     { id: 'profile', label: 'פרופיל'  },
     { id: 'predict', label: 'ניחושים' },
+    ...(hasLive ? [{ id: 'live', label: 'חדר מלחמה' }] : []),
     { id: 'table',   label: 'טבלה'    },
     { id: 'rules',   label: 'חוקים'   },
   ]
@@ -113,13 +167,14 @@ function App() {
       </div>
 
       {tab === 'predict' && <PredictPage />}
+      {tab === 'live'    && <LivePage />}
       {tab === 'table'   && <LeaderboardPage />}
       {tab === 'profile' && <ProfilePage />}
       {tab === 'rules'   && <RulesPage />}
 
       <nav className="bottom-nav">
         {tabs.map(t => (
-          <button key={t.id} className={`nav-item${tab === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} className={`nav-item${tab === t.id ? ' active' : ''}${t.id === 'live' ? ' live-tab' : ''}`} onClick={() => setTab(t.id)}>
             <div className="nav-icon-wrap">
               <NavIcon name={t.id} />
               {t.id === 'predict' && hasPending && tab !== 'predict' && <span className="nav-badge" />}

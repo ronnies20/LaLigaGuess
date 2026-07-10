@@ -50,11 +50,12 @@ alter table matches add column if not exists status         text default 'NS';
 alter table matches add column if not exists is_special     boolean default false;
 alter table matches add column if not exists penalty_minute int;
 alter table matches add column if not exists penalty_events jsonb default '[]'::jsonb;
+alter table matches add column if not exists score_90 jsonb;
 
--- פונקציה לבדיקה אם משחק נעול (שעה לפני קיקאוף)
+-- פונקציה לבדיקה אם משחק נעול (דקה לפני קיקאוף)
 create or replace function is_match_locked(kickoff timestamptz)
 returns boolean language sql stable as $$
-  select kickoff - interval '1 hour' <= now();
+  select kickoff - interval '1 minute' <= now();
 $$;
 
 create index if not exists matches_round_idx on matches(round);
@@ -163,7 +164,13 @@ begin
           else                         final_pts := base_exact * 2;
           end if;
         else
-          final_pts := case when streak_count >= 4 then -3 else -1 end;
+          -- לא מדויק: עונש רק אם הכיוון גם שגוי; כיוון נכון = 0נק'
+          if sign(rec.home_guess - rec.away_guess) = sign(new.home_score - new.away_score)
+             and new.home_score != new.away_score then
+            final_pts := 0;
+          else
+            final_pts := case when streak_count >= 4 then -3 else -1 end;
+          end if;
         end if;
       elsif new.is_special then
         -- Special match: ×2 of phase scoring (no streak stacking)
@@ -191,40 +198,40 @@ create trigger on_match_result
   after update of home_score, away_score on matches
   for each row execute function update_match_points();
 
--- 5. VIEW: טבלת דירוג עונה שלמה (כולל בונוס פנדל)
+-- 5. VIEW: טבלת דירוג עונה שלמה — כל היוזרים מופיעים גם עם 0 נק׳
 create or replace view leaderboard_view as
 select
-  p.user_id,
+  pr.id                                                                                           as user_id,
   pr.display_name,
   pr.avatar_url,
-  coalesce(sum(p.points), 0) + coalesce(sum(p.penalty_bonus), 0)                                 as total_points,
-  count(*) filter (where p.home_guess = m.home_score and p.away_guess = m.away_score)            as exact_count,
-  count(*) filter (where p.points > 0
-                     and not (p.home_guess = m.home_score and p.away_guess = m.away_score))      as direction_count,
-  count(*) filter (where p.points <= 0)                                                          as miss_count,
-  count(*)                                                                                       as total_predictions
-from predictions p
-join profiles pr on pr.id = p.user_id
-join matches   m  on m.id  = p.match_id
-where p.points is not null
-group by p.user_id, pr.display_name, pr.avatar_url;
+  coalesce(sum(p.points), 0) + coalesce(sum(p.penalty_bonus), 0)                                as total_points,
+  count(p.id) filter (where p.home_guess = m.home_score and p.away_guess = m.away_score)        as exact_count,
+  count(p.id) filter (where p.points > 0
+                        and not (p.home_guess = m.home_score and p.away_guess = m.away_score))  as direction_count,
+  count(p.id) filter (where p.points <= 0)                                                      as miss_count,
+  count(p.id)                                                                                   as total_predictions
+from profiles pr
+left join predictions p on p.user_id = pr.id
+left join matches     m on m.id = p.match_id and p.points is not null
+group by pr.id, pr.display_name, pr.avatar_url;
 
--- 6. VIEW: טבלת דירוג לפי מחזור (כולל בונוס פנדל)
+-- 6. VIEW: טבלת דירוג לפי מחזור — כל היוזרים מופיעים
 create or replace view round_leaderboard_view as
 select
-  p.user_id,
+  pr.id                                                                                          as user_id,
   pr.display_name,
   pr.avatar_url,
-  m.round,
-  coalesce(sum(p.points), 0) + coalesce(sum(p.penalty_bonus), 0)                                as round_points,
-  count(*) filter (where p.home_guess = m.home_score and p.away_guess = m.away_score)           as round_exact,
-  count(*) filter (where p.points > 0
-                     and not (p.home_guess = m.home_score and p.away_guess = m.away_score))     as round_direction
-from predictions p
-join profiles pr on pr.id = p.user_id
-join matches m   on m.id  = p.match_id
-where p.points is not null
-group by p.user_id, pr.display_name, pr.avatar_url, m.round;
+  r.round,
+  coalesce(sum(p.points)       filter (where m.id is not null), 0)
+    + coalesce(sum(p.penalty_bonus) filter (where m.id is not null), 0)                        as round_points,
+  count(p.id) filter (where m.id is not null and p.home_guess = m.home_score and p.away_guess = m.away_score)       as round_exact,
+  count(p.id) filter (where m.id is not null and p.points > 0
+                        and not (p.home_guess = m.home_score and p.away_guess = m.away_score)) as round_direction
+from profiles pr
+cross join (select distinct round from matches) r
+left join predictions p on p.user_id = pr.id
+left join matches     m on m.id = p.match_id and m.round = r.round and p.points is not null
+group by pr.id, pr.display_name, pr.avatar_url, r.round;
 
 -- 7. ROW LEVEL SECURITY
 alter table profiles    enable row level security;
@@ -238,10 +245,10 @@ create policy "profiles_update" on profiles for update using (auth.uid() = id);
 -- Matches: כולם יכולים לקרוא
 create policy "matches_select" on matches for select using (true);
 
--- Predictions: גלוי לבעלים בלבד לפני נעילה, לכולם אחרי נעילה
+-- Predictions: גלוי לבעלים בלבד לפני נעילה, לכולם אחרי נעילה או סיום
 create policy "predictions_select" on predictions for select using (
   auth.uid() = user_id
-  or (select is_match_locked(kickoff) from matches where id = match_id)
+  or (select is_match_locked(kickoff) or status = 'FT' from matches where id = match_id)
 );
 create policy "predictions_insert" on predictions for insert
   with check (
@@ -252,6 +259,12 @@ create policy "predictions_update" on predictions for update
   using (auth.uid() = user_id)
   with check (
     not (select is_match_locked(kickoff) from matches where id = match_id)
+  );
+
+create policy "predictions_delete" on predictions for delete
+  using (
+    auth.uid() = user_id
+    and not (select is_match_locked(kickoff) from matches where id = match_id)
   );
 
 -- Column-level: מניעת כתיבה ישירה לנקודות (מחושב ע"י trigger בלבד)

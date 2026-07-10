@@ -46,7 +46,7 @@ export async function getMatchesByRound(round) {
 export async function getPredictions(userId, round) {
   const { data, error } = await supabase
     .from('predictions')
-    .select('*, matches(home_team, away_team, home_score, away_score, kickoff, locked)')
+    .select('*, matches(home_team, away_team, home_score, away_score, kickoff)')
     .eq('user_id', userId)
     .eq('matches.round', round)
   if (error) throw error
@@ -121,10 +121,11 @@ export async function uploadAvatar(file, userId) {
 
 // Returns the earliest round that still has unplayed matches (open for prediction)
 export async function getCurrentRound() {
+  // Use status != 'FT' so live matches (home_score=0) keep the round pinned correctly
   const { data } = await supabase
     .from('matches')
     .select('round')
-    .is('home_score', null)
+    .neq('status', 'FT')
     .order('round', { ascending: true })
     .limit(1)
   return data?.[0]?.round ?? 1
@@ -133,7 +134,7 @@ export async function getCurrentRound() {
 export async function getRoundMessages(round) {
   const { data } = await supabase
     .from('round_messages')
-    .select('user_id, message')
+    .select('user_id, message, profiles(display_name, avatar_url)')
     .eq('round', round)
   return data || []
 }
@@ -168,7 +169,7 @@ export async function getLiveMatchGuesses(liveMatchIds) {
 export async function getPlayerRoundPredictions(userId, round) {
   const { data, error } = await supabase
     .from('predictions')
-    .select('home_guess, away_guess, is_joker, points, penalty_bonus, matches!inner(home_team, away_team, home_score, away_score, kickoff, status, is_special)')
+    .select('home_guess, away_guess, is_joker, points, penalty_min, penalty_max, penalty_bonus, matches!inner(home_team, away_team, home_score, away_score, kickoff, status, is_special, penalty_events)')
     .eq('user_id', userId)
     .eq('matches.round', round)
   if (error) throw error
@@ -211,7 +212,7 @@ export async function countRoundParticipants(round) {
 export async function getMyHistory(userId) {
   const { data, error } = await supabase
     .from('predictions')
-    .select('home_guess, away_guess, points, is_joker, penalty_bonus, matches!inner(round, home_score, away_score, kickoff, is_special)')
+    .select('home_guess, away_guess, points, is_joker, penalty_bonus, matches!inner(round, home_score, away_score, kickoff, is_special, score_90)')
     .eq('user_id', userId)
     .not('matches.home_score', 'is', null)
   if (error) return []

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase, signOut, getMyStats, uploadAvatar, updateProfile, submitFeedback, getAdminFeedback, markFeedbackRead, getMyHistory } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import { calcPoints } from '../lib/teams'
 
 const ADMIN_EMAIL = 'mikaswiftt@gmail.com'
 
@@ -170,20 +171,24 @@ function CameraOverlay() {
   )
 }
 
-// Compute trophies from stats + history
+// Compute trophies from stats + history — milestones scale up once reached
 function computeTrophies(stats, history) {
   if (!stats) return []
   const uniqueRounds = new Set(history.map(p => p.matches?.round).filter(Boolean)).size
   const jokerWins = history.filter(p => p.is_joker && (p.points ?? 0) >= 6).length
-  const trophies = [
-    { id: 'sniper',  icon: '🎯', label: 'סנייפר',       desc: '10 תוצאות מדויקות', val: stats.exact,       target: 10 },
-    { id: 'joker',   icon: '🃏', label: 'ג׳וקר מאסטר', desc: '3 ג׳וקרים מוצלחים',  val: jokerWins,         target: 3  },
-    { id: 'iron',    icon: '🔩', label: 'הברזל',         desc: '10 מחזורים ברצף',   val: uniqueRounds,      target: 10 },
-    { id: 'penalty', icon: '⚽', label: 'הימוריאל',      desc: '5 פנדלים נכונים',   val: stats.penaltyHits, target: 5  },
-    { id: 'hundred', icon: '💯', label: 'מאה ניחושים',   desc: '100 ניחושים כולל',  val: stats.played,      target: 100 },
-    { id: 'streak',  icon: '🔥', label: 'רצף להבה',      desc: 'סטרייק של 5',       val: stats.maxStreak,   target: 5  },
+  const defs = [
+    { id: 'sniper',  icon: '🎯', label: 'סנייפר',       descFn: t => `${t} תוצאות מדויקות`,  val: stats.exact,       ms: [10, 25, 50]    },
+    { id: 'joker',   icon: '🃏', label: 'ג׳וקר מאסטר', descFn: t => `${t} ג׳וקרים מוצלחים`, val: jokerWins,         ms: [3, 7, 15]      },
+    { id: 'iron',    icon: '🔩', label: 'הברזל',         descFn: t => `${t} מחזורים ברצף`,    val: uniqueRounds,      ms: [10, 20, 38]    },
+    { id: 'penalty', icon: '⚽', label: 'הימוריאל',      descFn: t => `${t} פנדלים נכונים`,   val: stats.penaltyHits, ms: [5, 10, 20]     },
+    { id: 'hundred', icon: '💯', label: 'מאה ניחושים',   descFn: t => `${t} ניחושים כולל`,    val: stats.played,      ms: [100, 200, 300] },
+    { id: 'streak',  icon: '🔥', label: 'רצף להבה',      descFn: t => `סטרייק של ${t}`,       val: stats.maxStreak,   ms: [5, 8, 12]      },
   ]
-  return trophies
+  return defs.map(d => {
+    const target = d.ms.find(m => m > d.val) ?? d.ms[d.ms.length - 1]
+    const done   = d.val >= d.ms[d.ms.length - 1]
+    return { id: d.id, icon: d.icon, label: d.label, desc: d.descFn(target), val: d.val, target, done }
+  })
 }
 
 // Compute persona from history
@@ -254,6 +259,16 @@ export default function ProfilePage() {
 
   const displayName = profile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'שחקן'
   const pct = stats && stats.played > 0 ? Math.round(((stats.exact + stats.dir) / stats.played) * 100) : 0
+  const lateGoalPtsLost = history.reduce((total, p) => {
+    const s90 = p.matches?.score_90
+    if (!s90) return total
+    const wouldBeExact = p.home_guess === s90.home && p.away_guess === s90.away
+    if (!wouldBeExact) return total
+    const resultChanged = p.home_guess !== p.matches.home_score || p.away_guess !== p.matches.away_score
+    if (!resultChanged) return total
+    const wouldHaveGot = calcPoints(p.home_guess, p.away_guess, s90.home, s90.away, p.is_joker, p.matches.is_special, p.matches.round, 0)
+    return total + Math.max(0, wouldHaveGot - (p.points ?? 0))
+  }, 0)
 
   return (
     <div className="page">
@@ -304,31 +319,17 @@ export default function ProfilePage() {
                 <div className="stat-lbl">% הצלחה</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val" style={{ color:'#ff6600' }}>{stats.maxStreak > 0 ? `🔥${stats.maxStreak}` : '—'}</div>
-                <div className="stat-lbl">סטרייק מקס׳</div>
+                <div className="stat-val" style={{ color:'#FF4444' }}>{lateGoalPtsLost > 0 ? `💀${lateGoalPtsLost}` : '—'}</div>
+                <div className="stat-lbl">איבוד נקודות בתוספת</div>
               </div>
             </div>
           </>
         ) : null}
 
         {stats && history.length > 0 && (() => {
-          const persona = computePersona(stats, history)
           const trophies = computeTrophies(stats, history)
-          const investHours = Math.round(stats.played * 3 / 60 * 10) / 10
-          const uniqueRounds = new Set(history.map(p => p.matches?.round).filter(Boolean)).size
           return (
             <>
-              {/* Persona */}
-              {persona && (
-                <div className="persona-card">
-                  <span className="persona-icon">{persona.icon}</span>
-                  <div>
-                    <div className="persona-label">{persona.label}</div>
-                    <div className="persona-desc">{persona.desc}</div>
-                  </div>
-                </div>
-              )}
-
               {/* Streak shield status */}
               <div className="shield-status-row">
                 <span>🛡️ מגן סטרייק</span>
@@ -337,24 +338,13 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              {/* Season investment */}
-              <div className="season-invest">
-                <div className="invest-title">השקעה בעונה</div>
-                <div className="invest-row">
-                  <span>🏆 {stats.played} ניחושים</span>
-                  <span>⏱️ ~{investHours} שעות</span>
-                  <span>📅 {uniqueRounds} מחזורים</span>
-                </div>
-              </div>
-
               {/* Trophies */}
               <div className="section-title">הישגים</div>
               <div className="trophies-grid">
                 {trophies.map(t => {
-                  const done = t.val >= t.target
                   const pct = Math.min(100, Math.round((t.val / t.target) * 100))
                   return (
-                    <div key={t.id} className={`trophy-card${done ? ' done' : ''}`}>
+                    <div key={t.id} className={`trophy-card${t.done ? ' done' : ''}`}>
                       <div className="trophy-icon">{t.icon}</div>
                       <div className="trophy-label">{t.label}</div>
                       <div className="trophy-desc">{t.desc}</div>
