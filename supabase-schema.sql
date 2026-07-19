@@ -50,7 +50,8 @@ alter table matches add column if not exists status         text default 'NS';
 alter table matches add column if not exists is_special     boolean default false;
 alter table matches add column if not exists penalty_minute int;
 alter table matches add column if not exists penalty_events jsonb default '[]'::jsonb;
-alter table matches add column if not exists score_90 jsonb;
+alter table matches add column if not exists score_90    jsonb;
+alter table matches add column if not exists result_at  timestamptz;
 
 -- פונקציה לבדיקה אם משחק נעול (דקה לפני קיקאוף)
 create or replace function is_match_locked(kickoff timestamptz)
@@ -112,6 +113,22 @@ begin
 end;
 $$;
 
+-- טריגר קטן: שומר את זמן הכנסת התוצאה ב-result_at
+create or replace function set_result_at()
+returns trigger language plpgsql as $$
+begin
+  if old.home_score is null and new.home_score is not null then
+    new.result_at = now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_result_entered on matches;
+create trigger on_result_entered
+  before update on matches
+  for each row execute function set_result_at();
+
 -- עדכון נקודות אחרי עדכון תוצאת משחק (כולל בונוס סטרייק + phase scoring)
 create or replace function update_match_points()
 returns trigger language plpgsql security definer as $$
@@ -124,26 +141,28 @@ declare
   base_dir      int;
 begin
   if new.home_score is not null then
-    -- Phase-based scoring
     base_exact := case when new.round >= 34 then 7 when new.round >= 20 then 5 else 3 end;
     base_dir   := case when new.round >= 34 then 3 when new.round >= 20 then 2 else 1 end;
 
     for rec in select * from predictions where match_id = new.id loop
       is_exact_pred := (rec.home_guess = new.home_score and rec.away_guess = new.away_score);
 
-      -- סטרייק לפני המשחק הנוכחי (מכבד מגן סטרייק — ראו 20. למטה)
       with ordered_preds as (
         select
           case when p.home_guess = m.home_score and p.away_guess = m.away_score then 1 else 0 end as is_exact,
-          row_number() over (order by m.kickoff desc) as rn
+          row_number() over (order by m.kickoff desc, coalesce(m.result_at, m.kickoff) desc) as rn
         from predictions p
         join matches m on m.id = p.match_id
         left join profiles pr on pr.id = p.user_id
         where p.user_id = rec.user_id
-          and m.kickoff < new.kickoff
+          and (
+            m.kickoff < new.kickoff
+            or (m.kickoff = new.kickoff and m.result_at is not null and new.result_at is not null and m.result_at < new.result_at)
+          )
           and m.home_score is not null
           and not (
-            pr.streak_shield_round = m.round
+            pr.streak_shield_round is not null
+            and pr.streak_shield_round = m.round
             and not (p.home_guess = m.home_score and p.away_guess = m.away_score)
           )
       ),
@@ -158,13 +177,11 @@ begin
 
       if rec.is_joker then
         if is_exact_pred then
-          -- joker = base_exact × 2, streak bonus +2/+3
-          if    streak_count >= 5 then final_pts := base_exact * 2 + 3;
-          elsif streak_count >= 4 then final_pts := base_exact * 2 + 1;
+          if    streak_count >= 6 then final_pts := base_exact * 2 + 3;
+          elsif streak_count >= 4 then final_pts := base_exact * 2 + 2;
           else                         final_pts := base_exact * 2;
           end if;
         else
-          -- לא מדויק: עונש רק אם הכיוון גם שגוי; כיוון נכון = 0נק'
           if sign(rec.home_guess - rec.away_guess) = sign(new.home_score - new.away_score)
              and new.home_score != new.away_score then
             final_pts := 0;
@@ -173,11 +190,10 @@ begin
           end if;
         end if;
       elsif new.is_special then
-        -- Special match: ×2 of phase scoring (no streak stacking)
         final_pts := calculate_points(rec.home_guess, rec.away_guess, new.home_score, new.away_score, new.round) * 2;
       else
         if is_exact_pred then
-          if    streak_count >= 5 then final_pts := base_exact + 3;
+          if    streak_count >= 6 then final_pts := base_exact + 3;
           elsif streak_count >= 4 then final_pts := base_exact + 2;
           else                         final_pts := base_exact;
           end if;
@@ -282,14 +298,15 @@ with ordered as (
     p.user_id,
     m.kickoff,
     case when p.home_guess = m.home_score and p.away_guess = m.away_score then 1 else 0 end as is_exact,
-    row_number() over (partition by p.user_id order by m.kickoff desc) as rn
+    row_number() over (partition by p.user_id order by m.kickoff desc, coalesce(m.result_at, m.kickoff) desc) as rn
   from predictions p
   join matches m on m.id = p.match_id
   left join profiles pr on pr.id = p.user_id
   where m.home_score is not null
     -- מגן סטרייק: ניחוש שגוי במחזור המוגן לא שובר את הרצף (פשוט מדולג)
     and not (
-      pr.streak_shield_round = m.round
+      pr.streak_shield_round is not null
+      and pr.streak_shield_round = m.round
       and not (p.home_guess = m.home_score and p.away_guess = m.away_score)
     )
 ),

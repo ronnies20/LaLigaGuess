@@ -177,17 +177,17 @@ function computeTrophies(stats, history) {
   const uniqueRounds = new Set(history.map(p => p.matches?.round).filter(Boolean)).size
   const jokerWins = history.filter(p => p.is_joker && (p.points ?? 0) >= 6).length
   const defs = [
-    { id: 'sniper',  icon: '🎯', label: 'סנייפר',       descFn: t => `${t} תוצאות מדויקות`,  val: stats.exact,       ms: [10, 25, 50]    },
-    { id: 'joker',   icon: '🃏', label: 'ג׳וקר מאסטר', descFn: t => `${t} ג׳וקרים מוצלחים`, val: jokerWins,         ms: [3, 7, 15]      },
-    { id: 'iron',    icon: '🔩', label: 'הברזל',         descFn: t => `${t} מחזורים ברצף`,    val: uniqueRounds,      ms: [10, 20, 38]    },
-    { id: 'penalty', icon: '⚽', label: 'הימוריאל',      descFn: t => `${t} פנדלים נכונים`,   val: stats.penaltyHits, ms: [5, 10, 20]     },
-    { id: 'hundred', icon: '💯', label: 'מאה ניחושים',   descFn: t => `${t} ניחושים כולל`,    val: stats.played,      ms: [100, 200, 300] },
-    { id: 'streak',  icon: '🔥', label: 'רצף להבה',      descFn: t => `סטרייק של ${t}`,       val: stats.maxStreak,   ms: [5, 8, 12]      },
+    { id: 'sniper',  icon: '🎯', label: 'סנייפר',       desc: 'תוצאות מדויקות',  val: stats.exact,       ms: [10, 25, 50]    },
+    { id: 'joker',   icon: '🃏', label: 'ג׳וקר מאסטר', desc: 'ג׳וקרים מוצלחים', val: jokerWins,         ms: [3, 7, 15]      },
+    { id: 'iron',    icon: '🔩', label: 'הברזל',         desc: 'מחזורים ברצף',    val: uniqueRounds,      ms: [10, 20, 38]    },
+    { id: 'penalty', icon: '⚽', label: 'הימוריאל',      desc: 'פנדלים נכונים',   val: stats.penaltyHits, ms: [5, 10, 20]     },
+    { id: 'hundred', icon: '💯', label: 'מאה ניחושים',   desc: 'ניחושים כולל',    val: stats.played,      ms: [100, 200, 300] },
+    { id: 'streak',  icon: '🔥', label: 'רצף להבה',      desc: 'סטרייק',          val: stats.maxStreak,   ms: [5, 8, 12]      },
   ]
   return defs.map(d => {
     const target = d.ms.find(m => m > d.val) ?? d.ms[d.ms.length - 1]
     const done   = d.val >= d.ms[d.ms.length - 1]
-    return { id: d.id, icon: d.icon, label: d.label, desc: d.descFn(target), val: d.val, target, done }
+    return { id: d.id, icon: d.icon, label: d.label, desc: d.desc, val: d.val, target, done }
   })
 }
 
@@ -330,14 +330,6 @@ export default function ProfilePage() {
           const trophies = computeTrophies(stats, history)
           return (
             <>
-              {/* Streak shield status */}
-              <div className="shield-status-row">
-                <span>🛡️ מגן סטרייק</span>
-                <span className={`shield-status-val${profile?.streak_shield === false ? ' used' : ''}`}>
-                  {profile?.streak_shield === false ? 'נוצל' : 'זמין'}
-                </span>
-              </div>
-
               {/* Trophies */}
               <div className="section-title">הישגים</div>
               <div className="trophies-grid">

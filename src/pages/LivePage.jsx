@@ -1,7 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
-import { LIVE_STATUSES, getTeamInfo, getStatusLabel, calcPoints } from '../lib/teams'
+import { LIVE_STATUSES, getTeamInfo, getTeamLogoUrl, getStatusLabel, calcPoints } from '../lib/teams'
+
+function TeamLogo({ name, size = 22 }) {
+  const t = getTeamInfo(name)
+  const url = getTeamLogoUrl(t.logoId)
+  const scale = t.logoScale ?? 1
+  const imgSize = size * scale
+  if (!url) return <span style={{ color: t.color, fontWeight: 700, fontSize: 10, width: size, textAlign: 'center', display: 'inline-block' }}>{t.short}</span>
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size, flexShrink: 0, overflow: 'hidden' }}>
+      <img src={url} alt={t.short}
+        style={{ width: imgSize, height: imgSize, objectFit: 'contain', flexShrink: 0, display: 'block' }}
+        onError={e => { e.currentTarget.style.display = 'none' }} />
+    </span>
+  )
+}
 
 const REAL_MADRID = 'Real Madrid'
 
@@ -142,9 +157,9 @@ export default function LivePage() {
               <div key={m.id} className="lw-score-card">
                 {/* away first → right in RTL, home last → left in RTL (same as PredictPage) */}
                 <div className="lw-score-row">
-                  <span className="lw-score-team" style={{ color: a.color }}>{a.short}</span>
+                  <TeamLogo name={m.away_team} size={24} />
                   <div className="lw-score-num">{m.home_score ?? 0}:{m.away_score ?? 0}</div>
-                  <span className="lw-score-team" style={{ color: h.color }}>{h.short}</span>
+                  <TeamLogo name={m.home_team} size={24} />
                 </div>
                 <div className="lw-score-status">{getStatusLabel(m.status) || m.status}</div>
               </div>
@@ -165,10 +180,9 @@ export default function LivePage() {
                   return (
                     <th key={m.id} className="lw-th lw-th-match">
                       <div className="lw-col-match-header">
-                        {/* away first → right, home last → left */}
-                        <span style={{ color: a.color }}>{a.short}</span>
+                        <TeamLogo name={m.away_team} size={18} />
                         <span className="lw-col-sep">×</span>
-                        <span style={{ color: h.color }}>{h.short}</span>
+                        <TeamLogo name={m.home_team} size={18} />
                       </div>
                       <div className="lw-col-score">
                         {m.home_score ?? 0}:{m.away_score ?? 0}

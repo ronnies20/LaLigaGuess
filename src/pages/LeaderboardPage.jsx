@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react'
-import { supabase, getCurrentRound, getRoundMessages, getPlayerHistory, getLiveMatchGuesses, getPlayerRoundPredictions } from '../lib/supabase'
+import { supabase, getCurrentRound, getRoundMessages, getPlayerHistory, getLiveMatchGuesses, getPlayerRoundPredictions, getBonusBreakdown } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
-import { getTeamInfo, LIVE_STATUSES } from '../lib/teams'
+import { getTeamInfo, getTeamLogoUrl, LIVE_STATUSES } from '../lib/teams'
+
+function TeamLogo({ name, size = 22 }) {
+  const t = getTeamInfo(name)
+  const url = getTeamLogoUrl(t.logoId)
+  const scale = t.logoScale ?? 1
+  const imgSize = size * scale
+  if (!url) return <span style={{ color: t.color, fontWeight: 700, fontSize: 11, width: size, textAlign: 'center', display: 'inline-block' }}>{t.short}</span>
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size, flexShrink: 0, overflow: 'hidden' }}>
+      <img src={url} alt={t.short}
+        style={{ width: imgSize, height: imgSize, objectFit: 'contain', flexShrink: 0, display: 'block' }}
+        onError={e => { e.currentTarget.style.display = 'none' }} />
+    </span>
+  )
+}
 
 const COLORS = ['#004D9E','#00883A','#CE1021','#534AB7','#C9A84C','#EF7D00','#005AA7','#D4002A','#6A0DAD','#0F6E56']
 const BGS    = ['#e8f0ff','#e8f8ee','#ffe8ea','#EEEDFE','#fff8e8','#fff3e0','#e8f0ff','#ffe8ea','#f0e8ff','#e1f5ee']
@@ -97,9 +112,9 @@ function PlayerRoundModal({ player, round, onClose }) {
               return (
                 <div key={i} className="rpm-row">
                   <div className="rpm-match">
-                    <span className="rpm-team-name" style={{ color: homeInfo.color }}>{homeInfo.short}</span>
+                    <TeamLogo name={m.home_team} size={22} />
                     <span className="rpm-vs">-</span>
-                    <span className="rpm-team-name" style={{ color: awayInfo.color }}>{awayInfo.short}</span>
+                    <TeamLogo name={m.away_team} size={22} />
                   </div>
                   <div className="rpm-guess-wrap">
                     {hasPenalty && (
@@ -201,13 +216,42 @@ function PlayerHistoryModal({ player, onClose }) {
   )
 }
 
+function BonusBreakdownModal({ data, onClose }) {
+  const fmt = v => v > 0 ? `+${v}` : v < 0 ? `${v}` : '0'
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card bonus-breakdown-modal" onClick={e => e.stopPropagation()}>
+        <button className="modal-close-btn" onClick={onClose}>✕</button>
+        <div className="bbm-title">בונוסים - {data.displayName}</div>
+        {data.loading ? (
+          <div className="spinner" style={{ margin: '24px auto' }} />
+        ) : (
+          <div className="bbm-rows">
+            <div className="bbm-row">
+              <span>⚽ פנדלים נכונים</span>
+              <span className="bbm-pts">{fmt(data.penalty)} נק'</span>
+            </div>
+            <div className="bbm-row">
+              <span>🃏 בונוס ג'וקר</span>
+              <span className="bbm-pts">{fmt(data.joker)} נק'</span>
+            </div>
+            <div className="bbm-row">
+              <span>🔥 בונוס סטרייק</span>
+              <span className="bbm-pts">{fmt(data.streak)} נק'</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function LeaderboardPage() {
   const { user } = useAuth()
   const [view, setView]         = useState('season')
   const [rows, setRows]         = useState([])
   const [streaks, setStreaks]   = useState({})
   const [messages, setMessages] = useState({})
-  const [penCounts, setPenCounts] = useState({})
   const [loading, setLoading]   = useState(true)
   const [round, setRound]       = useState(null)
   const [currentRound, setCurrentRound] = useState(null)
@@ -216,6 +260,7 @@ export default function LeaderboardPage() {
   const [liveGuesses, setLiveGuesses]   = useState({})
   const [selectedPlayer, setSelectedPlayer]           = useState(null)
   const [selectedRoundPlayer, setSelectedRoundPlayer] = useState(null)
+  const [bonusModal, setBonusModal]                   = useState(null)
   const [roundFinished, setRoundFinished]             = useState(false)
   const [roundStarted, setRoundStarted]               = useState(false)
   const [roundFinishedSeason, setRoundFinishedSeason] = useState(false)
@@ -266,13 +311,6 @@ export default function LeaderboardPage() {
         setLiveGuesses({})
       }
 
-      const { data: penData } = await supabase
-        .from('predictions')
-        .select('user_id')
-        .gt('penalty_bonus', 0)
-      const pc = {}
-      penData?.forEach(p => { pc[p.user_id] = (pc[p.user_id] || 0) + 1 })
-      setPenCounts(pc)
 
       if (view === 'season') {
         // Determine round timing window for trash talk visibility
@@ -341,6 +379,13 @@ export default function LeaderboardPage() {
       }
     } catch (err) { console.error(err) }
     setLoading(false)
+  }
+
+  async function handleBonusClick(r, bonus) {
+    if (bonus === 0) return
+    setBonusModal({ userId: r.user_id, displayName: r.display_name, loading: true })
+    const breakdown = await getBonusBreakdown(r.user_id, view === 'round' ? round : null)
+    setBonusModal({ userId: r.user_id, displayName: r.display_name, loading: false, ...breakdown })
   }
 
   const pts = r => view === 'season' ? r.total_points    : r.round_points
@@ -416,7 +461,7 @@ export default function LeaderboardPage() {
             <div>שחקן</div>
             <div style={{textAlign:'center'}}>מדויק</div>
             <div style={{textAlign:'center'}}>כיוון</div>
-            <div style={{textAlign:'center', fontSize:9, lineHeight:1.2}}>פנדל<br/>לריאל</div>
+            <div style={{textAlign:'center'}}>בונוס<div style={{fontSize:'9px',opacity:0.6,lineHeight:1.1}}>(בנק')</div></div>
             <div style={{textAlign:'center'}}>נק׳</div>
           </div>
 
@@ -429,7 +474,7 @@ export default function LeaderboardPage() {
             const colorIdx = i % COLORS.length
             const medal    = i===0?'🥇':i===1?'🥈':i===2?'🥉':null
             const streak   = view === 'season' ? (streaks[r.user_id] ?? 0) : 0
-            const penHits  = penCounts[r.user_id] || 0
+            const bonus    = (pts(r) ?? 0) - (ex(r) ?? 0) * 3 - (dir(r) ?? 0)
             const gap      = i > 0 ? leaderPts - (pts(r) ?? 0) : 0
             const avgRound = (pts(r) ?? 0) > 0 && currentRound > 0 ? (pts(r) ?? 0) / currentRound : 0
             const roundsToClose = i > 0 && avgRound > 0 ? Math.ceil(gap / avgRound) : null
@@ -454,7 +499,7 @@ export default function LeaderboardPage() {
                 </div>
 
                 <div className="lb-user">
-                  <div className="lb-avatar" style={{ background:BGS[colorIdx], color:COLORS[colorIdx], overflow:'hidden', padding:0 }}>
+                  <div className={`lb-avatar${streak >= 3 ? ' on-fire' : ''}`} style={{ background:BGS[colorIdx], color:COLORS[colorIdx], overflow:'hidden', padding:0 }}>
                     {r.avatar_url
                       ? <img src={r.avatar_url} alt={r.display_name} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }} />
                       : initial(r.display_name)
@@ -468,8 +513,11 @@ export default function LeaderboardPage() {
 
                 <div className="lb-num">{ex(r) ?? 0}</div>
                 <div className="lb-num">{dir(r) ?? 0}</div>
-                <div className="lb-num" style={{ color: penHits > 0 ? '#00BCD4' : undefined }}>
-                  {penHits}
+                <div
+                  className={`lb-num${bonus !== 0 ? ' lb-bonus-clickable' : ''}`}
+                  onClick={e => { e.stopPropagation(); handleBonusClick(r, bonus) }}
+                >
+                  {bonus > 0 ? `${bonus}+` : bonus}
                 </div>
                 <div className="lb-pts">
                   {pts(r) ?? 0}
@@ -492,6 +540,13 @@ export default function LeaderboardPage() {
           player={selectedRoundPlayer}
           round={round}
           onClose={() => setSelectedRoundPlayer(null)}
+        />
+      )}
+
+      {bonusModal && (
+        <BonusBreakdownModal
+          data={bonusModal}
+          onClose={() => setBonusModal(null)}
         />
       )}
     </div>

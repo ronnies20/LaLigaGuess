@@ -230,6 +230,34 @@ export async function getLeaderboardRanked() {
   return (data || []).map((r, i) => ({ ...r, rank: i + 1 }))
 }
 
+export async function getBonusBreakdown(userId, round = null) {
+  let query = supabase
+    .from('predictions')
+    .select('points, penalty_bonus, is_joker, home_guess, away_guess, matches!inner(home_score, away_score, round)')
+    .eq('user_id', userId)
+    .not('matches.home_score', 'is', null)
+    .not('points', 'is', null)
+  if (round !== null) query = query.eq('matches.round', round)
+  const { data } = await query
+
+  let penalty = 0, joker = 0, streak = 0
+  for (const p of (data || [])) {
+    const m = p.matches
+    if (!m) continue
+    const isExact = p.home_guess === m.home_score && p.away_guess === m.away_score
+    const isDir   = !isExact && Math.sign(p.home_guess - p.away_guess) === Math.sign(m.home_score - m.away_score)
+    const r = m.round
+    const phaseExact = r < 20 ? 3 : r < 34 ? 5 : 7
+    const phaseDir   = r < 20 ? 1 : r < 34 ? 2 : 3
+    const basePts    = isExact ? phaseExact : isDir ? phaseDir : 0
+    const jokerExtra = p.is_joker ? basePts : 0
+    streak  += (p.points ?? 0) - basePts - jokerExtra
+    joker   += jokerExtra
+    penalty += p.penalty_bonus ?? 0
+  }
+  return { penalty, joker, streak }
+}
+
 export async function getMyStats(userId) {
   const [{ data: lb }, { data: maxStreakData }, { data: penPreds }] = await Promise.all([
     supabase.from('leaderboard_view').select('*').eq('user_id', userId).maybeSingle(),

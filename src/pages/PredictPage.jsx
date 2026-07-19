@@ -126,6 +126,8 @@ function PtsBadge({ pts, isJoker, isSpecial, round = 1, isExact = false }) {
 function TeamDisplay({ name }) {
   const t = getTeamInfo(name)
   const logoUrl = getTeamLogoUrl(t.logoId, t.logoUrl)
+  const scale = t.logoScale ?? 1
+  const imgSize = 42 * scale
   return (
     <div className="team">
       <div className="team-logo-wrap">
@@ -134,6 +136,7 @@ function TeamDisplay({ name }) {
             src={logoUrl}
             alt={name}
             className="team-logo-img"
+            style={scale !== 1 ? { width: imgSize, height: imgSize } : undefined}
             onError={e => {
               e.currentTarget.style.display = 'none'
               e.currentTarget.nextSibling.style.display = 'flex'
@@ -216,6 +219,7 @@ export default function PredictPage() {
   const [revealingMatches, setRevealingMatches] = useState(new Set())
   const [goalFlash, setGoalFlash]               = useState(new Set())
   const [missedRound, setMissedRound]           = useState(null)
+  const [streakBroken, setStreakBroken]         = useState(null)
   const [trashUnlocked, setTrashUnlocked]       = useState(true)
   const [trashMessages, setTrashMessages]       = useState([])
   const saveBtnRef            = useRef(null)
@@ -272,7 +276,15 @@ export default function PredictPage() {
       const { data: streakData } = await supabase
         .from('current_streak_view').select('current_streak')
         .eq('user_id', user.id).maybeSingle()
-      setUserStreak(streakData?.current_streak ?? 0)
+      const newStreak = streakData?.current_streak ?? 0
+      setUserStreak(newStreak)
+      const lsKey = `streak_${user.id}`
+      const prevStreak = parseInt(localStorage.getItem(lsKey) ?? '0')
+      if (newStreak < prevStreak && prevStreak >= 3) {
+        setStreakBroken(prevStreak)
+        setTimeout(() => setStreakBroken(null), 5000)
+      }
+      localStorage.setItem(lsKey, String(newStreak))
 
       // Social proof FOMO — rises smoothly based on time until first kickoff
       // 70% when round opens → 90% at first kickoff. Never decreases.
@@ -479,18 +491,6 @@ export default function PredictPage() {
     playJokerActivate()
   }
 
-  async function activateStreakShield() {
-    try {
-      const { data, error } = await supabase.rpc('activate_streak_shield', { p_round: round })
-      if (error || !data) throw error || new Error('shield not available')
-      refreshProfile()
-      setSaveMsg('🛡️ המגן הופעל! הסטרייק שלך מוגן')
-      setTimeout(() => setSaveMsg(''), 4000)
-    } catch {
-      setSaveMsg('לא ניתן להפעיל את המגן')
-      setTimeout(() => setSaveMsg(''), 4000)
-    }
-  }
 
   function handleInput(matchId, side, val) {
     const clean = val.replace(/\D/g, '').slice(0, 2)
@@ -657,16 +657,18 @@ export default function PredictPage() {
 
   // Single headline status banner — only the most relevant message is shown
   // at a time, picked in priority order, instead of stacking every banner.
-  const streakAtRisk = userStreak >= 1 && openMatches.length > 0 && predictedCount === 0
+  const streakAtRisk = userStreak >= 3 && openMatches.length > 0 && predictedCount === 0
+  const hasOpenMatches = openMatches.length > 0
   const headline =
     streakAtRisk                                  ? 'streak-risk' :
+    streakBroken && round === currentRound        ? 'streak-lost' :
     missedRound && round === currentRound         ? 'missed-round' :
     round >= 34                                   ? 'phase-sprint' :
-    userStreak >= 5                               ? 'streak5' :
-    userStreak === 4                              ? 'streak4' :
-    userStreak === 3                              ? 'streak3' :
+    hasOpenMatches && userStreak >= 5             ? 'streak5' :
+    hasOpenMatches && userStreak === 4            ? 'streak4' :
+    hasOpenMatches && userStreak === 3            ? 'streak3' :
     hasRoundResults                               ? 'round-pts' :
-    (userStreak >= 1 && userStreak <= 2)          ? 'streak-mini' :
+    hasOpenMatches && userStreak >= 1             ? 'streak-mini' :
     null
 
   return (
@@ -740,36 +742,38 @@ export default function PredictPage() {
           </div>
         )}
 
+        {/* Streak broken banner */}
+        {headline === 'streak-lost' && (
+          <div className="streak-lost-banner">
+            💔 הסטרייק של {streakBroken} נשבר - התחל מחדש!
+          </div>
+        )}
+
         {/* Headline status banner — streak at risk warning */}
         {headline === 'streak-risk' && (
           <div className="streak-risk-banner">
-            <div>⚠️ יש לך סטרייק של {userStreak} {'🔥'.repeat(Math.min(userStreak,5))} — נחש לפני הנעילה כדי לשמור עליו!</div>
-            {profile?.streak_shield !== false ? (
-              <button className="shield-btn" onClick={() => activateStreakShield()}>🛡️ הפעל מגן</button>
-            ) : (
-              <span className="shield-used-tag">🛡️ מגן נוצל</span>
-            )}
+            <div>⚠️ יש לך סטרייק של {userStreak} 🔥 - נחש לפני הנעילה כדי לשמור עליו!</div>
           </div>
         )}
 
         {headline === 'streak-mini' && (
           <div className="streak-mini">
-            {'🔥'.repeat(userStreak)} {userStreak} ברצף — עוד {3 - userStreak} לבונוס
+            🔥 {userStreak} ברצף — עוד {3 - userStreak} לבונוס
           </div>
         )}
         {headline === 'streak3' && (
           <div className="streak-banner streak-warning">
-            🔥🔥🔥 3 ניחושים ברצף! הניחוש המדויק הבא יהיה שווה <strong>5 נקודות</strong>
+            🔥 3 ברצף! הניחוש המדויק הבא יהיה שווה <strong>5 נקודות</strong>
           </div>
         )}
         {headline === 'streak4' && (
           <div className="streak-banner streak-bonus">
-            🔥🔥🔥🔥 4 ברצף! ניחוש מדויק הבא = <strong>6 נקודות</strong>
+            🔥 4 ברצף! ניחוש מדויק הבא = <strong>6 נקודות</strong>
           </div>
         )}
         {headline === 'streak5' && (
           <div className="streak-banner streak-bonus">
-            {'🔥'.repeat(Math.min(userStreak, 6))} {userStreak} ברצף! ניחוש מדויק = <strong>6 נקודות</strong> 🎯
+            🔥 {userStreak} ברצף! ניחוש מדויק = <strong>6 נקודות</strong> 🎯
           </div>
         )}
 

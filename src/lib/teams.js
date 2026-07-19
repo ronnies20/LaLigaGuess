@@ -4,7 +4,7 @@ export const TEAMS = {
   'Atletico Madrid': { short: 'ATL', color: '#CE1021', bg: '#1a0002', initial: 'א', logoId: 530 },
   'Sevilla':         { short: 'SEV', color: '#D4002A', bg: '#1a0002', initial: 'ס', logoId: 536 },
   'Real Betis':      { short: 'BET', color: '#00883A', bg: '#001a0d', initial: 'ב', logoId: 543 },
-  'Valencia':        { short: 'VAL', color: '#EF7D00', bg: '#1a0e00', initial: 'ו', logoId: 532 },
+  'Valencia':        { short: 'VAL', color: '#EF7D00', bg: '#1a0e00', initial: 'ו', logoId: 532, logoScale: 2.2 },
   'Villarreal':      { short: 'VIL', color: '#FFDA00', bg: '#1a1400', initial: 'ו', logoId: 533 },
   'Real Sociedad':   { short: 'SOC', color: '#005AA7', bg: '#001233', initial: 'ס', logoId: 548 },
   'Osasuna':         { short: 'OSA', color: '#C11B17', bg: '#1a0002', initial: 'א', logoId: 727 },
@@ -59,8 +59,8 @@ export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = f
       if (isDirCorrect) return 0
       return streakBefore >= 4 ? -3 : -1
     }
-    if (streakBefore >= 5) return exact * 2 + 3
-    if (streakBefore >= 4) return exact * 2 + 1
+    if (streakBefore >= 6) return exact * 2 + 3
+    if (streakBefore >= 4) return exact * 2 + 2
     return exact * 2
   }
   if (isSpecial) {
@@ -70,7 +70,7 @@ export function calcPoints(homeGuess, awayGuess, homeReal, awayReal, isJoker = f
     return realDir === guessDir ? dir * 2 : 0
   }
   if (isExact) {
-    if (streakBefore >= 5) return exact + 3
+    if (streakBefore >= 6) return exact + 3
     if (streakBefore >= 4) return exact + 2
     return exact
   }
