@@ -150,6 +150,7 @@ function App() {
       {/* Logo header — profile tab only */}
       {tab === 'profile' && (
         <div
+          className="arcade-flicker"
           style={{ background:'#050210', height:480, overflow:'hidden', cursor:'pointer' }}
           onClick={() => setTab('profile')}
         >
