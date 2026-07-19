@@ -147,24 +147,30 @@ function App() {
 
   return (
     <div>
-      <div
-        className="topbar"
-        style={{ flexDirection:'column', alignItems:'center', gap:6, paddingTop:16, paddingBottom:14, cursor:'pointer' }}
-        onClick={() => setTab('profile')}
-      >
-        <img
-          src="https://media.api-sports.io/football/teams/529.png"
-          alt="Barça"
-          style={{ width:34, height:34, objectFit:'contain', filter:'drop-shadow(0 0 10px rgba(253,185,39,0.6))' }}
-        />
-        <div style={{ textAlign:'center' }}>
-          <div style={{ fontSize:14, fontWeight:800, color:'#FDB927', letterSpacing:0.3 }}>תחרות הניחושים של הלה ליגה</div>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:7, marginTop:3 }}>
-            <span style={{ fontSize:12, fontWeight:700, color:'#A07FCC', letterSpacing:0.5 }}>Barca Mania x FRIEREN · עונת 26/27</span>
-            <span style={{ fontSize:9, fontWeight:800, color:'#050210', background:'linear-gradient(135deg,#FDB927,#ff8800)', borderRadius:4, padding:'1px 5px', letterSpacing:1, textTransform:'uppercase', boxShadow:'0 0 8px rgba(253,185,39,0.5)' }}>BETA</span>
+      {tab === 'profile' ? (
+        <div
+          className="topbar"
+          style={{ flexDirection:'column', alignItems:'center', gap:4, paddingTop:14, paddingBottom:12, cursor:'pointer' }}
+          onClick={() => setTab('profile')}
+        >
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontSize:14, fontWeight:800, color:'#FDB927', letterSpacing:0.3 }}>תחרות הניחושים של הלה ליגה</div>
+            <div style={{ fontSize:12, fontWeight:700, color:'#A07FCC', letterSpacing:0.5, marginTop:3 }}>KittyCata · עונת 26/27</div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div
+          className="topbar"
+          style={{ justifyContent:'center', paddingTop:10, paddingBottom:10, cursor:'pointer' }}
+          onClick={() => setTab('profile')}
+        >
+          <img
+            src="/kittyCATa.io%20LOGO.png"
+            alt="KittyCata"
+            style={{ height:110, width:110, objectFit:'contain', filter:'drop-shadow(0 0 18px rgba(253,185,39,0.5))' }}
+          />
+        </div>
+      )}
 
       {tab === 'predict' && <PredictPage />}
       {tab === 'live'    && <LivePage />}
