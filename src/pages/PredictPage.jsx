@@ -879,6 +879,7 @@ export default function PredictPage() {
                             type="number" min="0" max="20" inputMode="numeric"
                             value={g.h} disabled={effectiveLocked}
                             onChange={e => handleInput(m.id, 'h', e.target.value)}
+                            onFocus={e => e.target.select()}
                           />
                           <span className="score-sep">:</span>
                           <input
@@ -886,6 +887,7 @@ export default function PredictPage() {
                             type="number" min="0" max="20" inputMode="numeric"
                             value={g.a} disabled={effectiveLocked}
                             onChange={e => handleInput(m.id, 'a', e.target.value)}
+                            onFocus={e => e.target.select()}
                           />
                           <div style={{ marginRight:'6px' }}>
                             <PtsBadge pts={null} />
