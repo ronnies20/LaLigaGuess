@@ -2221,22 +2221,21 @@ body {
 /* Leaderboard headers */
 .lb-header { font-family: var(--secular); font-size: 10px; letter-spacing: 1px; }
 
-/* User names in leaderboard + war room — Press Start 2P for arcade impact */
+/* User names in leaderboard + war room — Secular One (Hebrew + English, readable) */
 .lb-name {
-  font-family: var(--arcade);
-  font-size: 8px;
-  color: #E0D4FF;
-  text-shadow: 0 0 6px rgba(160,127,204,0.6);
+  font-family: var(--secular);
+  font-size: 13px;
+  color: #D0C0FF;
+  text-shadow: 0 0 8px rgba(160,127,204,0.45);
 }
 .me .lb-name {
   color: var(--gold);
-  text-shadow: 0 0 8px rgba(253,185,39,0.6);
+  text-shadow: 0 0 10px rgba(253,185,39,0.6);
 }
 .lw-name-text {
-  font-family: var(--arcade);
-  font-size: 7px;
-  line-height: 1.5;
-  color: #E0D4FF;
+  font-family: var(--secular);
+  font-size: 13px;
+  color: #D0C0FF;
 }
 .lw-score-team { font-family: var(--secular); }
 .rpm-team-name { font-family: var(--secular); }
