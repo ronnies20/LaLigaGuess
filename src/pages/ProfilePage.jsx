@@ -326,7 +326,7 @@ export default function ProfilePage() {
           </>
         ) : null}
 
-        {stats && history.length > 0 && (() => {
+        {stats && (() => {
           const trophies = computeTrophies(stats, history)
           return (
             <>

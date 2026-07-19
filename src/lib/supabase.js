@@ -215,8 +215,14 @@ export async function getMyHistory(userId) {
     .select('home_guess, away_guess, points, is_joker, penalty_bonus, matches!inner(round, home_score, away_score, kickoff, is_special, score_90)')
     .eq('user_id', userId)
     .not('matches.home_score', 'is', null)
-  if (error) return []
-  return data || []
+  if (!error) return data || []
+  // Fallback: score_90 may not exist in older DB schemas
+  const { data: fallback } = await supabase
+    .from('predictions')
+    .select('home_guess, away_guess, points, is_joker, penalty_bonus, matches!inner(round, home_score, away_score, kickoff, is_special)')
+    .eq('user_id', userId)
+    .not('matches.home_score', 'is', null)
+  return fallback || []
 }
 
 // Get season leaderboard with ranks for rival computation (already have getLeaderboard)

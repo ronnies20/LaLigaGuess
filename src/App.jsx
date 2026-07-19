@@ -59,7 +59,7 @@ function NavIcon({ name }) {
 
 function App() {
   const { user, loading } = useAuth()
-  const [tab, setTab] = useState('predict')
+  const [tab, setTab] = useState('profile')
   const [hasPending, setHasPending] = useState(false)
   const [hasLive, setHasLive] = useState(false)
 
