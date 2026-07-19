@@ -147,30 +147,17 @@ function App() {
 
   return (
     <div>
-      {tab === 'profile' ? (
-        <div
-          className="topbar"
-          style={{ flexDirection:'column', alignItems:'center', gap:4, paddingTop:14, paddingBottom:12, cursor:'pointer' }}
-          onClick={() => setTab('profile')}
-        >
-          <div style={{ textAlign:'center' }}>
-            <div style={{ fontSize:14, fontWeight:800, color:'#FDB927', letterSpacing:0.3 }}>תחרות הניחושים של הלה ליגה</div>
-            <div style={{ fontSize:12, fontWeight:700, color:'#A07FCC', letterSpacing:0.5, marginTop:3 }}>KittyCata · עונת 26/27</div>
-          </div>
-        </div>
-      ) : (
-        <div
-          className="topbar"
-          style={{ justifyContent:'center', paddingTop:10, paddingBottom:10, cursor:'pointer' }}
-          onClick={() => setTab('profile')}
-        >
-          <img
-            src="/kittyCATa.io%20LOGO.png"
-            alt="KittyCata"
-            style={{ height:110, width:110, objectFit:'contain', filter:'drop-shadow(0 0 18px rgba(253,185,39,0.5))' }}
-          />
-        </div>
-      )}
+      <div
+        className="topbar"
+        style={{ justifyContent:'center', padding:0, cursor:'pointer' }}
+        onClick={() => setTab('profile')}
+      >
+        <img
+          src="/kittyCATa.io%20LOGO.png"
+          alt="KittyCata"
+          style={{ width:'100%', maxHeight:180, objectFit:'cover', objectPosition:'center top', display:'block' }}
+        />
+      </div>
 
       {tab === 'predict' && <PredictPage />}
       {tab === 'live'    && <LivePage />}
