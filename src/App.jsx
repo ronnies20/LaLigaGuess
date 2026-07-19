@@ -147,22 +147,26 @@ function App() {
 
   return (
     <div>
+      {/* Logo header — fills full width, not sticky */}
       <div
-        className="topbar"
-        style={{ flexDirection:'column', alignItems:'center', gap:6, paddingTop:14, paddingBottom:12, cursor:'pointer' }}
+        style={{ background:'linear-gradient(135deg,#0C0625 0%,#1A0850 60%,#0D0330 100%)', height:160, overflow:'hidden', cursor:'pointer' }}
         onClick={() => setTab('profile')}
       >
         <img
           src="/kittyCATa.io%20LOGO.png"
           alt="KittyCata"
-          style={{ width:90, height:90, objectFit:'contain' }}
+          style={{ width:'100%', height:'100%', objectFit:'fill', display:'block' }}
         />
-        <div style={{ textAlign:'center' }}>
-          <div style={{ fontSize:14, fontWeight:800, color:'#FDB927', letterSpacing:0.3 }}>תחרות הניחושים של הלה ליגה</div>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:7, marginTop:3 }}>
-            <span style={{ fontSize:12, fontWeight:700, color:'#A07FCC', letterSpacing:0.5 }}>Barca Mania x FRIEREN · עונת 26/27</span>
-          </div>
-        </div>
+      </div>
+
+      {/* Sticky secondary header with text */}
+      <div
+        className="topbar"
+        style={{ flexDirection:'column', alignItems:'center', gap:2, paddingTop:8, paddingBottom:8, cursor:'pointer' }}
+        onClick={() => setTab('profile')}
+      >
+        <div style={{ fontSize:13, fontWeight:800, color:'#FDB927', letterSpacing:0.3 }}>תחרות הניחושים של הלה ליגה</div>
+        <div style={{ fontSize:11, fontWeight:700, color:'#A07FCC', letterSpacing:0.5 }}>Barca Mania x FRIEREN · עונת 26/27</div>
       </div>
 
       {tab === 'predict' && <PredictPage />}
