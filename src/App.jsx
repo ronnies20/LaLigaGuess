@@ -155,7 +155,10 @@ function App() {
         <img
           src="/kittyCATa.io%20LOGO.png"
           alt="KittyCata"
-          style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }}
+          style={{ width:'100%', height:'100%', objectFit:'contain', display:'block',
+            WebkitMaskImage:'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
+            maskImage:'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)'
+          }}
         />
       </div>
 
