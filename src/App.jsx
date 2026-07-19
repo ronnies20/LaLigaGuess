@@ -149,13 +149,13 @@ function App() {
     <div>
       {/* Logo header — fills full width, not sticky */}
       <div
-        style={{ background:'linear-gradient(135deg,#0C0625 0%,#1A0850 60%,#0D0330 100%)', height:160, overflow:'hidden', cursor:'pointer' }}
+        style={{ background:'linear-gradient(135deg,#0C0625 0%,#1A0850 60%,#0D0330 100%)', height:250, overflow:'hidden', cursor:'pointer' }}
         onClick={() => setTab('profile')}
       >
         <img
           src="/kittyCATa.io%20LOGO.png"
           alt="KittyCata"
-          style={{ width:'100%', height:'100%', objectFit:'fill', display:'block' }}
+          style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }}
         />
       </div>
 
