@@ -147,19 +147,21 @@ function App() {
 
   return (
     <div>
-      {/* Logo header — fills full width, not sticky */}
-      <div
-        style={{ background:'#050210', height:400, overflow:'hidden', cursor:'pointer' }}
-        onClick={() => setTab('profile')}
-      >
-        <img
-          src="/kittyCATa.io%20LOGO.png"
-          alt="KittyCata"
-          style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 40%', display:'block' }}
-        />
-      </div>
+      {/* Logo header — profile tab only */}
+      {tab === 'profile' && (
+        <div
+          style={{ background:'#050210', height:480, overflow:'hidden', cursor:'pointer' }}
+          onClick={() => setTab('profile')}
+        >
+          <img
+            src="/kittyCATa.io%20LOGO.png"
+            alt="KittyCata"
+            style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 40%', display:'block' }}
+          />
+        </div>
+      )}
 
-      {/* Sticky secondary header with text */}
+      {/* Sticky secondary header — all tabs */}
       <div
         className="topbar"
         style={{ flexDirection:'column', alignItems:'center', gap:2, paddingTop:8, paddingBottom:8, cursor:'pointer' }}
