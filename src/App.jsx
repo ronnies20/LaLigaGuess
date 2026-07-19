@@ -149,7 +149,7 @@ function App() {
     <div>
       {/* Logo header — fills full width, not sticky */}
       <div
-        style={{ background:'#050210', height:320, overflow:'hidden', cursor:'pointer' }}
+        style={{ background:'#050210', height:400, overflow:'hidden', cursor:'pointer' }}
         onClick={() => setTab('profile')}
       >
         <img
