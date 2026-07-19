@@ -361,16 +361,6 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <div className="beta-box">
-          <div className="beta-box-title">🧪 גרסת BETA</div>
-          <div className="beta-box-text">
-            האפליקציה נמצאת בפיתוח פעיל. נתקלת בבאג או יש לך הצעה לשיפור?
-          </div>
-          <button className="beta-box-link" style={{ cursor:'pointer', background:'none' }} onClick={() => setShowFeedback(true)}>
-            📨 שלח פידבק
-          </button>
-        </div>
-
         {isAdmin && <AdminFeedbackPanel />}
 
         <button className="btn btn-outline btn-full" style={{ marginTop:12, color:'#FF4444', borderColor:'rgba(255,68,68,0.3)' }}
